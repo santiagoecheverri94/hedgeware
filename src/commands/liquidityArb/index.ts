@@ -1,6 +1,6 @@
 import {Args, Command, Flags} from '@oclif/core'
 
-export default class Hello extends Command {
+export default class LiquidityArb extends Command {
   static description = 'Say hello'
 
   static examples = [
@@ -18,7 +18,7 @@ hello friend from oclif! (./src/commands/hello/index.ts)
   }
 
   async run(): Promise<void> {
-    const {args, flags} = await this.parse(Hello)
+    const {args, flags} = await this.parse(LiquidityArb)
 
     this.log(`hello ${args.person} from ${flags.from}! (./src/commands/hello/index.ts)`)
   }
