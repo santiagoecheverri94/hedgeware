@@ -1,6 +1,6 @@
 import {Args, Command, Flags} from '@oclif/core'
 
-export default class DeepValueSwings extends Command {
+export default class Start extends Command {
   static description = 'describe the command here'
 
   static examples = [
@@ -19,12 +19,7 @@ export default class DeepValueSwings extends Command {
   }
 
   public async run(): Promise<void> {
-    const {args, flags} = await this.parse(DeepValueSwings)
-
-    const name = flags.name ?? 'world'
-    this.log(`hello ${name} from C:\\Users\\santi\\Documents\\HedgeWare\\cli\\src\\commands\\deepValueSwings.ts`)
-    if (args.file && flags.force) {
-      this.log(`you input --force and --file: ${args.file}`)
-    }
+    const {args, flags} = await this.parse(Start)
+    require('../trading/rich-client')
   }
 }

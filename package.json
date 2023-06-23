@@ -20,7 +20,9 @@
     "@oclif/core": "^2",
     "@oclif/plugin-help": "^5",
     "@oclif/plugin-plugins": "^2.4.7",
-    "apisauce": "^3.0.1"
+    "apisauce": "^3.0.1",
+    "fastify": "^4.18.0",
+    "moment": "^2.29.4"
   },
   "devDependencies": {
     "@oclif/test": "^2.3.22",

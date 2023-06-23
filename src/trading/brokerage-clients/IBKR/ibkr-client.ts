@@ -1,5 +1,6 @@
 import {create} from 'apisauce'
 import {Agent as httpsAgent} from 'node:https'
+import moment from 'moment'
 
 import {BrokerageClient} from '../BrokerageClient'
 import {MINUTE_IN_MILLISECONDS} from '../constants'
@@ -26,16 +27,20 @@ export class IBKRClient implements BrokerageClient {
 
   stopSystem!: () => void;
 
-  constructor(stopSytem: () => void) {
+  constructor(stopSytem: () => void = () => {
+    process.exit(1)
+  }) {
     this.stopSystem = stopSytem
+
     this.tickleApiGateway().then(response => {
-      if (response.status === 200 && response.data?.session) {
+      if (response.status === 200 && response.data?.session && response.data?.iserver.authStatus.authenticated) {
         this.sessionId = response.data?.session
-        this.log('Initiated connection with IBKR API Gateway and saved sessionId.')
+        this.log(`Initiated connection with IBKR API Gateway at ${moment().format('hh:mma on MM-DD-YYYY')}.`)
       } else {
         this.stopSystemDueToApiGatewayError('Unable to connect with IBKR API Gateway and save sessionId.')
       }
     })
+
     this.tickleApiGatewayEveryMinute()
   }
 
@@ -47,12 +52,15 @@ export class IBKRClient implements BrokerageClient {
     setTimeout(async () => {
       const tickleResponse = await this.tickleApiGateway()
 
-      if (tickleResponse.status === 200) {
-        this.log('Tickled IBKR Gateway successfully.')
-      } else {
+      if (tickleResponse.status !== 200) {
         this.stopSystemDueToApiGatewayError('Unable to tickle IBKR API Gateway.')
       }
 
+      if (!tickleResponse.data?.iserver.authStatus.authenticated) {
+        this.stopSystemDueToApiGatewayError(`IBKR API Gateway became unauthenticated at ${moment().format('hh:mma on MM-DD-YYYY')}.`)
+      }
+
+      this.log('Tickled IBKR Gateway successfully.')
       this.tickleApiGatewayEveryMinute()
     }, MINUTE_IN_MILLISECONDS)
   }
