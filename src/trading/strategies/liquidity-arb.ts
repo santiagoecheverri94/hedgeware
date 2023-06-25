@@ -1,1 +1,5 @@
-// Helps preserve options premium written by arbitraging the liquidity of the underlying equity.
+import {IBKRClient} from '../brokerage-clients/IBKR/ibkr-client'
+
+export function startLiquidityArb(): void {
+  const brokerageClient = new IBKRClient()
+}
