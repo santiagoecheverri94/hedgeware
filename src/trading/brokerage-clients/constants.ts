@@ -1,1 +1,1 @@
-export const MINUTE_IN_MILLISECONDS = 60_000
+export const MINUTE_IN_MILLISECONDS = 60_000;

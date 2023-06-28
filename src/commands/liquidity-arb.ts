@@ -1,5 +1,5 @@
-import {Command} from '@oclif/core'
-import {startLiquidityArb} from '../trading/strategies/liquidity-arb'
+import {Command} from '@oclif/core';
+import {startLiquidityArb} from '../trading/strategies/liquidity-arb';
 
 export default class LiquidityArb extends Command {
   static description = 'Helps preserve options premium written by arbitraging the liquidity of the underlying equity.'
@@ -20,6 +20,6 @@ export default class LiquidityArb extends Command {
   public async run(): Promise<void> {
     // const {args, flags} = await this.parse(LiquidityArb)
 
-    startLiquidityArb()
+    startLiquidityArb();
   }
 }
