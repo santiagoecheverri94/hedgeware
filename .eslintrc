@@ -2,5 +2,9 @@
   "extends": [
     "oclif",
     "oclif-typescript"
-  ]
+  ],
+  "rules": {
+    "semi": ["error", "always"],
+    "no-await-in-loop": "off"
+  }
 }

@@ -21,13 +21,16 @@
     "@oclif/plugin-help": "^5",
     "@oclif/plugin-plugins": "^2.4.7",
     "apisauce": "^3.0.1",
-    "moment": "^2.29.4"
+    "mathjs": "^11.9.1",
+    "moment-timezone": "^0.5.43",
+    "ws": "^8.13.0"
   },
   "devDependencies": {
     "@oclif/test": "^2.3.22",
     "@types/chai": "^4",
     "@types/mocha": "^9.0.0",
     "@types/node": "^16.18.36",
+    "@types/ws": "^8.5.5",
     "chai": "^4",
     "eslint": "^7.32.0",
     "eslint-config-oclif": "^4",
