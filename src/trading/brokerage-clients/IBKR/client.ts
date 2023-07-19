@@ -1,20 +1,20 @@
 import {ApisauceInstance} from 'apisauce';
-import {BrokerageClient, log, stopSystem} from '../brokerage-client';
-import {getIBKRApi} from './api';
+import {BrokerageClient, log, stopSystem, Snapshot} from '../brokerage-client';
+import {getUncheckedIBKRApi} from './api';
 import {tickleApiGateway, isOkTickleResponse, tickleApiGatewayEveryMinute} from './tickle';
 
-export class IBKRClient implements BrokerageClient {
+export class IBKRClient extends BrokerageClient {
   sessionId!: string;
 
-  private async getApi() {
+  protected async getApi(): Promise<ApisauceInstance> {
     if (!this.sessionId) {
       await this.initiateBrokerageApiConnection();
     }
 
-    return getIBKRApi();
+    return getUncheckedIBKRApi();
   }
 
-  async initiateBrokerageApiConnection(): Promise<void> {
+  protected async initiateBrokerageApiConnection(): Promise<void> {
     const tickleResponse = await tickleApiGateway();
 
     if (!isOkTickleResponse(tickleResponse)) {
@@ -27,5 +27,25 @@ export class IBKRClient implements BrokerageClient {
     tickleApiGatewayEveryMinute();
   }
 
-  async getSecuritySnapshot() {}
+  async getSnapshot(conid: string): Promise<Snapshot> {
+    const api = await this.getApi();
+
+    // const snapshotResponse = await api.post
+
+    const snapshot: Snapshot = {
+      bid: 0,
+      ask: getRandom(),
+      lastPrice: 0,
+    };
+
+    return snapshot;
+  }
+}
+
+function getRandom(): number {
+  const num = Math.random();
+  if (num < 0.3) return 4.16;  // probability 0.3
+  if (num < 0.6) return 4.15; // probability 0.3
+  if (num <= 1) return 4.14; // probability 0.4
+  return 0;
 }

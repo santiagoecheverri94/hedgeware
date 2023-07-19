@@ -7,6 +7,10 @@ export interface TickleResponse {
   }
 }
 
+export interface SnapshotResponse {
+
+}
+
 export interface SsoValidateResponse {
   RESULT: boolean;
 }

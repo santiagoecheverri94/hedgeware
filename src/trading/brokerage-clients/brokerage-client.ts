@@ -1,7 +1,17 @@
 import moment from 'moment';
+import {ApisauceInstance} from 'apisauce';
 
-export interface BrokerageClient {
-  initiateBrokerageApiConnection: () => void;
+export abstract class BrokerageClient {
+  protected abstract getApi(): Promise<ApisauceInstance>
+  protected abstract initiateBrokerageApiConnection(): void;
+
+  abstract getSnapshot(brokerageId: string): Promise<Snapshot>;
+}
+
+export interface Snapshot {
+  bid: number;
+  ask: number;
+  lastPrice: number;
 }
 
 export function log(msg: string): void {
