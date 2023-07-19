@@ -1,7 +1,6 @@
 import {Brokerages, getBrokerageClient} from '../brokerage-clients/factory';
 
 interface CallDescription {
-  brokerage: Brokerages;
   underlyingBrokerageId: string;
   contractBrokerageId: string;
   numCallsToSell: number;
@@ -15,7 +14,6 @@ interface CallDescription {
 
 const callsToFish: {[underlying: string]: CallDescription} = {
   ACTG: {
-    brokerage: Brokerages.IBKR,
     underlyingBrokerageId: '16699274',
     contractBrokerageId: '',
     strike: 2.5,
@@ -29,19 +27,16 @@ const callsToFish: {[underlying: string]: CallDescription} = {
 };
 
 export async function startFishingDeepValueCalls(): Promise<void> {
-  /* eslint-disable no-await-in-loop */
   while (areThereRemainingCallsToFish()) {
     await fishCalls();
   }
-  /* eslint-enable no-await-in-loop */
 }
 
 async function fishCalls() {
-  /* eslint-disable no-await-in-loop */
   for (const underlying of getRemainingCallsToFish()) {
     const callDescription = callsToFish[underlying];
 
-    const brokerageClient = getBrokerageClient(callDescription.brokerage);
+    const brokerageClient = getBrokerageClient(Brokerages.IBKR);
 
     const snapshot = await brokerageClient.getSnapshot(underlying);
 
@@ -49,7 +44,6 @@ async function fishCalls() {
 
     console.log(`Ask price for a "${underlying}" share is ${askPrice}`);
   }
-  /* eslint-enable no-await-in-loop */
 }
 
 function areThereRemainingCallsToFish(): boolean {
