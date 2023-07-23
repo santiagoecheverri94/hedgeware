@@ -1,7 +1,7 @@
 import {ApiResponse} from 'apisauce';
 import {TickleResponse} from './types';
 import {getUncheckedIBKRApi} from './api';
-import {log, stopSystem} from '../brokerage-client';
+import {stopSystem, log} from '../../utils';
 
 export async function tickleApiGateway(): Promise<ApiResponse<TickleResponse>> {
   const api = await getUncheckedIBKRApi();

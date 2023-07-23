@@ -1,12 +1,19 @@
 import {ApisauceInstance} from 'apisauce';
-import {BrokerageClient, log, stopSystem, Snapshot} from '../brokerage-client';
+import {BrokerageClient, Snapshot} from '../brokerage-client';
 import {getUncheckedIBKRApi} from './api';
 import {tickleApiGateway, isOkTickleResponse, tickleApiGatewayEveryMinute} from './tickle';
+import {stopSystem, log} from '../../utils';
 
 export class IBKRClient extends BrokerageClient {
   sessionId!: string;
 
   protected async getApi(): Promise<ApisauceInstance> {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        resolve({} as any);
+      }, 2000);
+    });
+
     if (!this.sessionId) {
       await this.initiateBrokerageApiConnection();
     }
@@ -44,8 +51,14 @@ export class IBKRClient extends BrokerageClient {
 
 function getRandom(): number {
   const num = Math.random();
-  if (num < 0.3) return 4.16;  // probability 0.3
-  if (num < 0.6) return 4.15; // probability 0.3
-  if (num <= 1) return 4.14; // probability 0.4
+  if (num < 0.1) return 4.11;  // probability 0.1
+  if (num < 0.2) return 4.12; // probability 0.1
+  if (num < 0.3) return 4.13; // probability 0.1
+  if (num < 0.4) return 4.14;  // probability 0.1
+  if (num < 0.5) return 4.15; // probability 0.1
+  if (num < 0.6) return 4.16; // probability 0.1
+  if (num < 0.7) return 4.17;  // probability 0.1
+  if (num < 0.8) return 4.18; // probability 0.1
+  if (num <= 1) return 4.19; // probability 0.2
   return 0;
 }
