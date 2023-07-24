@@ -1,42 +1,64 @@
 import {Brokerages, getBrokerageClient} from '../brokerage-clients/factory';
 import {log} from '../utils';
 
-interface CallDescription {
-  underlyingBrokerageId: string;
-  callBrokerageId: string;
-  contractBrokerageId: string;
-  numContractsToSell: number;
-  strike: number;
-  premiumDesired: number;
-  acceptablePremiumDifference: number;
-  state: {
-    numContractsCurrentlySold: number;
-    openOrderId: string | null;
-    assumedUnderlyingAskPrice: number;
+interface TargetSecurities {
+  call: {
+    brokerageId: string;
+    numDesiredSold: number;
+    strike: number;
+    premiumDesired: number;
+    acceptablePremiumSlippage: number;
+
+    state: {
+      numCurrentlySold: number;
+      openOrderId: string;
+    }
+  },
+  underlying: {
+    brokerageId: string;
+
+    state: {
+      assumedAskPrice: number;
+      numCurrentlyOwned: number;
+    }
   },
 }
 
-const callsToFish: { [underlying: string]: CallDescription } = {
+const targets: { [underlyingTicker: string]: TargetSecurities } = {
   ACTG: {
-    underlyingBrokerageId: '16699274',
-    callBrokerageId: '643210806',
-    contractBrokerageId: '',
-    strike: 2.5,
-    premiumDesired: 0.1,
-    acceptablePremiumDifference: 0.01,
-    numContractsToSell: 10,
-    state: { // this needs to be initialized everytime dynamically
-      numContractsCurrentlySold: 0,
-      openOrderId: null,
-      assumedUnderlyingAskPrice: 0,
+    call: {
+      strike: 2.5,
+      brokerageId: '643210806', // /* CALL: */ '643210806', /* PUT (for testing): */ '643210997',
+      numDesiredSold: 10,
+      premiumDesired: 0.1,
+      acceptablePremiumSlippage: 0.01,
+
+      state: {
+        numCurrentlySold: 0,
+        openOrderId: '',
+      }
+    },
+    underlying: {
+      brokerageId: '16699274',
+
+      state: {
+        assumedAskPrice: 0,
+        numCurrentlyOwned: 0,
+      }
     },
   },
 };
 
 export async function startFishingDeepValueCalls(): Promise<void> {
+  await initialize();
+
   while (areThereRemainingCallsToFish()) {
     await fishCalls();
   }
+}
+
+async function initialize(): Promise<void> {
+
 }
 
 function areThereRemainingCallsToFish(): boolean {
@@ -45,17 +67,16 @@ function areThereRemainingCallsToFish(): boolean {
 }
 
 function getRemainingCallsToFish(): string[] {
-  return Object.keys(callsToFish).filter(underlying => getNumContractsToSell(underlying) > 0);
+  return Object.keys(targets).filter(underlying => getNumCallsToSell(underlying) > 0);
 }
 
-function getNumContractsToSell(underlying: string): number {
-  return callsToFish[underlying].numContractsToSell - callsToFish[underlying].state.numContractsCurrentlySold;
+function getNumCallsToSell(underlying: string): number {
+  return targets[underlying].call.numDesiredSold - targets[underlying].call.state.numCurrentlySold;
 }
 
 async function fishCalls() {
   for (const underlying of getRemainingCallsToFish()) {
     // get current ask price for underlying
-    const callDescription = callsToFish[underlying];
     const brokerageClient = getBrokerageClient(Brokerages.IBKR);
     const snapshot = await brokerageClient.getSnapshot(underlying);
     const underlyingAskPrice = snapshot.ask;
@@ -66,18 +87,19 @@ async function fishCalls() {
 
 async function placeCallOrderForUnderlyingIfNeeded(underlying: string, currentUnderlyingAskPrice: number): Promise<void> {
   // if no open order, place one
-  const {state} = callsToFish[underlying];
-  if (!state.openOrderId) {
-    state.openOrderId = await placeCallOrder(underlying, currentUnderlyingAskPrice, getNumContractsToSell(underlying));
+  const {state: callState} = targets[underlying].call;
+  if (!callState.openOrderId) {
+    callState.openOrderId = await placeCallOrder(underlying, currentUnderlyingAskPrice, getNumCallsToSell(underlying));
     return;
   }
 
-  const {acceptablePremiumDifference} = callsToFish[underlying];
+  const {acceptablePremiumSlippage} = targets[underlying].call;
+  const {assumedAskPrice} = targets[underlying].underlying.state;
   if (hasUnderlyingAskPriceChangedTooMuch(underlying, currentUnderlyingAskPrice)) {
-    log(`The distance from current ask price of $${currentUnderlyingAskPrice} to currently assumed ask price of $${state.assumedUnderlyingAskPrice} is LARGER than the acceptable difference of $${acceptablePremiumDifference}. Time to replace the existing order.`);
-    state.openOrderId = await replaceCallOrder(underlying, currentUnderlyingAskPrice);
+    log(`The distance from current ask price of $${currentUnderlyingAskPrice} to currently assumed ask price of $${assumedAskPrice} is LARGER than the acceptable difference of $${acceptablePremiumSlippage}. Time to replace the existing order.`);
+    callState.openOrderId = await replaceCallOrder(underlying, currentUnderlyingAskPrice);
   } else {
-    log(`The distance from current ask price of $${currentUnderlyingAskPrice} to currently assumed ask price of $${state.assumedUnderlyingAskPrice} is SMALLER than the acceptable difference of $${acceptablePremiumDifference}. Keep the existing order.`);
+    log(`The distance from current ask price of $${currentUnderlyingAskPrice} to currently assumed ask price of $${assumedAskPrice} is SMALLER than the acceptable difference of $${acceptablePremiumSlippage}. Keep the existing order.`);
   }
 }
 
@@ -88,19 +110,21 @@ async function placeCallOrder(underlying: string, currentUnderlyingAskPrice: num
 }
 
 function hasUnderlyingAskPriceChangedTooMuch(underlying: string, currentUnderlyingAskPrice: number): boolean {
-  const {acceptablePremiumDifference, state} = callsToFish[underlying];
-  return Math.abs(currentUnderlyingAskPrice - state.assumedUnderlyingAskPrice) > acceptablePremiumDifference;
+  const {acceptablePremiumSlippage} = targets[underlying].call;
+  const {assumedAskPrice} = targets[underlying].underlying.state;
+  return Math.abs(currentUnderlyingAskPrice - assumedAskPrice) > acceptablePremiumSlippage;
 }
 
 async function replaceCallOrder(underlying: string, currentUnderlyingAskPrice: number): Promise<OrderId> {
-  const {state} = callsToFish[underlying];
-  const previousOrderId = state.openOrderId;
-  const numContractsToSell = getNumContractsToSell(underlying);
+  const {state: callState} = targets[underlying].call;
+  const {state: underlyingState} = targets[underlying].underlying;
+  const previousOrderId = callState.openOrderId;
+  const numContractsToSell = getNumCallsToSell(underlying);
 
   // cancel current order
   // set new order
-  state.openOrderId = await placeCallOrder(underlying, currentUnderlyingAskPrice, numContractsToSell);
-  state.assumedUnderlyingAskPrice = currentUnderlyingAskPrice;
+  callState.openOrderId = await placeCallOrder(underlying, currentUnderlyingAskPrice, numContractsToSell);
+  underlyingState.assumedAskPrice = currentUnderlyingAskPrice;
 
   return '';
 }

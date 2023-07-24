@@ -1,18 +1,22 @@
 import {ApisauceInstance} from 'apisauce';
-import {BrokerageClient, Snapshot} from '../brokerage-client';
+import {BrokerageClient, OrderTypes, Snapshot} from '../brokerage-client';
 import {getUncheckedIBKRApi} from './api';
 import {tickleApiGateway, isOkTickleResponse, tickleApiGatewayEveryMinute} from './tickle';
 import {stopSystem, log} from '../../utils';
 
 export class IBKRClient extends BrokerageClient {
-  sessionId!: string;
+  protected orderTypes = {
+    [OrderTypes.LIMIT]: 'LMT',
+  };
+
+  protected sessionId!: string;
 
   protected async getApi(): Promise<ApisauceInstance> {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        resolve({} as any);
-      }, 2000);
-    });
+    // return new Promise(resolve => {
+    //   setTimeout(() => {
+    //     resolve({} as any);
+    //   }, 2000);
+    // });
 
     if (!this.sessionId) {
       await this.initiateBrokerageApiConnection();
