@@ -1,23 +1,25 @@
 import {ApisauceInstance} from 'apisauce';
-import {BrokerageClient, OrderTypes, Snapshot} from '../brokerage-client';
+import {BrokerageClient, OrderTypes, SnapShotFields, Snapshot} from '../brokerage-client';
 import {getUncheckedIBKRApi} from './api';
-import {tickleApiGateway, isOkTickleResponse, tickleApiGatewayEveryMinute} from './tickle';
-import {stopSystem, log} from '../../utils';
+import {initiateApiSessionWithTickling} from './tickle';
+import { getNextRandomAskPrice } from '../../../utils/askPriceSimulator';
+import { SnapshotResponse } from './types';
+import { getSnapshotFromResponse, isSnapshotResponseWithAllFields } from './snapshot';
 
 export class IBKRClient extends BrokerageClient {
   protected orderTypes = {
     [OrderTypes.LIMIT]: 'LMT',
   };
 
+  protected snapshotFields = {
+    [SnapShotFields.bid]: '84',
+    [SnapShotFields.ask]: '86',
+    [SnapShotFields.last]: '31',
+  };
+
   protected sessionId!: string;
 
   protected async getApi(): Promise<ApisauceInstance> {
-    // return new Promise(resolve => {
-    //   setTimeout(() => {
-    //     resolve({} as any);
-    //   }, 2000);
-    // });
-
     if (!this.sessionId) {
       await this.initiateBrokerageApiConnection();
     }
@@ -26,43 +28,29 @@ export class IBKRClient extends BrokerageClient {
   }
 
   protected async initiateBrokerageApiConnection(): Promise<void> {
-    const tickleResponse = await tickleApiGateway();
-
-    if (!isOkTickleResponse(tickleResponse)) {
-      stopSystem('Unable to connect with IBKR API Gateway and save sessionId.');
-    }
-
-    this.sessionId = tickleResponse.data!.session;
-    log('Initiated connection with IBKR API Gateway.');
-
-    tickleApiGatewayEveryMinute();
+    this.sessionId = await initiateApiSessionWithTickling();
   }
 
   async getSnapshot(conid: string): Promise<Snapshot> {
-    const api = await this.getApi();
+    // IBKR Docs require that snapshot requests are preceeded by an accounts request.
+    await (await this.getApi()).get('/iserver/accounts');
 
-    // const snapshotResponse = await api.post
-
-    const snapshot: Snapshot = {
-      bid: 0,
-      ask: getRandom(),
-      lastPrice: 0,
-    };
-
-    return snapshot;
+    return this.getSnapshotAfterAccountsRequestIsDone(conid);
   }
-}
 
-function getRandom(): number {
-  const num = Math.random();
-  if (num < 0.1) return 4.11;  // probability 0.1
-  if (num < 0.2) return 4.12; // probability 0.1
-  if (num < 0.3) return 4.13; // probability 0.1
-  if (num < 0.4) return 4.14;  // probability 0.1
-  if (num < 0.5) return 4.15; // probability 0.1
-  if (num < 0.6) return 4.16; // probability 0.1
-  if (num < 0.7) return 4.17;  // probability 0.1
-  if (num < 0.8) return 4.18; // probability 0.1
-  if (num <= 1) return 4.19; // probability 0.2
-  return 0;
+  private async getSnapshotAfterAccountsRequestIsDone(conid: string): Promise<Snapshot> {
+    const fields = Object.values(this.snapshotFields);
+
+    const response = (await (await this.getApi()).get<SnapshotResponse[]>('/iserver/marketdata/snapshot', {
+      conids: conid,
+      fields: Object.values(this.snapshotFields).join(','),
+    }));
+    const snapshotResponse = response.data![0];
+
+    if (isSnapshotResponseWithAllFields(snapshotResponse, fields)) {
+      return getSnapshotFromResponse(snapshotResponse, this.snapshotFields);
+    }
+      
+    return await this.getSnapshotAfterAccountsRequestIsDone(conid);
+  }
 }

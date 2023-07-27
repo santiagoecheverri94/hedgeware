@@ -1,7 +1,8 @@
 import {ApisauceInstance} from 'apisauce';
 
 export abstract class BrokerageClient {
-  protected abstract orderTypes: {[orderType in OrderTypes]: string};
+  protected abstract orderTypes: {[type in OrderTypes]: string};
+  protected abstract snapshotFields: {[field in SnapShotFields]: string};
 
   protected abstract getApi(): Promise<ApisauceInstance>
   protected abstract initiateBrokerageApiConnection(): void;
@@ -9,10 +10,14 @@ export abstract class BrokerageClient {
   abstract getSnapshot(brokerageId: string): Promise<Snapshot>;
 }
 
-export interface Snapshot {
-  bid: number;
-  ask: number;
-  lastPrice: number;
+export enum SnapShotFields {
+  bid = 'bid',
+  ask = 'ask',
+  last = 'last',
+}
+
+export type Snapshot = {
+  [field in SnapShotFields]: number
 }
 
 export enum OrderTypes {

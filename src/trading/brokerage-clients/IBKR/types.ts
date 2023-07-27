@@ -7,8 +7,8 @@ export interface TickleResponse {
   }
 }
 
-export interface SnapshotResponse {
-
+export type SnapshotResponse = {
+  [field: string]: string;
 }
 
 export interface SsoValidateResponse {

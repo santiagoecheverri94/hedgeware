@@ -1,18 +1,30 @@
 import {ApiResponse} from 'apisauce';
 import {TickleResponse} from './types';
 import {getUncheckedIBKRApi} from './api';
-import {stopSystem, log} from '../../utils';
+import {stopSystem, log} from '../../../utils/utils';
 
-export async function tickleApiGateway(): Promise<ApiResponse<TickleResponse>> {
-  const api = await getUncheckedIBKRApi();
-  return api.post<TickleResponse>('/tickle');
+export async function initiateApiSessionWithTickling(): Promise<string> {
+  const tickleResponse = await tickleApiGateway();
+
+  if (!isOkTickleResponse(tickleResponse)) {
+    stopSystem('Unable to connect with IBKR API Gateway and save sessionId.');
+  }
+
+  tickleApiGatewayEveryMinute();
+
+  log('Initiated session with IBKR API Gateway tickling.');
+  return tickleResponse.data!.session;
 }
 
-export function isOkTickleResponse(tickleResponse: ApiResponse<TickleResponse>): boolean {
+async function tickleApiGateway(): Promise<ApiResponse<TickleResponse>> {
+  return (await getUncheckedIBKRApi()).post<TickleResponse>('/tickle');
+}
+
+function isOkTickleResponse(tickleResponse: ApiResponse<TickleResponse>): boolean {
   return Boolean(tickleResponse.status === 200 && tickleResponse.data?.session && tickleResponse.data?.iserver.authStatus.authenticated);
 }
 
-export function tickleApiGatewayEveryMinute(): void {
+function tickleApiGatewayEveryMinute(): void {
   const ONE_MINUTE = 60_000;
   setTimeout(async () => {
     const tickleResponse = await tickleApiGateway();

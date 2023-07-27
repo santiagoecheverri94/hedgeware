@@ -14,7 +14,7 @@ export async function getUncheckedIBKRApi(): Promise<ApisauceInstance> {
   return syncApi;
 }
 
-const ONE_POINT_TWO_SECONDS = 1200;
+const ONE_POINT_TWO_SECONDS = 1_200;
 let waiting: Promise<void> = Promise.resolve();
 async function ensureItsBeenOnePointTwoSecondsSinceApiWasLastRetrieved(): Promise<void> {
   await waiting;
