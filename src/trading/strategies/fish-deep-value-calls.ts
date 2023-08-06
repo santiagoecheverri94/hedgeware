@@ -1,28 +1,32 @@
 import {Brokerages, getBrokerageClient} from '../brokerage-clients/factory';
 import {log} from '../../utils/utils';
-import { FloatOperations, evaluateFloatOperation } from '../../utils/floatCalculator';
+import {FloatCalculations, doFloatCalculation} from '../../utils/float-calculator';
+import {OrderDetails, OrderSides, OrderTypes, TimesInForce} from '../brokerage-clients/brokerage-client';
+import moment from 'moment-timezone';
+
+interface CallDetails {
+  brokerageId: string;
+  numDesiredSold: number;
+  strike: number;
+  premiumDesired: number;
+  maxPremiumDifference: number;
+  state: {
+    numCurrentlySold: number;
+    openOrderId: string;
+  }
+}
+
+interface StockDetails {
+  brokerageId: string;
+  state: {
+    assumedAskPrice: number;
+    numCurrentlyOwned: number;
+  }
+}
 
 interface TargetSecurities {
-  call: {
-    brokerageId: string;
-    numDesiredSold: number;
-    strike: number;
-    premiumDesired: number;
-    maxPremiumDifference: number;
-
-    state: {
-      numCurrentlySold: number;
-      openOrderId: string;
-    }
-  },
-  stock: {
-    brokerageId: string;
-
-    state: {
-      assumedAskPrice: number;
-      numCurrentlyOwned: number;
-    }
-  },
+  call: CallDetails,
+  stock: StockDetails,
 }
 
 const brokerageClient = getBrokerageClient(Brokerages.IBKR);
@@ -39,7 +43,7 @@ const targets: { [stockTicker: string]: TargetSecurities } = {
       state: {
         numCurrentlySold: 0,
         openOrderId: '',
-      }
+      },
     },
     stock: {
       brokerageId: '16699274',
@@ -47,35 +51,49 @@ const targets: { [stockTicker: string]: TargetSecurities } = {
       state: {
         assumedAskPrice: 0,
         numCurrentlyOwned: 0,
-      }
+      },
     },
   },
 };
 
 export async function startFishingDeepValueCalls(): Promise<void> {
-  await initialize();
+  while (true) {
+    if (!isMarketOpen()) {
+      // close positions and exit
+      break;
+    }
 
-  // TODO: add cleanup code to cancel orders at end of day
-  while (areThereMoreCallsToSell()) {
-    await sellCalls();
+    // if need to purchase share...
+
+    if (shouldSellMoreCalls()) {
+      await sellCalls();
+    }
   }
 }
 
-async function initialize(): Promise<void> {
+function isMarketOpen(): boolean {
+  const hoursFormat = 'hh:mma';
+  const marketTimezone = 'America/New_York';
 
+  const currentTimeInNewYork = moment(moment().tz(marketTimezone).format(hoursFormat), hoursFormat);
+  const marketOpens = moment('9:30am', hoursFormat);
+  const marketCloses = moment('3:30pm', hoursFormat); // End early to have time to close positions;
+
+  const isMarketHours = currentTimeInNewYork.isBetween(marketOpens, marketCloses);
+  return isMarketHours;
 }
 
-function areThereMoreCallsToSell(): boolean {
+function shouldSellMoreCalls(): boolean {
   const tickers = getStockTickersWithMoreCallsToSell();
   return tickers.length > 0;
 }
 
 function getStockTickersWithMoreCallsToSell(): string[] {
-  return Object.keys(targets).filter(stockTicker => getNumberOfMoreCallsToSell(stockTicker) > 0);
+  return Object.keys(targets).filter(stockTicker => getNumberOfMoreCallsToSell(getCallDetails(stockTicker)) > 0);
 }
 
-function getNumberOfMoreCallsToSell(stockTicker: string): number {
-  return getCallDetails(stockTicker).numDesiredSold - getCallDetails(stockTicker).state.numCurrentlySold;
+function getNumberOfMoreCallsToSell(call: CallDetails): number {
+  return call.numDesiredSold - call.state.numCurrentlySold;
 }
 
 function getCallDetails(stockTicker: string) {
@@ -83,58 +101,64 @@ function getCallDetails(stockTicker: string) {
 }
 
 async function sellCalls() {
-  for (const ticker of getStockTickersWithMoreCallsToSell()) {
-    const snapshot = await brokerageClient.getSnapshot(getStockDetails(ticker).brokerageId);
+  for (const stockTicker of getStockTickersWithMoreCallsToSell()) {
+    const stock = getStockDetails(stockTicker);
+    const snapshot = await brokerageClient.getSnapshot(stock.brokerageId);
 
-    await placeCallOrderIfNeeded(ticker, snapshot.ask);
+    await placeCallOrderIfNeeded(getCallDetails(stockTicker), stock, snapshot.ask);
   }
-}
-
-async function placeCallOrderIfNeeded(stockTicker: string, currentStockAskPrice: number): Promise<void> {
-  const call = getCallDetails(stockTicker);
-  if (!call.state.openOrderId) {
-    call.state.openOrderId = await placeCallOrder(stockTicker, currentStockAskPrice, getNumberOfMoreCallsToSell(stockTicker));
-    return;
-  }
-
-  const isCallOrderModificationNeeded = hasStockAskPriceChangedTooMuch(stockTicker, currentStockAskPrice);
-
-  logCurrentAskPriceConsequence(currentStockAskPrice, getStockDetails(stockTicker).state.assumedAskPrice, getCallDetails(stockTicker).maxPremiumDifference, isCallOrderModificationNeeded);
-
-  if (isCallOrderModificationNeeded) {
-    call.state.openOrderId = await modifyCallOrder(stockTicker, currentStockAskPrice);
-  } 
-}
-
-function logCurrentAskPriceConsequence(currentStockAskPrice: number, assumedStockAskPrice: number, maxPremiumDifference: number, differenceExceedsMax: boolean) {
-  log(`The distance from current ask price of "$${currentStockAskPrice}" to currently assumed ask price of "$${assumedStockAskPrice}" is ${differenceExceedsMax ? 'INDEED' : 'NOT'} larger than the acceptable difference of "$${maxPremiumDifference}". ${differenceExceedsMax ? 'Modify' : 'Keep'} the existing order.`);
 }
 
 function getStockDetails(stockTicker: string) {
   return targets[stockTicker].stock;
 }
 
-async function placeCallOrder(stockTicker: string, currentStockAskPrice: number, numContracts: number): Promise<string> {
-  const newOrderId = `test-${Math.round(Math.random() * 1000)}`;
-  return newOrderId;
+async function placeCallOrderIfNeeded(call: CallDetails, stock: StockDetails, currentStockAskPrice: number): Promise<void> {
+  if (!call.state.openOrderId) {
+    stock.state.assumedAskPrice = currentStockAskPrice;
+    call.state.openOrderId = await placeCallOrder(call, currentStockAskPrice);
+    return;
+  }
+
+  const isCallOrderModificationNeeded = hasStockAskPriceChangedTooMuch(call, stock, currentStockAskPrice);
+  logCurrentAskPriceConsequence(currentStockAskPrice, stock.state.assumedAskPrice, call.maxPremiumDifference, isCallOrderModificationNeeded);
+  if (isCallOrderModificationNeeded) {
+    await modifyCallOrder(call, stock, currentStockAskPrice);
+  }
 }
 
-function hasStockAskPriceChangedTooMuch(stockTicker: string, currentAskPrice: number): boolean {
-  const {assumedAskPrice} = getStockDetails(stockTicker).state;
+function hasStockAskPriceChangedTooMuch(call: CallDetails, stock: StockDetails, currentAskPrice: number): boolean {
+  const differenceInAskPrices = Math.abs(doFloatCalculation(FloatCalculations.subtract, currentAskPrice, stock.state.assumedAskPrice));
 
-  const differenceInAskPrices = Math.abs(evaluateFloatOperation(FloatOperations.subtract, currentAskPrice, assumedAskPrice));
-
-  return Boolean(evaluateFloatOperation(FloatOperations.greaterThan, differenceInAskPrices, getCallDetails(stockTicker).maxPremiumDifference));
+  return Boolean(doFloatCalculation(FloatCalculations.greaterThan, differenceInAskPrices, call.maxPremiumDifference));
 }
 
-async function modifyCallOrder(stockTicker: string, currentStockAskPrice: number): Promise<string> {
-  const call = getCallDetails(stockTicker);
-  const stock = getStockDetails(stockTicker);
-  const numContractsToSell = getNumberOfMoreCallsToSell(stockTicker);
+function logCurrentAskPriceConsequence(currentStockAskPrice: number, assumedStockAskPrice: number, maxPremiumDifference: number, differenceExceedsMax: boolean) {
+  log(`The distance from current ask price of "$${currentStockAskPrice}" to currently assumed ask price of "$${assumedStockAskPrice}" is ${differenceExceedsMax ? 'INDEED' : 'NOT'} larger than the acceptable difference of "$${maxPremiumDifference}". ${differenceExceedsMax ? 'Modify' : 'Keep'} the existing order.`);
+}
 
-  // cancel current order
-  // set new order
+async function placeCallOrder(call: CallDetails, currentStockAskPrice: number): Promise<string> {
+  return brokerageClient.placeOrder(getOrderDetails(call, currentStockAskPrice));
+}
+
+function getOrderDetails(call: CallDetails, currentStockAskPrice: number): OrderDetails {
+  return {
+    side: OrderSides.sell,
+    type: OrderTypes.LIMIT,
+    timeInForce: TimesInForce.day,
+    brokerageIdOfTheSecurity: call.brokerageId,
+    quantity: getNumberOfMoreCallsToSell(call),
+    price: getCallSellPriceLimit(call, currentStockAskPrice),
+  };
+}
+
+function getCallSellPriceLimit(call: CallDetails, currentStockAskPrice: number) {
+  const intrinsicValue = doFloatCalculation(FloatCalculations.subtract, currentStockAskPrice, call.strike);
+  const priceLimit = doFloatCalculation(FloatCalculations.add, intrinsicValue, call.premiumDesired);
+  return priceLimit;
+}
+
+async function modifyCallOrder(call: CallDetails, stock: StockDetails, currentStockAskPrice: number): Promise<void> {
   stock.state.assumedAskPrice = currentStockAskPrice;
-
-  return '';
+  await brokerageClient.modifyOrder(call.state.openOrderId, getOrderDetails(call, currentStockAskPrice));
 }

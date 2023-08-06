@@ -1,3 +1,7 @@
+export interface SsoValidateResponse {
+  RESULT: boolean;
+}
+
 export interface TickleResponse {
   session: string;
   iserver: {
@@ -7,10 +11,25 @@ export interface TickleResponse {
   }
 }
 
+export interface AccountsResponse {
+  accounts: string[]
+}
+
 export type SnapshotResponse = {
   [field: string]: string;
 }
 
-export interface SsoValidateResponse {
-  RESULT: boolean;
-}
+export interface IBKROrderDetails {
+  tif: string;
+  orderType: string;
+  conidex: string;
+  price: number
+  side: string;
+  quantity: number;
+  useAdaptive: false;
+};
+
+export type OrdersResponse = Array<{
+  id?: string;
+  order_id?: string; // eslint-disable-line camelcase
+}>;

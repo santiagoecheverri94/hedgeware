@@ -1,7 +1,7 @@
-import { SnapShotFields, Snapshot } from "../brokerage-client";
-import { SnapshotResponse } from "./types";
+import {SnapShotFields, Snapshot} from '../brokerage-client';
+import {SnapshotResponse} from './types';
 
-export function isSnapshotResponseWithAllFields(snapshotResponse: SnapshotResponse, fields: string[]) {
+export function isSnapshotResponseWithAllFields(snapshotResponse: SnapshotResponse, fields: string[]): boolean {
   for (const field of fields) {
     if (!snapshotResponse[field]) {
       return false;
@@ -12,8 +12,11 @@ export function isSnapshotResponseWithAllFields(snapshotResponse: SnapshotRespon
 }
 
 export function getSnapshotFromResponse(snapshotResponse: SnapshotResponse, ibkrSnapshotFields: {[field in SnapShotFields]: string}): Snapshot {
-  return Object.values(SnapShotFields).reduce((snapshot, field) => {
+  const snapshot = {} as Snapshot;
+
+  for (const field of Object.values(SnapShotFields)) {
     snapshot[field] = Number.parseFloat(snapshotResponse[ibkrSnapshotFields[field]]);
-    return snapshot;
-  }, {} as Snapshot)
+  }
+
+  return snapshot;
 }
