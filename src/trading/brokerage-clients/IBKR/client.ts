@@ -3,8 +3,9 @@ import {BrokerageClient, OrderDetails, OrderSides, OrderTypes, SnapShotFields, S
 import {getUncheckedIBKRApi} from './api';
 import {initiateApiSessionWithTickling} from './tickle';
 import {getNextRandomAskPrice} from '../../../utils/price-simulator';
-import {AccountsResponse, IBKROrderDetails, OrdersResponse, SnapshotResponse} from './types';
+import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrdersResponse, SnapshotResponse} from './types';
 import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
+import {log} from '../../../utils/utils';
 
 export class IBKRClient extends BrokerageClient {
   protected orderTypes = {
@@ -51,11 +52,13 @@ export class IBKRClient extends BrokerageClient {
     }));
     const snapshotResponse = response.data![0];
 
-    return {
-      bid: 0,
-      ask: getNextRandomAskPrice(),
-      last: 0,
-    };
+    if (true) {
+      return {
+        bid: 0,
+        ask: getNextRandomAskPrice(),
+        last: 0,
+      };
+    }
 
     if (isSnapshotResponseWithAllFields(snapshotResponse, fields)) {
       return getSnapshotFromResponse(snapshotResponse, this.snapshotFields);
@@ -65,7 +68,6 @@ export class IBKRClient extends BrokerageClient {
   }
 
   async placeOrder(orderDetails: OrderDetails): Promise<string> {
-    console.log(orderDetails); debugger;
     const response = await (await this.getApi()).post<OrdersResponse>(`/iserver/account/${this.account}/orders`, {
       orders: [
         {
@@ -76,10 +78,13 @@ export class IBKRClient extends BrokerageClient {
     });
 
     if (response.data?.[0].order_id) {
+      log(`Placed Order with id "${response.data?.[0].order_id}"`);
+      console.log(orderDetails);
       return response.data[0].order_id;
     }
 
-    return this.confirmOrder(response.data?.[0].id!);
+    log(`Order-Confirmation Id '${response.data?.[0].id!}' will be used for confirmation.`);
+    return this.confirmOrder(response.data?.[0].id!, orderDetails);
   }
 
   private getIBKROrderDetails(orderDetails: OrderDetails): IBKROrderDetails {
@@ -94,29 +99,42 @@ export class IBKRClient extends BrokerageClient {
     };
   }
 
-  private async confirmOrder(orderConfirmationId: string): Promise<string> {
+  private async confirmOrder(orderConfirmationId: string, orderDetails: OrderDetails): Promise<string> {
     const response = await (await this.getApi()).post<OrdersResponse>(`/iserver/reply/${orderConfirmationId}`, {
       confirmed: true,
     });
 
-    if (response.data?.[0].order_id) {
+    if (response.data?.[0]?.order_id) {
+      log(`Confirmed Order with id "${response.data?.[0].order_id}"`);
+      console.log(orderDetails);
       return response.data[0].order_id;
     }
 
-    return this.confirmOrder(response.data?.[0].id!);
+    log(`Order-Confirmation Id '${orderConfirmationId}' requires re-confirmation.`);
+    return this.confirmOrder(response.data?.[0]?.id!, orderDetails);
   }
 
   async modifyOrder(orderId: string, orderDetails: OrderDetails): Promise<string> {
-    console.log(orderDetails); debugger;
     const response = await (await this.getApi()).post<OrdersResponse>(`/iserver/account/${this.account}/order/${orderId}`, {
       ...this.getIBKROrderDetails(orderDetails),
     });
 
-    debugger;
-    if (response.data?.[0].order_id) {
+    if (response.data?.[0]?.order_id) {
+      log(`Modified Order with id "${response.data?.[0].order_id}"`);
+      console.log(orderDetails);
       return response.data[0].order_id;
     }
 
-    return this.confirmOrder(response.data?.[0].id!);
+    log(`Modifiying order '${orderId}' requires confirmation.`);
+    return this.confirmOrder(response.data?.[0]?.id!, orderDetails);
+  }
+
+  async cancelOrder(orderId: string): Promise<void> {
+    const response = await (await this.getApi()).delete<CancelOrderResponse>(`/iserver/account/${this.account}/order/${orderId}`);
+
+    if (!response.data?.order_id) {
+      log(`Failed to cancel order '${orderId}'. Will try again`);
+      return this.cancelOrder(orderId);
+    }
   }
 }

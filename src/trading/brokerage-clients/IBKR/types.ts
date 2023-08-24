@@ -27,9 +27,13 @@ export interface IBKROrderDetails {
   side: string;
   quantity: number;
   useAdaptive: false;
-};
+}
 
 export type OrdersResponse = Array<{
   id?: string;
   order_id?: string; // eslint-disable-line camelcase
 }>;
+
+export interface CancelOrderResponse {
+  order_id?: string; // eslint-disable-line camelcase
+}
