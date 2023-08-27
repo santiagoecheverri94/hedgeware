@@ -1,4 +1,5 @@
 import {ApisauceInstance} from 'apisauce';
+import {setSecurityPosition} from './commands/set-security-position';
 
 export abstract class BrokerageClient {
   protected abstract orderTypes: {[type in OrderTypes]: string};
@@ -14,6 +15,15 @@ export abstract class BrokerageClient {
   abstract placeOrder(orderDetails: OrderDetails): Promise<string>;
   abstract modifyOrder(orderId: string, orderDetails: OrderDetails): Promise<string>;
   abstract cancelOrder(orderId: string): Promise<void>;
+  abstract getPositionSize(brokerageIdOfSecurity: string): Promise<number>;
+
+  async setSecurityPosition(brokerageClient: BrokerageClient, brokerageIdOfSecurity: string, newPosition: number): Promise<void> {
+    return setSecurityPosition({
+      brokerageClient: this,
+      brokerageIdOfSecurity,
+      newPosition,
+    });
+  }
 }
 
 export enum SnapShotFields {
@@ -41,7 +51,7 @@ export enum TimesInForce {
 
 export interface OrderDetails {
   type: OrderTypes.LIMIT,
-  brokerageIdOfTheSecurity: string;
+  brokerageIdOfSecurity: string;
   price: number,
   side: OrderSides;
   quantity: number;

@@ -164,7 +164,7 @@ function getCallOrderDetails(security: TargetSecurity, stockAskPrice: number): O
     side: OrderSides.sell,
     type: OrderTypes.LIMIT,
     timeInForce: TimesInForce.day,
-    brokerageIdOfTheSecurity: security.call.brokerageId,
+    brokerageIdOfSecurity: security.call.brokerageId,
     quantity: getNumberOfMoreCallsToSell(security),
     price: getCallSellPriceLimit(stockAskPrice, security.call.strikePrice, security.call.premiumDesired),
   };

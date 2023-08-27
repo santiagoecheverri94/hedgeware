@@ -91,7 +91,7 @@ export class IBKRClient extends BrokerageClient {
     return {
       tif: this.timesInForce[orderDetails.timeInForce],
       orderType: this.orderTypes[orderDetails.type],
-      conidex: `${orderDetails.brokerageIdOfTheSecurity}@SMART`,
+      conidex: `${orderDetails.brokerageIdOfSecurity}@SMART`,
       price: orderDetails.price,
       side: this.orderSides[orderDetails.side],
       quantity: orderDetails.quantity,
