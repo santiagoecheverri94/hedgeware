@@ -37,3 +37,10 @@ export type OrdersResponse = Array<{
 export interface CancelOrderResponse {
   order_id?: string; // eslint-disable-line camelcase
 }
+
+export type PositionResponse = [{
+  'acctId': string,
+  'conid': number,
+  'contractDesc': string,
+  'position': number,
+}];

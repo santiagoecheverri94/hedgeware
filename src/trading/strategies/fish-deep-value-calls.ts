@@ -13,6 +13,7 @@ interface CallDetails {
   maxPremiumDifference: number;
   state: {
     openOrderId: string;
+    numCurrentlySold: number,
   }
 }
 
@@ -44,21 +45,24 @@ const targetSecurities: TargetSecurity[] = [
     },
     call: {
       strikePrice: 2.5,
-      brokerageId: '643210806',
+      brokerageId: '636823129', // TODO: change this back to "643210806"
       numDesiredSold: 10,
       premiumDesired: 0.1,
       maxPremiumDifference: 0,
       state: {
         openOrderId: '',
+        numCurrentlySold: 0,
       },
     },
   },
 ];
 
 export async function startFishingDeepValueCalls(): Promise<void> {
+  await updateState();
+
   while (isMarketOpen() && await shouldSellMoreCalls()) {
     await sellCalls();
-    // await coverCallsIfNeeded();
+    await coverCallsIfNeeded();
   }
 
   let exitMessage = 'Finished fishing for now because ';
@@ -67,9 +71,23 @@ export async function startFishingDeepValueCalls(): Promise<void> {
   log(exitMessage);
 
   await cancelCallOrders();
-  // await coverCallsIfNeeded();
+
+  const waitTimeMs = 10_000;
+  await setTimeout(waitTimeMs);
+
+  await coverCallsIfNeeded();
 
   log('All call orders have been closed, and any naked calls have been covered.');
+}
+
+async function updateState(): Promise<void> {
+  for (const security of targetSecurities) {
+    const stockOwned = await brokerageClient.getPositionSize(security.stock.brokerageId);
+    security.stock.state.numCurrentlyOwned = stockOwned;
+
+    const callsSold = await brokerageClient.getPositionSize(security.call.brokerageId);
+    security.call.state.numCurrentlySold = Math.abs(callsSold);
+  }
 }
 
 function isMarketOpen(): boolean {
@@ -85,8 +103,8 @@ function isMarketOpen(): boolean {
 }
 
 async function shouldSellMoreCalls(): Promise<boolean> {
-  const tickers = getSecuritiesWithMoreCallsToSell();
-  return tickers.length > 0;
+  const securities = getSecuritiesWithMoreCallsToSell();
+  return securities.length > 0;
 }
 
 function getSecuritiesWithMoreCallsToSell(): TargetSecurity[] {
@@ -94,8 +112,7 @@ function getSecuritiesWithMoreCallsToSell(): TargetSecurity[] {
 }
 
 function getNumberOfMoreCallsToSell(security: TargetSecurity): number {
-  const numCallsCurrentlySold = 0; // TODO get this from brokerage
-  return security.call.numDesiredSold - numCallsCurrentlySold;
+  return security.call.numDesiredSold - security.call.state.numCurrentlySold;
 }
 
 async function sellCalls() {
@@ -197,4 +214,31 @@ async function cancelCallOrders(): Promise<void> {
   }
 
   await Promise.all(cancelOrders);
+}
+
+async function coverCallsIfNeeded(): Promise<void> {
+  await updateState();
+
+  for (const security of targetSecurities) {
+    if (isCallsNeedCovering(security)) {
+      await covercalls(security);
+    }
+  }
+}
+
+function isCallsNeedCovering(security: TargetSecurity): boolean {
+  const numSharesNeeded = getNumSharesNeeded(security);
+  const needsCover = numSharesNeeded > security.stock.state.numCurrentlyOwned;
+
+  return needsCover;
+}
+
+function getNumSharesNeeded(security: TargetSecurity) {
+  return security.call.state.numCurrentlySold * 100;
+}
+
+async function covercalls(security: TargetSecurity) {
+  const numSharesNeeded = getNumSharesNeeded(security);
+
+  await brokerageClient.setSecurityPosition(security.stock.brokerageId, numSharesNeeded);
 }

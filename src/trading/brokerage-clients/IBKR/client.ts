@@ -3,7 +3,7 @@ import {BrokerageClient, OrderDetails, OrderSides, OrderTypes, SnapShotFields, S
 import {getUncheckedIBKRApi} from './api';
 import {initiateApiSessionWithTickling} from './tickle';
 import {getNextRandomAskPrice} from '../../../utils/price-simulator';
-import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrdersResponse, SnapshotResponse} from './types';
+import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrdersResponse, PositionResponse, SnapshotResponse} from './types';
 import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
 import {log} from '../../../utils/utils';
 
@@ -136,5 +136,11 @@ export class IBKRClient extends BrokerageClient {
       log(`Failed to cancel order '${orderId}'. Will try again`);
       return this.cancelOrder(orderId);
     }
+  }
+
+  async getPositionSize(conid: string): Promise<number> {
+    const response = await (await this.getApi()).get<PositionResponse>(`/portfolio/${this.account}/position/${conid}`);
+
+    return response.data?.[0].position!;
   }
 }
