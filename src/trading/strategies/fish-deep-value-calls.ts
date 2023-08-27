@@ -55,7 +55,7 @@ const targetSecurities: TargetSecurity[] = [
   },
 ];
 
-export async function fishingDeepValueCalls(): Promise<void> {
+export async function startFishingDeepValueCalls(): Promise<void> {
   while (isMarketOpen() && await shouldSellMoreCalls()) {
     await sellCalls();
     // await coverCallsIfNeeded();
@@ -82,18 +82,6 @@ function isMarketOpen(): boolean {
 
   const isMarketHours = currentTimeInNewYork.isBetween(marketOpens, marketCloses);
   return isMarketHours;
-}
-
-async function cancelCallOrders(): Promise<void> {
-  const cancelOrders: Promise<void>[] = [];
-
-  for (const security of targetSecurities) {
-    if (security.call.state.openOrderId.length > 0) {
-      cancelOrders.push(brokerageClient.cancelOrder(security.call.state.openOrderId));
-    }
-  }
-
-  await Promise.all(cancelOrders);
 }
 
 async function shouldSellMoreCalls(): Promise<boolean> {
@@ -136,6 +124,10 @@ async function placeCallOrderIfNeeded(security: TargetSecurity, currentStockAskP
   }
 }
 
+async function placeCallOrder(security: TargetSecurity, currentStockAskPrice: number): Promise<string> {
+  return brokerageClient.placeOrder(getCallOrderDetails(security, currentStockAskPrice));
+}
+
 function hasStockAskPriceChangedTooMuch(security: TargetSecurity, currentAskPrice: number): boolean {
   const existingSellPriceLimit = getCallSellPriceLimit(security.stock.state.assumedAskPrice, security.call.strikePrice, security.call.premiumDesired);
   const possiblyNewSellPriceLimit = getCallSellPriceLimit(currentAskPrice, security.call.strikePrice, security.call.premiumDesired);
@@ -167,10 +159,6 @@ function logCurrentAskPriceConsequence({security, currentStockAskPrice, differen
   log(msg);
 }
 
-async function placeCallOrder(security: TargetSecurity, currentStockAskPrice: number): Promise<string> {
-  return brokerageClient.placeOrder(getCallOrderDetails(security, currentStockAskPrice));
-}
-
 function getCallOrderDetails(security: TargetSecurity, stockAskPrice: number): OrderDetails {
   return {
     side: OrderSides.sell,
@@ -183,16 +171,11 @@ function getCallOrderDetails(security: TargetSecurity, stockAskPrice: number): O
 }
 
 function roundSecondDecimalPlaceToNearestMultipleOfFive(priceLimit: number) {
-  const secondDecimalPlace = Math.floor(priceLimit * 100) % 10;
-
-  if (secondDecimalPlace === 5) {
-    return priceLimit;
-  }
-
   let rounded: number;
   rounded = doFloatCalculation(FloatCalculations.roundToNumDecimalPlaces, priceLimit, 1);
 
-  if (secondDecimalPlace > 5) {
+  const originalSecondDecimalPlace = Math.floor(priceLimit * 100) % 10;
+  if (originalSecondDecimalPlace > 5) {
     rounded = doFloatCalculation(FloatCalculations.subtract, rounded, 0.05);
   }
 
@@ -202,4 +185,16 @@ function roundSecondDecimalPlaceToNearestMultipleOfFive(priceLimit: number) {
 async function modifyCallOrder(security: TargetSecurity, currentStockAskPrice: number): Promise<void> {
   security.stock.state.assumedAskPrice = currentStockAskPrice;
   await brokerageClient.modifyOrder(security.call.state.openOrderId, getCallOrderDetails(security, currentStockAskPrice));
+}
+
+async function cancelCallOrders(): Promise<void> {
+  const cancelOrders: Promise<void>[] = [];
+
+  for (const security of targetSecurities) {
+    if (security.call.state.openOrderId.length > 0) {
+      cancelOrders.push(brokerageClient.cancelOrder(security.call.state.openOrderId));
+    }
+  }
+
+  await Promise.all(cancelOrders);
 }
