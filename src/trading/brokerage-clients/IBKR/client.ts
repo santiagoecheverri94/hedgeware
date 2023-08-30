@@ -52,7 +52,7 @@ export class IBKRClient extends BrokerageClient {
     }));
     const snapshotResponse = response.data![0];
 
-    if (true) {
+    if ((process.env as any).SIMULATE_SNAPSHOT) {
       return {
         bid: 0,
         ask: getNextRandomAskPrice(),
@@ -141,6 +141,6 @@ export class IBKRClient extends BrokerageClient {
   async getPositionSize(conid: string): Promise<number> {
     const response = await (await this.getApi()).get<PositionResponse>(`/portfolio/${this.account}/position/${conid}`);
 
-    return response.data?.[0].position!;
+    return response.data?.[0]?.position! || 0;
   }
 }

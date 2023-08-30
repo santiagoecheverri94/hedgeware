@@ -31,7 +31,7 @@ export async function setSecurityPosition({
 
   const orderId = await brokerageClient.placeOrder(orderDetails);
 
-  const waitTimeMs = 10_000;
+  const waitTimeMs = 60_000 * 5;
   await setTimeout(waitTimeMs);
 
   currentPosition = await brokerageClient.getPositionSize(brokerageIdOfSecurity);

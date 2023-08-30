@@ -8,7 +8,7 @@ import {setTimeout} from 'node:timers/promises';
 interface CallDetails {
   brokerageId: string;
   numDesiredSold: number;
-  strikePrice: number;
+  strikePrice: number; // TODO: get the strike dynamically from the contract description
   premiumDesired: number;
   maxPremiumDifference: number;
   state: {
@@ -45,10 +45,31 @@ const targetSecurities: TargetSecurity[] = [
     },
     call: {
       strikePrice: 2.5,
-      brokerageId: '636823129', // TODO: change this back to "643210806"
+      brokerageId: '636823129',
       numDesiredSold: 10,
       premiumDesired: 0.1,
       maxPremiumDifference: 0,
+      state: {
+        openOrderId: '',
+        numCurrentlySold: 0,
+      },
+    },
+  },
+  {
+    stock: {
+      ticker: 'BRKB',
+      brokerageId: '72063691',
+      state: {
+        assumedAskPrice: 0,
+        numCurrentlyOwned: 0,
+      },
+    },
+    call: {
+      strikePrice: 350,
+      brokerageId: '608946933',
+      numDesiredSold: 10,
+      premiumDesired: 1,
+      maxPremiumDifference: 0.1,
       state: {
         openOrderId: '',
         numCurrentlySold: 0,
@@ -81,6 +102,7 @@ export async function startFishingDeepValueCalls(): Promise<void> {
 }
 
 async function updateState(): Promise<void> {
+  // TODO: open order ids for the given conid should also be initialized
   for (const security of targetSecurities) {
     const stockOwned = await brokerageClient.getPositionSize(security.stock.brokerageId);
     security.stock.state.numCurrentlyOwned = stockOwned;
@@ -96,7 +118,7 @@ function isMarketOpen(): boolean {
 
   const currentTimeInNewYork = moment(moment().tz(marketTimezone).format(hoursFormat), hoursFormat);
   const marketOpens = moment(`${'' || '9:30'}am`, hoursFormat);
-  const marketCloses = moment(`${'' || '3:30'}pm`, hoursFormat); // End 30 minutes early to have time to close call orders and cover naked calls;
+  const marketCloses = moment(`${'4:00' || '3:30'}pm`, hoursFormat); // End 30 minutes early to have time to close call orders and cover naked calls;
 
   const isMarketHours = currentTimeInNewYork.isBetween(marketOpens, marketCloses);
   return isMarketHours;
