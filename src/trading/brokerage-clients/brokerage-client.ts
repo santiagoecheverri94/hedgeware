@@ -41,12 +41,12 @@ export enum OrderTypes {
 }
 
 export enum OrderSides {
-  buy = 'buy',
-  sell = 'sell',
+  BUY = 'BUY',
+  SELL = 'SELL',
 }
 
 export enum TimesInForce {
-  day = 'day',
+  DAY = 'DAY',
 }
 
 export interface OrderDetails {
@@ -55,5 +55,5 @@ export interface OrderDetails {
   price: number,
   side: OrderSides;
   quantity: number;
-  timeInForce: TimesInForce.day;
+  timeInForce: TimesInForce.DAY;
 }

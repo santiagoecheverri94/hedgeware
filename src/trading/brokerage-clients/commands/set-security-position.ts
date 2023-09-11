@@ -22,7 +22,7 @@ export async function setSecurityPosition({
 
   const orderDetails: OrderDetails = {
     brokerageIdOfSecurity,
-    timeInForce: TimesInForce.day,
+    timeInForce: TimesInForce.DAY,
     type: OrderTypes.LIMIT,
     side: side,
     quantity: quantity,
@@ -51,7 +51,7 @@ export async function setSecurityPosition({
 }
 
 function determineIfOrderNeedBeBuyOrSell(currentPosition: number, newPosition: number): OrderSides {
-  return newPosition > currentPosition ? OrderSides.buy : OrderSides.sell;
+  return newPosition > currentPosition ? OrderSides.BUY : OrderSides.SELL;
 }
 
 function getOrderQuantity(currentPosition: number, newPosition: number): number {
@@ -69,7 +69,7 @@ async function getOrderPrice({
 }): Promise<number> {
   const snapshot = await brokerageClient.getSnapshot(brokerageIdOfSecurity);
 
-  if (orderSide === OrderSides.buy) {
+  if (orderSide === OrderSides.BUY) {
     return snapshot.ask;
   }
 

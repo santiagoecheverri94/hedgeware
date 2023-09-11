@@ -5,7 +5,7 @@ import {initiateApiSessionWithTickling} from './tickle';
 import {getNextRandomAskPrice} from '../../../utils/price-simulator';
 import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrdersResponse, PositionResponse, SnapshotResponse} from './types';
 import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
-import {log} from '../../../utils/utils';
+import {log} from '../../../utils/miscellaneous';
 
 export class IBKRClient extends BrokerageClient {
   protected orderTypes = {
@@ -13,11 +13,11 @@ export class IBKRClient extends BrokerageClient {
   };
 
   protected orderSides = {
-    [OrderSides.buy]: 'BUY',
-    [OrderSides.sell]: 'SELL',
+    [OrderSides.BUY]: 'BUY',
+    [OrderSides.SELL]: 'SELL',
   };
 
-  protected timesInForce = {[TimesInForce.day]: 'DAY'};
+  protected timesInForce = {[TimesInForce.DAY]: 'DAY'};
 
   protected snapshotFields = {
     [SnapShotFields.bid]: '84',

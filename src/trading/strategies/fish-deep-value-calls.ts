@@ -1,8 +1,7 @@
 import {Brokerages, getBrokerageClient} from '../brokerage-clients/factory';
-import {log} from '../../utils/utils';
+import {isMarketOpen, log} from '../../utils/miscellaneous';
 import {FloatCalculations, doFloatCalculation} from '../../utils/float-calculator';
 import {OrderDetails, OrderSides, OrderTypes, TimesInForce} from '../brokerage-clients/brokerage-client';
-import moment from 'moment-timezone';
 import {setTimeout} from 'node:timers/promises';
 
 interface CallDetails {
@@ -112,18 +111,6 @@ async function updateState(): Promise<void> {
   }
 }
 
-function isMarketOpen(): boolean {
-  const hoursFormat = 'hh:mma';
-  const marketTimezone = 'America/New_York';
-
-  const currentTimeInNewYork = moment(moment().tz(marketTimezone).format(hoursFormat), hoursFormat);
-  const marketOpens = moment(`${'' || '9:30'}am`, hoursFormat);
-  const marketCloses = moment(`${'4:00' || '3:30'}pm`, hoursFormat); // End 30 minutes early to have time to close call orders and cover naked calls;
-
-  const isMarketHours = currentTimeInNewYork.isBetween(marketOpens, marketCloses);
-  return isMarketHours;
-}
-
 async function shouldSellMoreCalls(): Promise<boolean> {
   const securities = getSecuritiesWithMoreCallsToSell();
   return securities.length > 0;
@@ -200,9 +187,9 @@ function logCurrentAskPriceConsequence({security, currentStockAskPrice, differen
 
 function getCallOrderDetails(security: TargetSecurity, stockAskPrice: number): OrderDetails {
   return {
-    side: OrderSides.sell,
+    side: OrderSides.SELL,
     type: OrderTypes.LIMIT,
-    timeInForce: TimesInForce.day,
+    timeInForce: TimesInForce.DAY,
     brokerageIdOfSecurity: security.call.brokerageId,
     quantity: getNumberOfMoreCallsToSell(security),
     price: getCallSellPriceLimit(stockAskPrice, security.call.strikePrice, security.call.premiumDesired),

@@ -1,7 +1,7 @@
 import {ApiResponse} from 'apisauce';
 import {TickleResponse} from './types';
 import {getUncheckedIBKRApi} from './api';
-import {stopSystem, log} from '../../../utils/utils';
+import {stopSystem, log} from '../../../utils/miscellaneous';
 
 export async function initiateApiSessionWithTickling(): Promise<string> {
   const tickleResponse = await tickleApiGateway();
