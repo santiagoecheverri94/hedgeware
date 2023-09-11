@@ -2,7 +2,7 @@ import {ApisauceInstance} from 'apisauce';
 import {BrokerageClient, OrderDetails, OrderSides, OrderTypes, SnapShotFields, Snapshot, TimesInForce} from '../brokerage-client';
 import {getUncheckedIBKRApi} from './api';
 import {initiateApiSessionWithTickling} from './tickle';
-import {getNextRandomAskPrice} from '../../../utils/price-simulator';
+import {getManualLastPrice, getNextRandomAskPrice} from '../../../utils/price-simulator';
 import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrdersResponse, PositionResponse, SnapshotResponse} from './types';
 import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
 import {log} from '../../../utils/miscellaneous';
@@ -56,7 +56,7 @@ export class IBKRClient extends BrokerageClient {
       return {
         bid: 0,
         ask: getNextRandomAskPrice(),
-        last: 0,
+        last: getManualLastPrice(),
       };
     }
 

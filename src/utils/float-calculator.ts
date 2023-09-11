@@ -9,7 +9,9 @@ export enum FloatCalculations {
   add = 'add',
   subtract = 'subtract',
   greaterThan = 'greaterThan',
+  greaterThanOrEqual = 'greaterThanOrEqual',
   lessThan = 'lessThan',
+  lessThanOrEqual = 'lessThanOrEqual',
   equal = 'equal',
   roundToNumDecimalPlaces = 'roundToNumDecimalPlaces',
 }
@@ -26,9 +28,19 @@ export function doFloatCalculation(operation: FloatCalculations, input1: number,
       const result = math.compare(math.bignumber(input1), math.bignumber(input2));
       return math.number(result as Exclude<typeof result, MathCollection>) === 1 ? 1 : 0;
     },
+    [FloatCalculations.greaterThanOrEqual]: () => {
+      let result = math.compare(math.bignumber(input1), math.bignumber(input2));
+      result = math.number(result as Exclude<typeof result, MathCollection>);
+      return result === 1 || result === 0 ? 1 : 0;
+    },
     [FloatCalculations.lessThan]: () => {
       const result = math.compare(math.bignumber(input1), math.bignumber(input2));
       return math.number(result as Exclude<typeof result, MathCollection>) === -1 ? 1 : 0;
+    },
+    [FloatCalculations.lessThanOrEqual]: () => {
+      let result = math.compare(math.bignumber(input1), math.bignumber(input2));
+      result = math.number(result as Exclude<typeof result, MathCollection>);
+      return result === -1 || result === 0 ? 1 : 0;
     },
     [FloatCalculations.equal]: () => {
       const result = math.compare(math.bignumber(input1), math.bignumber(input2));
