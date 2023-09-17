@@ -1,22 +1,22 @@
 import {FloatCalculations, doFloatCalculation} from './float-calculator';
 
-let askPrice = 12.45;
+let randomPrice = 11.72;
 
-export function getNextRandomAskPrice(): number {
+export function getRandomPrice(): number {
   const num = Math.random();
-  if (num < 0.50) {
-    askPrice = doFloatCalculation(FloatCalculations.subtract, askPrice, 0.02);
-  } else if (num < 0.75) {
-    askPrice = doFloatCalculation(FloatCalculations.add, askPrice, 0.02);
+  if (num < 0.33) {
+    randomPrice = doFloatCalculation(FloatCalculations.subtract, randomPrice, 0.01);
+  } else if (num < 0.66) {
+    randomPrice = doFloatCalculation(FloatCalculations.add, randomPrice, 0.01);
   }
 
-  return askPrice;
+  return randomPrice;
 }
 
-let lastPrice = 0;
+const manualPrice = 0;
 
-export function getManualLastPrice(): number {
+export function getManualPrice(): number {
   console.log('Enter last price: ');
   debugger;
-  return lastPrice;
+  return manualPrice;
 }

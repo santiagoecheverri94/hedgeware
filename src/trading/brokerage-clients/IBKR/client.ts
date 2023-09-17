@@ -2,7 +2,7 @@ import {ApisauceInstance} from 'apisauce';
 import {BrokerageClient, OrderDetails, OrderSides, OrderTypes, SnapShotFields, Snapshot, TimesInForce} from '../brokerage-client';
 import {getUncheckedIBKRApi} from './api';
 import {initiateApiSessionWithTickling} from './tickle';
-import {getManualLastPrice, getNextRandomAskPrice} from '../../../utils/price-simulator';
+import {getManualPrice, getRandomPrice} from '../../../utils/price-simulator';
 import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrdersResponse, PositionResponse, SnapshotResponse} from './types';
 import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
 import {log} from '../../../utils/miscellaneous';
@@ -44,6 +44,15 @@ export class IBKRClient extends BrokerageClient {
   }
 
   async getSnapshot(conid: string): Promise<Snapshot> {
+    if ((process.env as any).SIMULATE_SNAPSHOT) {
+      return {
+        bid: 0,
+        ask: getRandomPrice(),
+        last: getRandomPrice(),
+        // last: getManualPrice(),
+      };
+    }
+
     const fields = Object.values(this.snapshotFields);
 
     const response = (await (await this.getApi()).get<SnapshotResponse[]>('/iserver/marketdata/snapshot', {
@@ -51,14 +60,6 @@ export class IBKRClient extends BrokerageClient {
       fields: Object.values(this.snapshotFields).join(','),
     }));
     const snapshotResponse = response.data![0];
-
-    if ((process.env as any).SIMULATE_SNAPSHOT) {
-      return {
-        bid: 0,
-        ask: getNextRandomAskPrice(),
-        last: getManualLastPrice(),
-      };
-    }
 
     if (isSnapshotResponseWithAllFields(snapshotResponse, fields)) {
       return getSnapshotFromResponse(snapshotResponse, this.snapshotFields);
