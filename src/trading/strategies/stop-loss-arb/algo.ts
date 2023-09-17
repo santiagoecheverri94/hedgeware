@@ -116,9 +116,15 @@ function getNumToBuy(stockState: StockState, last: number): number {
     }
   }
 
-  // if (indexesToExecute.length > 1) {
-  //   indexesToExecute.splice(1, 1);
-  // }
+  if (indexesToExecute.length > 1) {
+    for (const [i, buyingInterval] of buyingIntervals.entries()) {
+      if (buyingInterval.active && !buyingInterval.crossed) {
+        indexesToExecute.push(i);
+      }
+    }
+
+    indexesToExecute.splice(1, 1);
+  }
 
   for (const index of indexesToExecute) {
     buyingIntervals[index].active = false;
@@ -147,9 +153,17 @@ function getNumToSell(stockState: StockState, last: number): number {
     }
   }
 
-  // if (indexesToExecute.length > 1) {
-  //   indexesToExecute.pop();
-  // }
+  if (indexesToExecute.length > 1) {
+    for (let i = sellingIntervals.length - 1; i >= 0; i--) {
+      const sellingInterval = sellingIntervals[i];
+  
+      if (sellingInterval.active && !sellingInterval.crossed) {
+        indexesToExecute.push(i);
+      }
+    }
+
+    indexesToExecute.pop();
+  }
 
   for (const index of indexesToExecute) {
     sellingIntervals[index].active = false;
