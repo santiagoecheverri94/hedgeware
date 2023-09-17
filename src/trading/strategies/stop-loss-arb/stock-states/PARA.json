@@ -1,7 +1,7 @@
 {
   "brokerageId": "393897513",
   "numContracts": 1,
-  "position": 110,
+  "position": 0,
   "sellingIntervals": [
     {
       "positionLimit": 100,
@@ -12,78 +12,78 @@
     },
     {
       "positionLimit": 100,
-      "active": true,
-      "crossed": true,
+      "active": false,
+      "crossed": false,
       "orderSide": "SELL",
       "price": 12.3
     },
     {
       "positionLimit": 90,
-      "active": true,
-      "crossed": true,
+      "active": false,
+      "crossed": false,
       "orderSide": "SELL",
       "price": 12.2
     },
     {
       "positionLimit": 80,
-      "active": true,
-      "crossed": true,
+      "active": false,
+      "crossed": false,
       "orderSide": "SELL",
       "price": 12.1
     },
     {
       "positionLimit": 70,
-      "active": true,
-      "crossed": true,
+      "active": false,
+      "crossed": false,
       "orderSide": "SELL",
       "price": 12
     },
     {
       "positionLimit": 60,
-      "active": true,
-      "crossed": true,
+      "active": false,
+      "crossed": false,
       "orderSide": "SELL",
       "price": 11.9
     },
     {
       "positionLimit": 50,
-      "active": true,
-      "crossed": true,
+      "active": false,
+      "crossed": false,
       "orderSide": "SELL",
       "price": 11.8
     },
     {
       "positionLimit": 40,
-      "active": true,
-      "crossed": true,
+      "active": false,
+      "crossed": false,
       "orderSide": "SELL",
       "price": 11.7
     },
     {
       "positionLimit": 30,
-      "active": true,
-      "crossed": true,
+      "active": false,
+      "crossed": false,
       "orderSide": "SELL",
       "price": 11.6
     },
     {
       "positionLimit": 20,
-      "active": true,
-      "crossed": true,
+      "active": false,
+      "crossed": false,
       "orderSide": "SELL",
       "price": 11.5
     },
     {
       "positionLimit": 10,
-      "active": true,
-      "crossed": true,
+      "active": false,
+      "crossed": false,
       "orderSide": "SELL",
       "price": 11.4
     },
     {
       "positionLimit": 0,
-      "active": true,
-      "crossed": true,
+      "active": false,
+      "crossed": false,
       "orderSide": "SELL",
       "price": 11.3
     }
@@ -98,78 +98,78 @@
     },
     {
       "positionLimit": 100,
-      "active": false,
-      "crossed": false,
+      "active": true,
+      "crossed": true,
       "orderSide": "BUY",
       "price": 12.25
     },
     {
       "positionLimit": 90,
-      "active": false,
-      "crossed": false,
+      "active": true,
+      "crossed": true,
       "orderSide": "BUY",
       "price": 12.15
     },
     {
       "positionLimit": 80,
-      "active": false,
-      "crossed": false,
+      "active": true,
+      "crossed": true,
       "orderSide": "BUY",
       "price": 12.05
     },
     {
       "positionLimit": 70,
-      "active": false,
-      "crossed": false,
+      "active": true,
+      "crossed": true,
       "orderSide": "BUY",
       "price": 11.95
     },
     {
       "positionLimit": 60,
-      "active": false,
-      "crossed": false,
+      "active": true,
+      "crossed": true,
       "orderSide": "BUY",
       "price": 11.85
     },
     {
       "positionLimit": 50,
-      "active": false,
-      "crossed": false,
+      "active": true,
+      "crossed": true,
       "orderSide": "BUY",
       "price": 11.75
     },
     {
       "positionLimit": 40,
-      "active": false,
-      "crossed": false,
+      "active": true,
+      "crossed": true,
       "orderSide": "BUY",
       "price": 11.65
     },
     {
       "positionLimit": 30,
-      "active": false,
-      "crossed": false,
+      "active": true,
+      "crossed": true,
       "orderSide": "BUY",
       "price": 11.55
     },
     {
       "positionLimit": 20,
-      "active": false,
-      "crossed": false,
+      "active": true,
+      "crossed": true,
       "orderSide": "BUY",
       "price": 11.45
     },
     {
       "positionLimit": 10,
-      "active": false,
-      "crossed": false,
+      "active": true,
+      "crossed": true,
       "orderSide": "BUY",
       "price": 11.35
     },
     {
       "positionLimit": 0,
-      "active": false,
-      "crossed": false,
+      "active": true,
+      "crossed": true,
       "orderSide": "BUY",
       "price": 11.25
     }
