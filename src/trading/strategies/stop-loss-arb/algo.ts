@@ -1,5 +1,6 @@
 import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
-import {isMarketOpen, readJSONFile} from '../../../utils/miscellaneous';
+import {isMarketOpen, log, readJSONFile} from '../../../utils/miscellaneous';
+import {restartRandomPrice} from '../../../utils/price-simulator';
 import {IBKRClient} from '../../brokerage-clients/IBKR/client';
 import {OrderSides} from '../../brokerage-clients/brokerage-client';
 
@@ -21,15 +22,22 @@ interface StockState {
 
 const brokerageClient = new IBKRClient();
 
+const stockLastLogs: {last: number, position: number}[] = [];
+
 export async function startStopLossArb(): Promise<void> {
   const stocks = getStocks();
 
   const states = getStockStates(stocks);
 
   // TODO: correct market hours
-  while (isMarketOpen('12:00', '11:59')) {
+  // run each stock in its own thread
+  while (isMarketOpen()) {
     for (const stock of stocks) {
       await reconcileStockPosition(stock, states[stock]);
+
+      if (stockLastLogs[stockLastLogs.length - 1]?.position !== stockLastLogs[stockLastLogs.length - 2]?.position) {
+        log(`Changed position for ${stock}: ${JSON.stringify(stockLastLogs[stockLastLogs.length - 1])}`);
+      }
     }
   }
 
@@ -49,7 +57,6 @@ function getStockStates(stocks: string[]): {[stock: string]: StockState} {
   return states;
 }
 
-const lastLog: {last: number, position: number}[] = [];
 async function reconcileStockPosition(stock: string, stockState: StockState) {
   const {last} = await brokerageClient.getSnapshot(stockState.brokerageId);
   // 1)
@@ -66,25 +73,42 @@ async function reconcileStockPosition(stock: string, stockState: StockState) {
 
   // 4)
   if (numToBuy > 0) {
-    const newPosition = stockState.position + 10 * stockState.numContracts * numToBuy;
-    // await brokerageClient.setSecurityPosition(stockState.brokerageId, newPosition);
+    const newPosition = stockState.position + (10 * stockState.numContracts * numToBuy);
+    await brokerageClient.setSecurityPosition(stockState.brokerageId, newPosition);
     stockState.position = newPosition;
   } else if (numToSell > 0) {
-    const newPosition = stockState.position - 10 * stockState.numContracts * numToSell;
-    // await brokerageClient.setSecurityPosition(stockState.brokerageId, newPosition);
+    const newPosition = stockState.position - (10 * stockState.numContracts * numToSell);
+    await brokerageClient.setSecurityPosition(stockState.brokerageId, newPosition);
     stockState.position = newPosition;
   }
 
+  // 5)
   checkCrossings(stockState, last);
-  lastLog.push({last, position: stockState.position});
-  if (doFloatCalculation(FloatCalculations.greaterThan, last, 13.5)) {
-    console.log(`last: ${last}, position: ${stockState.position}`);
-    debugger;
-  } else if (doFloatCalculation(FloatCalculations.lessThan, last, 10.05)) {
-    console.log(`last: ${last}, position: ${stockState.position}`);
-    debugger;
-  }
+
+  // 6)
+  stockLastLogs.push({last, position: stockState.position});
 }
+
+// if (doFloatCalculation(FloatCalculations.greaterThan, lastLog[lastLog.length - 1].last, 12.5)) {
+//   console.log(`last: ${lastLog[lastLog.length - 1].last}, position: ${states[stock].position}`);
+
+//   if (lastLog[lastLog.length - 1].position < 100) {
+//     debugger; printDeltasOfLog();
+//   }
+
+//   restartRandomPrice();
+//   states = getStockStates(stocks);
+
+// } else if (doFloatCalculation(FloatCalculations.lessThan, lastLog[lastLog.length - 1].last, 11.15)) {
+//   console.log(`last: ${lastLog[lastLog.length - 1].last}, position: ${states[stock].position}`);
+
+//   if (lastLog[lastLog.length - 1].position > 10 || lastLog[lastLog.length - 1].position < 0) {
+//     debugger; printDeltasOfLog();
+//   }
+
+//   restartRandomPrice();
+//   states = getStockStates(stocks);
+// }
 
 function checkCrossings(stockState: StockState, last: number) {
   const {buyingIntervals, sellingIntervals} = stockState;
@@ -106,7 +130,7 @@ function getNumToBuy(stockState: StockState, last: number): number {
   const {buyingIntervals, sellingIntervals, position} = stockState;
 
   let newPosition = position;
-  let indexesToExecute: number[] = [];
+  const indexesToExecute: number[] = [];
   for (let i = buyingIntervals.length - 1; i >= 0; i--) {
     const buyingInterval = buyingIntervals[i];
     if (doFloatCalculation(FloatCalculations.greaterThanOrEqual, last, buyingInterval.price) && buyingInterval.active && buyingInterval.crossed && // (buyingInterval.crossed || indexesToExecute.length > 0)) {
@@ -117,19 +141,9 @@ function getNumToBuy(stockState: StockState, last: number): number {
   }
 
   if (indexesToExecute.length > 0) {
-    let extraIndices = 0;
-    const newIndexesToExecute: number[] = [];
-    for (let i = buyingIntervals.length - 1; i >= indexesToExecute[indexesToExecute.length - 1]; i--) {
-      // if (extraIndices > 0 || (buyingIntervals[i].active && !buyingIntervals[i].crossed)) {
-        if (extraIndices > 0 || (buyingIntervals[i].active && !buyingIntervals[i].crossed) || (sellingIntervals[i].active && !sellingIntervals[i].crossed)) {
-        if (i !== indexesToExecute[indexesToExecute.length - 1] + 1) {
-          newIndexesToExecute.push(i);
-          extraIndices++;
-        }
-      }
-
-      if (newIndexesToExecute.length > indexesToExecute.length) {
-        indexesToExecute = newIndexesToExecute;
+    for (let i = buyingIntervals.length - 1; i > indexesToExecute[0]; i--) {
+      if (buyingIntervals[i].active && i !== indexesToExecute[indexesToExecute.length - 1] + 1) {
+        indexesToExecute.push(i);
       }
     }
   }
@@ -149,7 +163,7 @@ function getNumToSell(stockState: StockState, last: number): number {
   const {buyingIntervals, sellingIntervals, position} = stockState;
 
   let newPosition = position;
-  let indexesToExecute: number[] = [];
+  const indexesToExecute: number[] = [];
   for (const [i, sellingInterval] of sellingIntervals.entries()) {
     if (doFloatCalculation(FloatCalculations.lessThanOrEqual, last, sellingInterval.price)  && sellingInterval.active && sellingInterval.crossed && //  (sellingInterval.crossed || indexesToExecute.length > 0)) {
       newPosition > sellingInterval.positionLimit) {
@@ -159,18 +173,10 @@ function getNumToSell(stockState: StockState, last: number): number {
   }
 
   if (indexesToExecute.length > 0) {
-    let extraIndices = 0;
-    const newIndexesToExecute: number[] = [];
-    for (let i = 0; i <= indexesToExecute[indexesToExecute.length - 1]; i++) {
-      // if (extraIndices > 0 || (sellingIntervals[i].active && !sellingIntervals[i].crossed)) {
-      if (extraIndices > 0 || (sellingIntervals[i].active) || (buyingIntervals[i].active && !buyingIntervals[i].crossed)) {
-        newIndexesToExecute.push(i);
-        extraIndices++;
+    for (let i = 0; i < indexesToExecute[0]; i++) {
+      if (sellingIntervals[i].active) {
+        indexesToExecute.unshift(i);
       }
-    }
-
-    if (newIndexesToExecute.length > indexesToExecute.length) {
-      indexesToExecute = newIndexesToExecute;
     }
   }
 

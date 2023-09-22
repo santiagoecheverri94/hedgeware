@@ -13,6 +13,10 @@ export function getRandomPrice(): number {
   return randomPrice;
 }
 
+export function restartRandomPrice(): void {
+  randomPrice = 11.72;
+}
+
 const manualPrice = 0;
 
 export function getManualPrice(): number {
