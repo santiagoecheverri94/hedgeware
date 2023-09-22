@@ -12,6 +12,21 @@ interface SmoothingInterval {
   positionLimit: number;
 }
 
+// TODO: refactor SmoothingInterval in this way after 12.63 debugging
+// interface SmoothingInterval {
+//   positionLimit: number;
+//   [OrderSides.SELL]: {
+//     active: boolean;
+//     crossed: boolean;
+//     price: number;
+//   };
+//   [OrderSides.BUY]: {
+//     active: boolean;
+//     crossed: boolean;
+//     price: number;
+//   };
+// }
+
 interface StockState {
   brokerageId: string;
   numContracts: number;
@@ -72,13 +87,15 @@ async function reconcileStockPosition(stock: string, stockState: StockState) {
   }
 
   // 4)
+  let newPosition = 0;
   if (numToBuy > 0) {
-    const newPosition = stockState.position + (10 * stockState.numContracts * numToBuy);
-    await brokerageClient.setSecurityPosition(stockState.brokerageId, newPosition);
-    stockState.position = newPosition;
+    newPosition = stockState.position + (10 * numToBuy);
   } else if (numToSell > 0) {
-    const newPosition = stockState.position - (10 * stockState.numContracts * numToSell);
-    await brokerageClient.setSecurityPosition(stockState.brokerageId, newPosition);
+    newPosition = stockState.position - (10 * numToSell);
+  }
+
+  if (newPosition) {
+    await brokerageClient.setSecurityPosition(stockState.brokerageId, (newPosition * stockState.numContracts), (stockState.position * stockState.numContracts));
     stockState.position = newPosition;
   }
 

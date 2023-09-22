@@ -46,7 +46,7 @@ export class IBKRClient extends BrokerageClient {
   async getSnapshot(conid: string): Promise<Snapshot> {
     if ((process.env as any).SIMULATE_SNAPSHOT) {
       return {
-        bid: 0,
+        bid: getRandomPrice(),
         ask: getRandomPrice(),
         last: getRandomPrice(),
         // last: getManualPrice(),

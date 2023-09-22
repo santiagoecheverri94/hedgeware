@@ -17,11 +17,12 @@ export abstract class BrokerageClient {
   abstract cancelOrder(orderId: string): Promise<void>;
   abstract getPositionSize(brokerageIdOfSecurity: string): Promise<number>;
 
-  async setSecurityPosition(brokerageIdOfSecurity: string, newPosition: number): Promise<void> {
+  async setSecurityPosition(brokerageIdOfSecurity: string, newPosition: number, currentPosition?: number): Promise<void> {
     return setSecurityPosition({
       brokerageClient: this,
       brokerageIdOfSecurity,
       newPosition,
+      currentPosition,
     });
   }
 }

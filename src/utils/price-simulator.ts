@@ -1,6 +1,7 @@
 import {FloatCalculations, doFloatCalculation} from './float-calculator';
 
-let randomPrice = 11.72;
+const INITIAL_PRICE = 12.63;
+let randomPrice = INITIAL_PRICE;
 
 export function getRandomPrice(): number {
   const num = Math.random();
@@ -14,7 +15,7 @@ export function getRandomPrice(): number {
 }
 
 export function restartRandomPrice(): void {
-  randomPrice = 11.72;
+  randomPrice = INITIAL_PRICE;
 }
 
 const manualPrice = 0;

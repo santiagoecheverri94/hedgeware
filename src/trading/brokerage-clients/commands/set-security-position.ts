@@ -4,13 +4,17 @@ import {setTimeout} from 'node:timers/promises';
 export async function setSecurityPosition({
   brokerageClient,
   brokerageIdOfSecurity,
+  currentPosition,
   newPosition,
 }: {
   brokerageClient: BrokerageClient,
   brokerageIdOfSecurity: string,
+  currentPosition?: number,
   newPosition: number,
 }): Promise<void> {
-  let currentPosition = await brokerageClient.getPositionSize(brokerageIdOfSecurity);
+  if (!currentPosition) {
+    currentPosition = await brokerageClient.getPositionSize(brokerageIdOfSecurity);
+  }
 
   if (currentPosition === newPosition) {
     return;
@@ -28,6 +32,10 @@ export async function setSecurityPosition({
     quantity: quantity,
     price,
   };
+
+  if ((process.env as any).SIMULATE_SNAPSHOT) {
+    return;
+  }
 
   const orderId = await brokerageClient.placeOrder(orderDetails);
 

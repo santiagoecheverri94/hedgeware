@@ -1,177 +1,177 @@
 {
   "brokerageId": "393897513",
-  "numContracts": 1,
-  "position": 0,
+  "numContracts": 2,
+  "position": 120,
   "sellingIntervals": [
     {
       "positionLimit": 100,
-      "active": false,
-      "crossed": false,
+      "active": true,
+      "crossed": true,
+      "orderSide": "SELL",
+      "price": 13.1
+    },
+    {
+      "positionLimit": 100,
+      "active": true,
+      "crossed": true,
+      "orderSide": "SELL",
+      "price": 13.0
+    },
+    {
+      "positionLimit": 90,
+      "active": true,
+      "crossed": true,
+      "orderSide": "SELL",
+      "price": 12.9
+    },
+    {
+      "positionLimit": 80,
+      "active": true,
+      "crossed": true,
+      "orderSide": "SELL",
+      "price": 12.8
+    },
+    {
+      "positionLimit": 70,
+      "active": true,
+      "crossed": true,
+      "orderSide": "SELL",
+      "price": 12.7
+    },
+    {
+      "positionLimit": 60,
+      "active": true,
+      "crossed": true,
+      "orderSide": "SELL",
+      "price": 12.6
+    },
+    {
+      "positionLimit": 50,
+      "active": true,
+      "crossed": true,
+      "orderSide": "SELL",
+      "price": 12.5
+    },
+    {
+      "positionLimit": 40,
+      "active": true,
+      "crossed": true,
       "orderSide": "SELL",
       "price": 12.4
     },
     {
-      "positionLimit": 100,
-      "active": false,
-      "crossed": false,
+      "positionLimit": 30,
+      "active": true,
+      "crossed": true,
       "orderSide": "SELL",
       "price": 12.3
     },
     {
-      "positionLimit": 90,
-      "active": false,
-      "crossed": false,
+      "positionLimit": 20,
+      "active": true,
+      "crossed": true,
       "orderSide": "SELL",
       "price": 12.2
     },
     {
-      "positionLimit": 80,
-      "active": false,
-      "crossed": false,
+      "positionLimit": 10,
+      "active": true,
+      "crossed": true,
       "orderSide": "SELL",
       "price": 12.1
     },
     {
-      "positionLimit": 70,
-      "active": false,
-      "crossed": false,
-      "orderSide": "SELL",
-      "price": 12
-    },
-    {
-      "positionLimit": 60,
-      "active": false,
-      "crossed": false,
-      "orderSide": "SELL",
-      "price": 11.9
-    },
-    {
-      "positionLimit": 50,
-      "active": false,
-      "crossed": false,
-      "orderSide": "SELL",
-      "price": 11.8
-    },
-    {
-      "positionLimit": 40,
-      "active": false,
-      "crossed": false,
-      "orderSide": "SELL",
-      "price": 11.7
-    },
-    {
-      "positionLimit": 30,
-      "active": false,
-      "crossed": false,
-      "orderSide": "SELL",
-      "price": 11.6
-    },
-    {
-      "positionLimit": 20,
-      "active": false,
-      "crossed": false,
-      "orderSide": "SELL",
-      "price": 11.5
-    },
-    {
-      "positionLimit": 10,
-      "active": false,
-      "crossed": false,
-      "orderSide": "SELL",
-      "price": 11.4
-    },
-    {
       "positionLimit": 0,
-      "active": false,
-      "crossed": false,
+      "active": true,
+      "crossed": true,
       "orderSide": "SELL",
-      "price": 11.3
+      "price": 12.0
     }
   ],
   "buyingIntervals": [
     {
       "positionLimit": 100,
-      "active": true,
-      "crossed": true,
+      "active": false,
+      "crossed": false,
+      "orderSide": "BUY",
+      "price": 13.05
+    },
+    {
+      "positionLimit": 100,
+      "active": false,
+      "crossed": false,
+      "orderSide": "BUY",
+      "price": 12.95
+    },
+    {
+      "positionLimit": 90,
+      "active": false,
+      "crossed": false,
+      "orderSide": "BUY",
+      "price": 12.85
+    },
+    {
+      "positionLimit": 80,
+      "active": false,
+      "crossed": false,
+      "orderSide": "BUY",
+      "price": 12.75
+    },
+    {
+      "positionLimit": 70,
+      "active": false,
+      "crossed": false,
+      "orderSide": "BUY",
+      "price": 12.65
+    },
+    {
+      "positionLimit": 60,
+      "active": false,
+      "crossed": false,
+      "orderSide": "BUY",
+      "price": 12.55
+    },
+    {
+      "positionLimit": 50,
+      "active": false,
+      "crossed": false,
+      "orderSide": "BUY",
+      "price": 12.45
+    },
+    {
+      "positionLimit": 40,
+      "active": false,
+      "crossed": false,
       "orderSide": "BUY",
       "price": 12.35
     },
     {
-      "positionLimit": 100,
-      "active": true,
-      "crossed": true,
+      "positionLimit": 30,
+      "active": false,
+      "crossed": false,
       "orderSide": "BUY",
       "price": 12.25
     },
     {
-      "positionLimit": 90,
-      "active": true,
-      "crossed": true,
+      "positionLimit": 20,
+      "active": false,
+      "crossed": false,
       "orderSide": "BUY",
       "price": 12.15
     },
     {
-      "positionLimit": 80,
-      "active": true,
-      "crossed": true,
+      "positionLimit": 10,
+      "active": false,
+      "crossed": false,
       "orderSide": "BUY",
       "price": 12.05
     },
     {
-      "positionLimit": 70,
-      "active": true,
-      "crossed": true,
+      "positionLimit": 0,
+      "active": false,
+      "crossed": false,
       "orderSide": "BUY",
       "price": 11.95
-    },
-    {
-      "positionLimit": 60,
-      "active": true,
-      "crossed": true,
-      "orderSide": "BUY",
-      "price": 11.85
-    },
-    {
-      "positionLimit": 50,
-      "active": true,
-      "crossed": true,
-      "orderSide": "BUY",
-      "price": 11.75
-    },
-    {
-      "positionLimit": 40,
-      "active": true,
-      "crossed": true,
-      "orderSide": "BUY",
-      "price": 11.65
-    },
-    {
-      "positionLimit": 30,
-      "active": true,
-      "crossed": true,
-      "orderSide": "BUY",
-      "price": 11.55
-    },
-    {
-      "positionLimit": 20,
-      "active": true,
-      "crossed": true,
-      "orderSide": "BUY",
-      "price": 11.45
-    },
-    {
-      "positionLimit": 10,
-      "active": true,
-      "crossed": true,
-      "orderSide": "BUY",
-      "price": 11.35
-    },
-    {
-      "positionLimit": 0,
-      "active": true,
-      "crossed": true,
-      "orderSide": "BUY",
-      "price": 11.25
     }
   ]
 }
