@@ -5,34 +5,24 @@ import {IBKRClient} from '../../brokerage-clients/IBKR/client';
 import {OrderSides} from '../../brokerage-clients/brokerage-client';
 
 interface SmoothingInterval {
-  active: boolean;
-  crossed: boolean;
-  orderSide: OrderSides;
-  price: number;
   positionLimit: number;
+  [OrderSides.SELL]: {
+    active: boolean;
+    crossed: boolean;
+    price: number;
+  };
+  [OrderSides.BUY]: {
+    active: boolean;
+    crossed: boolean;
+    price: number;
+  };
 }
-
-// TODO: refactor SmoothingInterval in this way after 12.63 debugging
-// interface SmoothingInterval {
-//   positionLimit: number;
-//   [OrderSides.SELL]: {
-//     active: boolean;
-//     crossed: boolean;
-//     price: number;
-//   };
-//   [OrderSides.BUY]: {
-//     active: boolean;
-//     crossed: boolean;
-//     price: number;
-//   };
-// }
 
 interface StockState {
   brokerageId: string;
   numContracts: number;
   position: number;
-  sellingIntervals: SmoothingInterval[];
-  buyingIntervals: SmoothingInterval[];
+  intervals: SmoothingInterval[];
 }
 
 const brokerageClient = new IBKRClient();
@@ -128,62 +118,63 @@ async function reconcileStockPosition(stock: string, stockState: StockState) {
 // }
 
 function checkCrossings(stockState: StockState, last: number) {
-  const {buyingIntervals, sellingIntervals} = stockState;
+  const {intervals} = stockState;
 
-  for (const buyingInterval of buyingIntervals) {
-    if (buyingInterval.active && doFloatCalculation(FloatCalculations.lessThan, last, buyingInterval.price)) {
-      buyingInterval.crossed = true;
+  for (const interval of intervals) {
+    if (interval[OrderSides.BUY].active && doFloatCalculation(FloatCalculations.lessThan, last, interval[OrderSides.BUY].price)) {
+      interval[OrderSides.BUY].crossed = true;
     }
-  }
 
-  for (const sellingInterval of sellingIntervals) {
-    if (sellingInterval.active && doFloatCalculation(FloatCalculations.greaterThan, last, sellingInterval.price)) {
-      sellingInterval.crossed = true;
+    if (interval[OrderSides.SELL].active && doFloatCalculation(FloatCalculations.greaterThan, last, interval[OrderSides.SELL].price)) {
+      interval[OrderSides.SELL].crossed = true;
     }
   }
 }
 
 function getNumToBuy(stockState: StockState, last: number): number {
-  const {buyingIntervals, sellingIntervals, position} = stockState;
+  const {intervals, position} = stockState;
 
   let newPosition = position;
   const indexesToExecute: number[] = [];
-  for (let i = buyingIntervals.length - 1; i >= 0; i--) {
-    const buyingInterval = buyingIntervals[i];
-    if (doFloatCalculation(FloatCalculations.greaterThanOrEqual, last, buyingInterval.price) && buyingInterval.active && buyingInterval.crossed && // (buyingInterval.crossed || indexesToExecute.length > 0)) {
-      newPosition <= buyingInterval.positionLimit) {
+  for (let i = intervals.length - 1; i >= 0; i--) {
+    const interval = intervals[i];
+
+    if (doFloatCalculation(FloatCalculations.greaterThanOrEqual, last, interval[OrderSides.BUY].price) && interval[OrderSides.BUY].active && interval[OrderSides.BUY].crossed && newPosition <= interval.positionLimit) {
       indexesToExecute.push(i);
       newPosition += 10;
     }
   }
 
   if (indexesToExecute.length > 0) {
-    for (let i = buyingIntervals.length - 1; i > indexesToExecute[0]; i--) {
-      if (buyingIntervals[i].active && i !== indexesToExecute[indexesToExecute.length - 1] + 1) {
+    for (let i = intervals.length - 1; i > indexesToExecute[0]; i--) {
+      const interval = intervals[i];
+
+      if (interval[OrderSides.BUY].active && i !== indexesToExecute[indexesToExecute.length - 1] + 1) {
         indexesToExecute.push(i);
       }
     }
   }
 
   for (const index of indexesToExecute) {
-    buyingIntervals[index].active = false;
-    buyingIntervals[index].crossed = false;
+    const interval = intervals[index];
 
-    sellingIntervals[index].active = true;
-    sellingIntervals[index].crossed = false;
+    interval[OrderSides.BUY].active = false;
+    interval[OrderSides.BUY].crossed = false;
+
+    interval[OrderSides.SELL].active = true;
+    interval[OrderSides.SELL].crossed = false;
   }
 
   return indexesToExecute.length;
 }
 
 function getNumToSell(stockState: StockState, last: number): number {
-  const {buyingIntervals, sellingIntervals, position} = stockState;
+  const {intervals, position} = stockState;
 
   let newPosition = position;
   const indexesToExecute: number[] = [];
-  for (const [i, sellingInterval] of sellingIntervals.entries()) {
-    if (doFloatCalculation(FloatCalculations.lessThanOrEqual, last, sellingInterval.price)  && sellingInterval.active && sellingInterval.crossed && //  (sellingInterval.crossed || indexesToExecute.length > 0)) {
-      newPosition > sellingInterval.positionLimit) {
+  for (const [i, interval] of intervals.entries()) {
+    if (doFloatCalculation(FloatCalculations.lessThanOrEqual, last, interval[OrderSides.SELL].price)  && interval[OrderSides.SELL].active && interval[OrderSides.SELL].crossed && newPosition > interval.positionLimit) {
       indexesToExecute.push(i);
       newPosition -= 10;
     }
@@ -191,18 +182,22 @@ function getNumToSell(stockState: StockState, last: number): number {
 
   if (indexesToExecute.length > 0) {
     for (let i = 0; i < indexesToExecute[0]; i++) {
-      if (sellingIntervals[i].active) {
+      const interval = intervals[i];
+
+      if (interval[OrderSides.SELL].active) {
         indexesToExecute.unshift(i);
       }
     }
   }
 
   for (const index of indexesToExecute) {
-    sellingIntervals[index].active = false;
-    sellingIntervals[index].crossed = false;
+    const interval = intervals[index];
 
-    buyingIntervals[index].active = true;
-    buyingIntervals[index].crossed = false;
+    interval[OrderSides.SELL].active = false;
+    interval[OrderSides.SELL].crossed = false;
+
+    interval[OrderSides.BUY].active = true;
+    interval[OrderSides.BUY].crossed = false;
   }
 
   return indexesToExecute.length;
