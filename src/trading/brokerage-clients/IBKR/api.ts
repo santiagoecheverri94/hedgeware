@@ -10,17 +10,17 @@ const syncApi = createApiSauceInstance({
 });
 
 export async function getUncheckedIBKRApi(): Promise<ApisauceInstance> {
-  await ensureItsBeenOnePointTwoSecondsSinceApiWasLastRetrieved();
+  await ensureItsBeenPointTwoSecondsSinceApiWasLastRetrieved();
   return syncApi;
 }
 
-const ONE_POINT_TWO_SECONDS = 1200;
+const POINT_TWO_SECONDS = 200;
 let waiting: Promise<void> = Promise.resolve();
-async function ensureItsBeenOnePointTwoSecondsSinceApiWasLastRetrieved(): Promise<void> {
+async function ensureItsBeenPointTwoSecondsSinceApiWasLastRetrieved(): Promise<void> {
   await waiting;
   waiting = new Promise(resolve => {
     setTimeout(() => {
       resolve();
-    }, ONE_POINT_TWO_SECONDS);
+    }, POINT_TWO_SECONDS);
   });
 }
