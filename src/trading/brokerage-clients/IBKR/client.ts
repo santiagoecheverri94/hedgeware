@@ -1,9 +1,9 @@
 import {ApisauceInstance} from 'apisauce';
-import {BrokerageClient, OrderDetails, OrderSides, OrderTypes, SnapShotFields, Snapshot, TimesInForce} from '../brokerage-client';
+import {BrokerageClient, OrderDetails, OrderSides, OrderStatus, OrderTypes, SnapShotFields, Snapshot, TimesInForce} from '../brokerage-client';
 import {getUncheckedIBKRApi} from './api';
 import {initiateApiSessionWithTickling} from './tickle';
 import {getManualPrice, getRandomPrice} from '../../../utils/price-simulator';
-import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrdersResponse, PositionResponse, SnapshotResponse} from './types';
+import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrderStatusResponse, OrdersResponse, PositionResponse, SnapshotResponse} from './types';
 import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
 import {log} from '../../../utils/miscellaneous';
 
@@ -15,6 +15,10 @@ export class IBKRClient extends BrokerageClient {
   protected orderSides = {
     [OrderSides.BUY]: 'BUY',
     [OrderSides.SELL]: 'SELL',
+  };
+
+  protected orderStatus = {
+    [OrderStatus.FILLED]: 'Filled',
   };
 
   protected timesInForce = {[TimesInForce.DAY]: 'DAY'};
@@ -139,6 +143,15 @@ export class IBKRClient extends BrokerageClient {
     }
   }
 
+  async getOrderStatus(orderId: string): Promise<OrderStatus> {
+    const response = await (await this.getApi()).get<OrderStatusResponse>(`/iserver/account/order/status/${orderId}`);
+    const ibkrStatus = response.data?.order_status;
+
+    const genericStatus = Object.keys(this.orderStatus).find(status => this.orderStatus[status as OrderStatus] === ibkrStatus)! as OrderStatus;
+    return genericStatus;
+  }
+
+  // getPositionSize is delayed by 5 minutes. Bear this in mind.
   async getPositionSize(conid: string): Promise<number> {
     const response = await (await this.getApi()).get<PositionResponse>(`/portfolio/${this.account}/position/${conid}`);
 

@@ -4,6 +4,7 @@ import {setSecurityPosition} from './commands/set-security-position';
 export abstract class BrokerageClient {
   protected abstract orderTypes: {[type in OrderTypes]: string};
   protected abstract orderSides: {[side in OrderSides]: string};
+  protected abstract orderStatus: {[status in OrderStatus]: string};
   protected abstract timesInForce: {[time in TimesInForce]: string};
 
   protected abstract snapshotFields: {[field in SnapShotFields]: string};
@@ -15,6 +16,7 @@ export abstract class BrokerageClient {
   abstract placeOrder(orderDetails: OrderDetails): Promise<string>;
   abstract modifyOrder(orderId: string, orderDetails: OrderDetails): Promise<string>;
   abstract cancelOrder(orderId: string): Promise<void>;
+  abstract getOrderStatus(orderId: string): Promise<OrderStatus>;
   abstract getPositionSize(brokerageIdOfSecurity: string): Promise<number>;
 
   async setSecurityPosition(brokerageIdOfSecurity: string, newPosition: number, currentPosition?: number): Promise<void> {
@@ -44,6 +46,11 @@ export enum OrderTypes {
 export enum OrderSides {
   BUY = 'BUY',
   SELL = 'SELL',
+}
+
+export enum OrderStatus {
+  FILLED = 'FILLED',
+  // Pending, Cancelled, etc.
 }
 
 export enum TimesInForce {

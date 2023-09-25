@@ -1,4 +1,4 @@
-import {BrokerageClient, OrderDetails, OrderSides, OrderTypes, TimesInForce} from '../brokerage-client';
+import {BrokerageClient, OrderDetails, OrderSides, OrderStatus, OrderTypes, TimesInForce} from '../brokerage-client';
 import {setTimeout} from 'node:timers/promises';
 
 export async function setSecurityPosition({
@@ -58,16 +58,27 @@ export async function setSecurityPosition({
   //   newPosition,
   // });
 
-  await brokerageClient.placeOrder(orderDetails);
-  const TEN_SECS = 10_000;
-  while (!(await isNewPositionSet(brokerageClient, brokerageIdOfSecurity, newPosition))) {
-    await setTimeout(TEN_SECS);
+  // await brokerageClient.placeOrder(orderDetails);
+  // const TEN_SECS = 10_000;
+  // while (!(await isNewPositionSet(brokerageClient, brokerageIdOfSecurity, newPosition))) {
+  //   await setTimeout(TEN_SECS);
+  // }
+
+  const orderId = await brokerageClient.placeOrder(orderDetails);
+  const FIVE_SECS = 5000;
+  while (!(await isOrderFilled(brokerageClient, orderId))) {
+    await setTimeout(FIVE_SECS);
   }
 }
 
 async function isNewPositionSet(brokerageClient: BrokerageClient, brokerageIdOfSecurity: string, newPosition: number): Promise<boolean> {
   const currentlySettledPosition = await brokerageClient.getPositionSize(brokerageIdOfSecurity);
   return currentlySettledPosition === newPosition;
+}
+
+async function isOrderFilled(brokerageClient: BrokerageClient, orderId: string): Promise<boolean> {
+  const orderStatus = await brokerageClient.getOrderStatus(orderId);
+  return orderStatus === OrderStatus.FILLED;
 }
 
 function determineIfOrderNeedBeBuyOrSell(currentPosition: number, newPosition: number): OrderSides {
