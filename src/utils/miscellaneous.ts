@@ -10,7 +10,7 @@ export function stopSystem(errorMsg: string): void {
 }
 
 export function isMarketOpen(openingTimeET = '9:35', closingTimeET = '3:50'): boolean {
-  if ((process.env as any).SIMULATE_SNAPSHOT) {
+  if (process.env.SIMULATE_SNAPSHOT) {
     return true;
   }
 

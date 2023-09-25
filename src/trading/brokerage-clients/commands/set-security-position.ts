@@ -33,7 +33,7 @@ export async function setSecurityPosition({
     price,
   };
 
-  if ((process.env as any).SIMULATE_SNAPSHOT) {
+  if (process.env.SIMULATE_SNAPSHOT) {
     return;
   }
 

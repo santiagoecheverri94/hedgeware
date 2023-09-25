@@ -77,16 +77,21 @@ async function reconcileStockPosition(stock: string, stockState: StockState) {
   }
 
   // 4)
-  let newPosition = 0;
+  let newPosition: number | undefined;
   if (numToBuy > 0) {
     newPosition = stockState.position + (10 * numToBuy);
   } else if (numToSell > 0) {
     newPosition = stockState.position - (10 * numToSell);
   }
 
-  if (newPosition) {
-    await brokerageClient.setSecurityPosition(stockState.brokerageId, (newPosition * stockState.numContracts), (stockState.position * stockState.numContracts));
+  if (newPosition !== undefined) {
+    if (process.env.SIMULATE_SNAPSHOT) {
+      await brokerageClient.setSecurityPosition(stockState.brokerageId, (newPosition * stockState.numContracts), (stockState.position * stockState.numContracts));
+    }
+
+    await brokerageClient.setSecurityPosition(stockState.brokerageId, (newPosition * stockState.numContracts));
     stockState.position = newPosition;
+    // TODO: write stockState to file
   }
 
   // 5)
