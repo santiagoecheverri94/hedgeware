@@ -37,25 +37,37 @@ export async function setSecurityPosition({
     return;
   }
 
-  const orderId = await brokerageClient.placeOrder(orderDetails);
+  // TODO: use code commented in this block if we ever want to stop assuming
+  // that we can fulfill all our orders at the bid/ask
+  // const orderId = await brokerageClient.placeOrder(orderDetails);
+  // const waitTimeMs = 60_000 * 5;
+  // await setTimeout(waitTimeMs);
 
-  const waitTimeMs = 60_000 * 5;
-  await setTimeout(waitTimeMs);
+  // currentPosition = await brokerageClient.getPositionSize(brokerageIdOfSecurity);
 
-  currentPosition = await brokerageClient.getPositionSize(brokerageIdOfSecurity);
+  // if (currentPosition === newPosition) {
+  //   return;
+  // }
 
-  if (currentPosition === newPosition) {
-    return;
+  // await brokerageClient.cancelOrder(orderId);
+  // await setTimeout(waitTimeMs);
+
+  // return setSecurityPosition({
+  //   brokerageClient,
+  //   brokerageIdOfSecurity,
+  //   newPosition,
+  // });
+
+  await brokerageClient.placeOrder(orderDetails);
+  const TEN_SECS = 10_000;
+  while (!(await isNewPositionSet(brokerageClient, brokerageIdOfSecurity, newPosition))) {
+    await setTimeout(TEN_SECS);
   }
+}
 
-  await brokerageClient.cancelOrder(orderId);
-  await setTimeout(waitTimeMs);
-
-  return setSecurityPosition({
-    brokerageClient,
-    brokerageIdOfSecurity,
-    newPosition,
-  });
+async function isNewPositionSet(brokerageClient: BrokerageClient, brokerageIdOfSecurity: string, newPosition: number): Promise<boolean> {
+  const currentlySettledPosition = await brokerageClient.getPositionSize(brokerageIdOfSecurity);
+  return currentlySettledPosition === newPosition;
 }
 
 function determineIfOrderNeedBeBuyOrSell(currentPosition: number, newPosition: number): OrderSides {

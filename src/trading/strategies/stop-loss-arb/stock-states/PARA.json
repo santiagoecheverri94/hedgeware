@@ -1,7 +1,7 @@
 {
   "brokerageId": "393897513",
   "numContracts": 2,
-  "position": 50,
+  "position": 0,
   "intervals": [
     {
       "positionLimit": 100,
@@ -98,65 +98,65 @@
       "positionLimit": 40,
       "SELL": {
         "price": 12.4,
-        "active": true,
-        "crossed": true
+        "active": false,
+        "crossed": false
       },
       "BUY": {
         "price": 12.35,
-        "active": false,
-        "crossed": false
+        "active": true,
+        "crossed": true
       }
     },
     {
       "positionLimit": 30,
       "SELL": {
         "price": 12.3,
-        "active": true,
-        "crossed": true
+        "active": false,
+        "crossed": false
       },
       "BUY": {
         "price": 12.25,
-        "active": false,
-        "crossed": false
+        "active": true,
+        "crossed": true
       }
     },
     {
       "positionLimit": 20,
       "SELL": {
         "price": 12.2,
-        "active": true,
-        "crossed": true
+        "active": false,
+        "crossed": false
       },
       "BUY": {
         "price": 12.15,
-        "active": false,
-        "crossed": false
+        "active": true,
+        "crossed": true
       }
     },
     {
       "positionLimit": 10,
       "SELL": {
         "price": 12.1,
-        "active": true,
-        "crossed": true
+        "active": false,
+        "crossed": false
       },
       "BUY": {
         "price": 12.05,
-        "active": false,
-        "crossed": false
+        "active": true,
+        "crossed": true
       }
     },
     {
       "positionLimit": 0,
       "SELL": {
         "price": 12.0,
-        "active": true,
-        "crossed": true
+        "active": false,
+        "crossed": false
       },
       "BUY": {
         "price": 11.95,
-        "active": false,
-        "crossed": false
+        "active": true,
+        "crossed": true
       }
     }
   ]
