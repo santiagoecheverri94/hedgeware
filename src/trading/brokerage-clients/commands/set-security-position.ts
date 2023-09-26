@@ -9,13 +9,9 @@ export async function setSecurityPosition({
 }: {
   brokerageClient: BrokerageClient,
   brokerageIdOfSecurity: string,
-  currentPosition?: number,
+  currentPosition: number,
   newPosition: number,
 }): Promise<void> {
-  if (!currentPosition) {
-    currentPosition = await brokerageClient.getPositionSize(brokerageIdOfSecurity);
-  }
-
   if (currentPosition === newPosition) {
     return;
   }
@@ -39,6 +35,7 @@ export async function setSecurityPosition({
 
   // TODO: use code commented in this block if we ever want to stop assuming
   // that we can fulfill all our orders at the bid/ask
+
   // const orderId = await brokerageClient.placeOrder(orderDetails);
   // const waitTimeMs = 60_000 * 5;
   // await setTimeout(waitTimeMs);

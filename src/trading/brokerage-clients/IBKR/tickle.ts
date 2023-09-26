@@ -2,6 +2,7 @@ import {ApiResponse} from 'apisauce';
 import {TickleResponse} from './types';
 import {getUncheckedIBKRApi} from './api';
 import {stopSystem, log} from '../../../utils/miscellaneous';
+import {setTimeout} from 'node:timers/promises';
 
 export async function initiateApiSessionWithTickling(): Promise<string> {
   const tickleResponse = await tickleApiGateway();
@@ -24,21 +25,21 @@ function isOkTickleResponse(tickleResponse: ApiResponse<TickleResponse>): boolea
   return Boolean(tickleResponse.status === 200 && tickleResponse.data?.session && tickleResponse.data?.iserver.authStatus.authenticated);
 }
 
-function tickleApiGatewayEveryMinute(): void {
+async function tickleApiGatewayEveryMinute(): Promise<void> {
   const ONE_MINUTE = 60_000;
-  setTimeout(async () => {
-    const tickleResponse = await tickleApiGateway();
+  await setTimeout(ONE_MINUTE);
 
-    if (tickleResponse.status !== 200) {
-      stopSystem('Unable to tickle IBKR API Gateway.');
-    }
+  const tickleResponse = await tickleApiGateway();
 
-    if (!tickleResponse.data?.iserver.authStatus.authenticated) {
-      stopSystem('IBKR API Gateway became unauthenticated.');
-    }
+  if (tickleResponse.status !== 200) {
+    stopSystem('Unable to tickle IBKR API Gateway.');
+  }
 
-    log('Tickled IBKR Gateway successfully.');
+  if (!tickleResponse.data?.iserver.authStatus.authenticated) {
+    stopSystem('IBKR API Gateway became unauthenticated.');
+  }
 
-    tickleApiGatewayEveryMinute();
-  }, ONE_MINUTE);
+  log('Tickled IBKR Gateway successfully.');
+
+  tickleApiGatewayEveryMinute();
 }

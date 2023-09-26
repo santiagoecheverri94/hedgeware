@@ -19,7 +19,15 @@ export abstract class BrokerageClient {
   abstract getOrderStatus(orderId: string): Promise<OrderStatus>;
   abstract getPositionSize(brokerageIdOfSecurity: string): Promise<number>;
 
-  async setSecurityPosition(brokerageIdOfSecurity: string, newPosition: number, currentPosition?: number): Promise<void> {
+  async setSecurityPosition({
+    brokerageIdOfSecurity,
+    currentPosition,
+    newPosition,
+  }: {
+    brokerageIdOfSecurity: string,
+    currentPosition: number,
+    newPosition: number,
+  }): Promise<void> {
     return setSecurityPosition({
       brokerageClient: this,
       brokerageIdOfSecurity,

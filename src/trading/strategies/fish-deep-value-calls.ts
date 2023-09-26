@@ -249,5 +249,10 @@ function getNumSharesNeeded(security: TargetSecurity) {
 async function covercalls(security: TargetSecurity) {
   const numSharesNeeded = getNumSharesNeeded(security);
 
-  await brokerageClient.setSecurityPosition(security.stock.brokerageId, numSharesNeeded);
+  // await brokerageClient.setSecurityPosition(security.stock.brokerageId, numSharesNeeded);
+  await brokerageClient.setSecurityPosition({
+    brokerageIdOfSecurity: security.stock.brokerageId,
+    currentPosition: security.stock.state.numCurrentlyOwned,
+    newPosition: numSharesNeeded,
+  });
 }

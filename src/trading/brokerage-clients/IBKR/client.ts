@@ -6,6 +6,7 @@ import {getManualPrice, getRandomPrice} from '../../../utils/price-simulator';
 import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrderStatusResponse, OrdersResponse, PositionResponse, SnapshotResponse} from './types';
 import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
 import {log} from '../../../utils/miscellaneous';
+import {setTimeout} from 'node:timers/promises';
 
 export class IBKRClient extends BrokerageClient {
   protected orderTypes = {
@@ -151,8 +152,10 @@ export class IBKRClient extends BrokerageClient {
     return genericStatus;
   }
 
-  // getPositionSize is delayed by 5 minutes. Bear this in mind.
   async getPositionSize(conid: string): Promise<number> {
+    const FIVE_MINUTES = 5 * 60 * 1000;
+    await setTimeout(FIVE_MINUTES); // TODO: check if beta ccp interface allows for faster polling
+
     const response = await (await this.getApi()).get<PositionResponse>(`/portfolio/${this.account}/position/${conid}`);
 
     return response.data?.[0]?.position! || 0;

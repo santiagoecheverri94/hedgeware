@@ -1,8 +1,12 @@
 import moment from 'moment-timezone';
-import fs from 'node:fs';
+import {promises as fsPromises} from 'node:fs';
 
 export function log(msg: string): void {
-  console.log(`\r\n${moment().format('MM-DD-YYYY')} at ${moment().format('hh:mma')} : ${msg}\r\n`);
+  console.log(`\r\n${getCurrentTimeStamp()} : ${msg}\r\n`);
+}
+
+export function getCurrentTimeStamp(): string {
+  return `${moment().format('MM-DD-YYYY')} at ${moment().format('hh:mma')}`;
 }
 
 export function stopSystem(errorMsg: string): void {
@@ -25,7 +29,20 @@ export function isMarketOpen(openingTimeET = '9:40', closingTimeET = '3:50'): bo
   return isMarketHours;
 }
 
-export function readJSONFile<T>(filePath: string): T {
-  const file = fs.readFileSync(filePath, 'utf8');
+export async function readJSONFile<T>(filePath: string): Promise<T> {
+  const file = await fsPromises.readFile(filePath, 'utf8');
   return JSON.parse(file);
+}
+
+export async function writeJSONFile(filePath: string, jsonString: string): Promise<void> {
+  await fsPromises.writeFile(filePath, jsonString);
+}
+
+export function jsonPrettyPrint(obj: unknown): string {
+  return `${JSON.stringify(obj, null, 2)}\n`;
+}
+
+export async function getFileNamesWithinFolder(folderPath: string): Promise<string[]> {
+  const fileNames = await fsPromises.readdir(folderPath);
+  return fileNames.map(fileName => fileName.split('.')[0]);
 }

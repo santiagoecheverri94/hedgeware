@@ -1,8 +1,9 @@
 import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
-import {isMarketOpen, log, readJSONFile} from '../../../utils/miscellaneous';
+import {getCurrentTimeStamp, getFileNamesWithinFolder, isMarketOpen, jsonPrettyPrint, log, readJSONFile, writeJSONFile} from '../../../utils/miscellaneous';
 import {restartRandomPrice} from '../../../utils/price-simulator';
 import {IBKRClient} from '../../brokerage-clients/IBKR/client';
 import {OrderSides} from '../../brokerage-clients/brokerage-client';
+import {setTimeout} from 'node:timers/promises';
 
 interface SmoothingInterval {
   positionLimit: number;
@@ -23,48 +24,62 @@ interface StockState {
   numContracts: number;
   position: number;
   intervals: SmoothingInterval[];
+  tradingLogs: {
+    timeStamp: string;
+    action: OrderSides,
+    price: number;
+    previousPosition: number;
+    newPosition: number;
+  }[];
 }
 
 const brokerageClient = new IBKRClient();
 
-const stockLastLogs: {last: number, position: number}[] = [];
-
 export async function startStopLossArb(): Promise<void> {
-  const stocks = getStocks();
+  const stocks = await getStocks();
 
-  const states = getStockStates(stocks);
+  const states = await getStockStates(stocks);
 
-  // TODO: correct market hours
-  // run each stock in its own thread
-  while (isMarketOpen()) {
-    for (const stock of stocks) {
-      await reconcileStockPosition(stock, states[stock]);
-
-      if (stockLastLogs[stockLastLogs.length - 1]?.position !== stockLastLogs[stockLastLogs.length - 2]?.position) {
-        log(`Changed position for ${stock}: ${JSON.stringify(stockLastLogs[stockLastLogs.length - 1])}`);
+  await Promise.all(stocks.map(stock => {
+    return (async function () {
+      while (isMarketOpen()) {
+        await reconcileStockPosition(stock, states[stock]);
       }
-    }
-  }
-
-  // TODO: write intervalsState to files per stock
+    })();
+  }));
 }
 
-function getStocks() {
-  return ['PARA']; // TODO: get stocks from file names under intervals-state folder
+async function getStocks(): Promise<string[]> {
+  const fileNames = await getFileNamesWithinFolder(getStockStatesFolderPath());
+  return fileNames.filter(fileName => fileName !== 'template');
 }
 
-function getStockStates(stocks: string[]): {[stock: string]: StockState} {
+function getStockStatesFolderPath(): string {
+  return `${process.cwd()}\\src\\trading\\strategies\\stop-loss-arb\\stock-states`;
+}
+
+async function getStockStates(stocks: string[]): Promise<{ [stock: string]: StockState; }> {
   const states: {[stock: string]: StockState} = {};
   for (const stock of stocks) {
-    states[stock] = readJSONFile<StockState>(`${process.cwd()}\\src\\trading\\strategies\\stop-loss-arb\\stock-states\\${stock}.json`);
+    states[stock] = await readJSONFile<StockState>(getStockStateFilePath(stock));
   }
 
   return states;
 }
 
+function getStockStateFilePath(stock: string): string {
+  return `${getStockStatesFolderPath()}\\${stock}.json`;
+}
+
 async function reconcileStockPosition(stock: string, stockState: StockState) {
-  const {last} = await brokerageClient.getSnapshot(stockState.brokerageId);
+  // 0) wait a second
+  if (!process.env.SIMULATE_SNAPSHOT) {
+    const ONE_SECOND = 1000;
+    await setTimeout(ONE_SECOND);
+  }
+
   // 1)
+  const {last} = await brokerageClient.getSnapshot(stockState.brokerageId);
   checkCrossings(stockState, last);
 
   // 2)
@@ -85,20 +100,34 @@ async function reconcileStockPosition(stock: string, stockState: StockState) {
   }
 
   if (newPosition !== undefined) {
-    if (process.env.SIMULATE_SNAPSHOT) {
-      await brokerageClient.setSecurityPosition(stockState.brokerageId, (newPosition * stockState.numContracts), (stockState.position * stockState.numContracts));
-    }
+    await brokerageClient.setSecurityPosition({
+      brokerageIdOfSecurity: stockState.brokerageId,
+      currentPosition: stockState.position * stockState.numContracts,
+      newPosition: newPosition * stockState.numContracts,
+    });
 
-    await brokerageClient.setSecurityPosition(stockState.brokerageId, (newPosition * stockState.numContracts));
+    const tradingLog: typeof stockState.tradingLogs[number] = {
+      action: numToBuy > 0 ? OrderSides.BUY : OrderSides.SELL,
+      timeStamp: getCurrentTimeStamp(),
+      price: last,
+      previousPosition: stockState.position,
+      newPosition,
+    };
+
+    stockState.tradingLogs.push(tradingLog);
+
+    log(`Changed position for ${stock} (${stockState.numContracts} constracts): ${jsonPrettyPrint({
+      price: tradingLog.price,
+      previousPosition: tradingLog.previousPosition,
+      newPosition: tradingLog.newPosition,
+    })}`);
+
     stockState.position = newPosition;
-    // TODO: write stockState to file
+
+    checkCrossings(stockState, last);
+
+    await writeJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
   }
-
-  // 5)
-  checkCrossings(stockState, last);
-
-  // 6)
-  stockLastLogs.push({last, position: stockState.position});
 }
 
 // if (doFloatCalculation(FloatCalculations.greaterThan, lastLog[lastLog.length - 1].last, 12.5)) {
