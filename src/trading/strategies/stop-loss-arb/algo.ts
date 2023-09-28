@@ -31,6 +31,7 @@ interface StockState {
     previousPosition: number;
     newPosition: number;
   }[];
+  realizedPnL: number;
 }
 
 const brokerageClient = new IBKRClient();
