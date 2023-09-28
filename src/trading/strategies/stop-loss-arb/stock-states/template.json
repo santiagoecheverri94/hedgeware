@@ -160,5 +160,6 @@
       }
     }
   ],
-  "tradingLogs": []
+  "tradingLogs": [],
+  "realizedPnL": 0.00
 }

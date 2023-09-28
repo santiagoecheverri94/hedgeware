@@ -11,6 +11,7 @@ interface SmoothingInterval {
     active: boolean;
     crossed: boolean;
     price: number;
+    boughtAt: number;
   };
   [OrderSides.BUY]: {
     active: boolean;
