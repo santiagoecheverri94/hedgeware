@@ -21,6 +21,7 @@ interface SmoothingInterval {
 }
 
 interface StockState {
+  skips: number;
   brokerageId: string;
   numContracts: number;
   position: number;
@@ -55,7 +56,7 @@ export async function startStopLossArb(): Promise<void> {
 
 async function getStocks(): Promise<string[]> {
   const fileNames = await getFileNamesWithinFolder(getStockStatesFolderPath());
-  return fileNames.filter(fileName => fileName !== 'template' && !fileName.endsWith('_Sim'));
+  return fileNames.filter(fileName => fileName !== 'template' && !fileName.endsWith('_skip'));
 }
 
 function getStockStatesFolderPath(): string {
@@ -175,7 +176,7 @@ function getNumToBuy(stockState: StockState, last: number): number {
     for (let i = intervals.length - 1; i > indexesToExecute[0]; i--) {
       const interval = intervals[i];
 
-      if (interval[OrderSides.BUY].active && i !== indexesToExecute[indexesToExecute.length - 1] + 1) {
+      if (interval[OrderSides.BUY].active && stockState.skips ? i !== indexesToExecute[indexesToExecute.length - 1] + stockState.skips : true) {
         indexesToExecute.push(i);
       }
     }
