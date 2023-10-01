@@ -1,6 +1,6 @@
 import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
 import {getCurrentTimeStamp, getFileNamesWithinFolder, isMarketOpen, jsonPrettyPrint, log, readJSONFile, writeJSONFile} from '../../../utils/miscellaneous';
-import {restartRandomPrice} from '../../../utils/price-simulator';
+import {restartSimulatedPrice} from '../../../utils/price-simulator';
 import {IBKRClient} from '../../brokerage-clients/IBKR/client';
 import {OrderSides} from '../../brokerage-clients/brokerage-client';
 import {setTimeout} from 'node:timers/promises';
@@ -42,21 +42,27 @@ export async function startStopLossArb(): Promise<void> {
 
   const states = await getStockStates(stocks);
 
-  await Promise.all(stocks.map(stock => {
-    return (async function () {
-      while (isMarketOpen()) {
-        await reconcileStockPosition(stock, states[stock]);
+  await Promise.all(stocks.map(stock => (async () => {
+    while (isMarketOpen()) {
+      const {bid, ask} = await reconcileStockPosition(stock, states[stock]);
+
+      if (process.env.SIMULATE_SNAPSHOT) {
+        states[stock] = await debugSimulatedPrices(bid, ask, stock, states[stock]);
       }
-    })();
-  }));
+    }
+  })()));
 }
 
 async function getStocks(): Promise<string[]> {
   const fileNames = await getFileNamesWithinFolder(getStockStatesFolderPath());
-  return fileNames.filter(fileName => fileName !== 'template');
+  return fileNames.filter(fileName => fileName !== 'template' && !fileName.endsWith('_Sim'));
 }
 
 function getStockStatesFolderPath(): string {
+  if (process.env.SIMULATE_SNAPSHOT) {
+    return `${process.cwd()}\\src\\trading\\strategies\\stop-loss-arb\\stock-states\\simulated`;
+  }
+
   return `${process.cwd()}\\src\\trading\\strategies\\stop-loss-arb\\stock-states`;
 }
 
@@ -73,7 +79,7 @@ function getStockStateFilePath(stock: string): string {
   return `${getStockStatesFolderPath()}\\${stock}.json`;
 }
 
-async function reconcileStockPosition(stock: string, stockState: StockState) {
+async function reconcileStockPosition(stock: string, stockState: StockState): Promise<{bid: number, ask: number}> {
   // 0) wait a second
   if (!process.env.SIMULATE_SNAPSHOT) {
     const ONE_SECOND = 1000;
@@ -128,30 +134,14 @@ async function reconcileStockPosition(stock: string, stockState: StockState) {
 
     checkCrossings(stockState, last);
 
-    await writeJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
+    if (!process.env.SIMULATE_SNAPSHOT) {
+      await writeJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
+    }
   }
+
+  // 5)
+  return {bid: last, ask: last};
 }
-
-// if (doFloatCalculation(FloatCalculations.greaterThan, lastLog[lastLog.length - 1].last, 12.5)) {
-//   console.log(`last: ${lastLog[lastLog.length - 1].last}, position: ${states[stock].position}`);
-
-//   if (lastLog[lastLog.length - 1].position < 100) {
-//     debugger; printDeltasOfLog();
-//   }
-
-//   restartRandomPrice();
-//   states = getStockStates(stocks);
-
-// } else if (doFloatCalculation(FloatCalculations.lessThan, lastLog[lastLog.length - 1].last, 11.15)) {
-//   console.log(`last: ${lastLog[lastLog.length - 1].last}, position: ${states[stock].position}`);
-
-//   if (lastLog[lastLog.length - 1].position > 10 || lastLog[lastLog.length - 1].position < 0) {
-//     debugger; printDeltasOfLog();
-//   }
-
-//   restartRandomPrice();
-//   states = getStockStates(stocks);
-// }
 
 function checkCrossings(stockState: StockState, last: number) {
   const {intervals} = stockState;
@@ -237,4 +227,32 @@ function getNumToSell(stockState: StockState, last: number): number {
   }
 
   return indexesToExecute.length;
+}
+
+async function debugSimulatedPrices(bid: number, ask: number, stock: string, stockState: StockState): Promise<StockState> {
+  const upperBound = doFloatCalculation(FloatCalculations.add, stockState.intervals[0][OrderSides.SELL].price, 0.5);
+  if (doFloatCalculation(FloatCalculations.greaterThan, bid, upperBound)) {
+    console.log(`stock: ${stock}, bid: ${bid}, position: ${stockState.position}`);
+
+    if (stockState.position < 100) {
+      debugger;
+    }
+
+    restartSimulatedPrice();
+    return (await getStockStates([stock]))[stock];
+  }
+
+  const lowerBound = doFloatCalculation(FloatCalculations.subtract, stockState.intervals[stockState.intervals.length - 1][OrderSides.BUY].price, 0.5);
+  if (doFloatCalculation(FloatCalculations.lessThan, ask, lowerBound)) {
+    console.log(`stock: ${stock}, ask: ${ask}, position: ${stockState.position}`);
+
+    if (stockState.position > 10 || stockState.position < 0) {
+      debugger;
+    }
+
+    restartSimulatedPrice();
+    return (await getStockStates([stock]))[stock];
+  }
+
+  return stockState;
 }

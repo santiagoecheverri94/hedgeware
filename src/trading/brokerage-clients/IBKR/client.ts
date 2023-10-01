@@ -2,7 +2,7 @@ import {ApisauceInstance} from 'apisauce';
 import {BrokerageClient, OrderDetails, OrderSides, OrderStatus, OrderTypes, SnapShotFields, Snapshot, TimesInForce} from '../brokerage-client';
 import {getUncheckedIBKRApi} from './api';
 import {initiateApiSessionWithTickling} from './tickle';
-import {getManualPrice, getRandomPrice} from '../../../utils/price-simulator';
+import {getManualPrice, getSimulatedPrice} from '../../../utils/price-simulator';
 import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrderStatusResponse, OrdersResponse, PositionResponse, SnapshotResponse} from './types';
 import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
 import {log} from '../../../utils/miscellaneous';
@@ -51,9 +51,9 @@ export class IBKRClient extends BrokerageClient {
   async getSnapshot(conid: string): Promise<Snapshot> {
     if (process.env.SIMULATE_SNAPSHOT) {
       return {
-        bid: getRandomPrice(),
-        ask: getRandomPrice(),
-        last: getRandomPrice(),
+        bid: getSimulatedPrice(),
+        ask: getSimulatedPrice(),
+        last: getSimulatedPrice(),
         // last: getManualPrice(),
       };
     }

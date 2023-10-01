@@ -68,10 +68,11 @@ export async function setSecurityPosition({
   }
 }
 
-async function isNewPositionSet(brokerageClient: BrokerageClient, brokerageIdOfSecurity: string, newPosition: number): Promise<boolean> {
-  const currentlySettledPosition = await brokerageClient.getPositionSize(brokerageIdOfSecurity);
-  return currentlySettledPosition === newPosition;
-}
+// TODO: use code commented in this block if we ever want to stop assuming that we can fulfill all our orders at the bid/ask
+// async function isNewPositionSet(brokerageClient: BrokerageClient, brokerageIdOfSecurity: string, newPosition: number): Promise<boolean> {
+//   const currentlySettledPosition = await brokerageClient.getPositionSize(brokerageIdOfSecurity);
+//   return currentlySettledPosition === newPosition;
+// }
 
 async function isOrderFilled(brokerageClient: BrokerageClient, orderId: string): Promise<boolean> {
   const orderStatus = await brokerageClient.getOrderStatus(orderId);
