@@ -1,5 +1,5 @@
 {
-  "skips": 3,
+  "uncrossedBuyingSkips": 3,
   "brokerageId": "",
   "numContracts": 0,
   "position": 0,

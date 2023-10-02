@@ -1,22 +1,9 @@
 {
-  "skips": 1,
+  "uncrossedBuyingSkips": 1,
   "brokerageId": "",
   "numContracts": 0,
   "position": 0,
   "intervals": [
-    {
-      "positionLimit": 100,
-      "SELL": {
-        "price": 13.1,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 13.05,
-        "active": true,
-        "crossed": true
-      }
-    },
     {
       "positionLimit": 100,
       "SELL": {

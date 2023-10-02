@@ -21,7 +21,7 @@ interface SmoothingInterval {
 }
 
 interface StockState {
-  skips: number;
+  uncrossedBuyingSkips: number;
   brokerageId: string;
   numContracts: number;
   position: number;
@@ -56,7 +56,7 @@ export async function startStopLossArb(): Promise<void> {
 
 async function getStocks(): Promise<string[]> {
   const fileNames = await getFileNamesWithinFolder(getStockStatesFolderPath());
-  return fileNames.filter(fileName => fileName !== 'template' && !fileName.endsWith('_skip'));
+  return fileNames.filter(fileName => fileName !== 'template' && !fileName.includes('_skip'));
 }
 
 function getStockStatesFolderPath(): string {
@@ -176,7 +176,7 @@ function getNumToBuy(stockState: StockState, last: number): number {
     for (let i = intervals.length - 1; i > indexesToExecute[0]; i--) {
       const interval = intervals[i];
 
-      if (interval[OrderSides.BUY].active && stockState.skips ? i !== indexesToExecute[indexesToExecute.length - 1] + stockState.skips : true) {
+      if (interval[OrderSides.BUY].active && i !== indexesToExecute[indexesToExecute.length - 1] + stockState.uncrossedBuyingSkips) {
         indexesToExecute.push(i);
       }
     }
@@ -247,7 +247,7 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
   if (doFloatCalculation(FloatCalculations.lessThan, ask, lowerBound)) {
     console.log(`stock: ${stock}, ask: ${ask}, position: ${stockState.position}`);
 
-    if (stockState.position > 10 || stockState.position < 0) {
+    if (stockState.position > (10 * stockState.uncrossedBuyingSkips) || stockState.position < 0) {
       debugger;
     }
 
