@@ -58,7 +58,7 @@ export async function startStopLossArb(): Promise<void> {
 
 async function getStocks(): Promise<string[]> {
   const fileNames = await getFileNamesWithinFolder(getStockStatesFolderPath());
-  return fileNames.filter(fileName => fileName !== 'template' && !fileName.includes('_skip'));
+  return fileNames.filter(fileName => !fileName.includes('template') && !fileName.includes('_skip'));
 }
 
 function getStockStatesFolderPath(): string {
@@ -91,7 +91,12 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
 
   // 1)
   const {bid, ask} = await brokerageClient.getSnapshot(stockState.brokerageId);
-  checkCrossings(stockState, bid, ask);
+  const crossingHappened = checkCrossings(stock, stockState, bid, ask);
+
+  if (!process.env.SIMULATE_SNAPSHOT && crossingHappened) {
+    log(`"${stock}" crossed, bid: ${bid}, ask: ${ask}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
+    writeJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
+  }
 
   // 2)
   const numToBuy = getNumToBuy(stockState, ask);
@@ -135,10 +140,10 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
 
     stockState.position = newPosition;
 
-    checkCrossings(stockState, bid, ask);
+    checkCrossings(stock, stockState, bid, ask);
 
     if (!process.env.SIMULATE_SNAPSHOT) {
-      await writeJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
+      writeJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
     }
   }
 
@@ -146,18 +151,23 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
   return {bid, ask};
 }
 
-function checkCrossings(stockState: StockState, bid: number, ask: number) {
+function checkCrossings(stock: string, stockState: StockState, bid: number, ask: number): boolean {
   const {intervals} = stockState;
 
+  let crossingHappened = false;
   for (const interval of intervals) {
-    if (interval[OrderSides.BUY].active && doFloatCalculation(FloatCalculations.lessThan, ask, interval[OrderSides.BUY].price)) {
+    if (interval[OrderSides.BUY].active && !interval[OrderSides.BUY].crossed && doFloatCalculation(FloatCalculations.lessThan, ask, interval[OrderSides.BUY].price)) {
       interval[OrderSides.BUY].crossed = true;
+      crossingHappened = true;
     }
 
-    if (interval[OrderSides.SELL].active && doFloatCalculation(FloatCalculations.greaterThan, bid, interval[OrderSides.SELL].price)) {
+    if (interval[OrderSides.SELL].active && !interval[OrderSides.SELL].crossed && doFloatCalculation(FloatCalculations.greaterThan, bid, interval[OrderSides.SELL].price)) {
       interval[OrderSides.SELL].crossed = true;
+      crossingHappened = true;
     }
   }
+
+  return crossingHappened;
 }
 
 function getNumToBuy(stockState: StockState, ask: number): number {
@@ -183,7 +193,7 @@ function getNumToBuy(stockState: StockState, ask: number): number {
       }
     }
 
-    const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval * stockState.numContracts);
+    const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.realizedPnL = doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, tradingCosts);
   }
 
@@ -214,15 +224,16 @@ function getNumToSell(stockState: StockState, bid: number): number {
   }
 
   if (indexesToExecute.length > 0) {
-    for (let i = 0; i < indexesToExecute[0]; i++) {
+    const lowestSaleToExecute = indexesToExecute[0];
+    for (let i = 0; i < lowestSaleToExecute; i++) {
       const interval = intervals[i];
 
-      if (interval[OrderSides.SELL].active) {
+      if (interval[OrderSides.SELL].active && i !== lowestSaleToExecute - stockState.uncrossedBuyingSkips) {
         indexesToExecute.unshift(i);
       }
     }
 
-    const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval * stockState.numContracts);
+    const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.realizedPnL = doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, tradingCosts);
   }
 
@@ -232,7 +243,7 @@ function getNumToSell(stockState: StockState, bid: number): number {
     interval[OrderSides.SELL].active = false;
     interval[OrderSides.SELL].crossed = false;
     const unscaledSalePnL = doFloatCalculation(FloatCalculations.subtract, bid, interval[OrderSides.SELL].boughtAt);
-    const salePnL = doFloatCalculation(FloatCalculations.multiply, unscaledSalePnL, stockState.sharesPerInterval * stockState.numContracts);
+    const salePnL = doFloatCalculation(FloatCalculations.multiply, unscaledSalePnL, stockState.sharesPerInterval);
     stockState.realizedPnL = doFloatCalculation(FloatCalculations.add, stockState.realizedPnL, salePnL);
 
     interval[OrderSides.BUY].active = true;
@@ -245,7 +256,7 @@ function getNumToSell(stockState: StockState, bid: number): number {
 async function debugSimulatedPrices(bid: number, ask: number, stock: string, stockState: StockState): Promise<StockState> {
   const upperBound = doFloatCalculation(FloatCalculations.add, stockState.intervals[0][OrderSides.SELL].price, 0.5);
   if (doFloatCalculation(FloatCalculations.greaterThan, bid, upperBound)) {
-    console.log(`stock: ${stock}, bid: ${bid}, position: ${stockState.position}`);
+    console.log(`stock: ${stock}, bid: ${bid}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
 
     if (stockState.position < 100) {
       debugger;
@@ -257,7 +268,7 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
 
   const lowerBound = doFloatCalculation(FloatCalculations.subtract, stockState.intervals[stockState.intervals.length - 1][OrderSides.BUY].price, 0.5);
   if (doFloatCalculation(FloatCalculations.lessThan, ask, lowerBound)) {
-    console.log(`stock: ${stock}, ask: ${ask}, position: ${stockState.position}`);
+    console.log(`stock: ${stock}, ask: ${ask}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
 
     if (stockState.position > (stockState.sharesPerInterval * stockState.uncrossedBuyingSkips) || stockState.position < 0) {
       debugger;

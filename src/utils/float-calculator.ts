@@ -23,7 +23,7 @@ export function doFloatCalculation(operation: FloatCalculations, input1: number,
       return math.number(math.add(math.bignumber(input1), math.bignumber(input2)));
     },
     [FloatCalculations.multiply]: () => {
-      return math.number(math.multiply(input1, input2));
+      return math.number(math.multiply(math.bignumber(input1) as any, math.bignumber(input2) as any));
     },
     [FloatCalculations.subtract]: () => {
       return math.number(math.subtract(math.bignumber(input1), math.bignumber(input2)));

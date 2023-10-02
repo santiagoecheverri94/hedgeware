@@ -44,5 +44,5 @@ export function jsonPrettyPrint(obj: unknown): string {
 
 export async function getFileNamesWithinFolder(folderPath: string): Promise<string[]> {
   const fileNames = await fsPromises.readdir(folderPath);
-  return fileNames.map(fileName => fileName.split('.')[0]);
+  return fileNames.filter(fileName => fileName !== 'simulated').map(fileName => fileName.split('.')[0]);
 }

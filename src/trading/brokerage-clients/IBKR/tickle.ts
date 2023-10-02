@@ -39,7 +39,9 @@ async function tickleApiGatewayEveryMinute(): Promise<void> {
     stopSystem('IBKR API Gateway became unauthenticated.');
   }
 
-  log('Tickled IBKR Gateway successfully.');
+  if (process.env.VERBOSE) {
+    log('Tickled IBKR Gateway successfully.');
+  }
 
   tickleApiGatewayEveryMinute();
 }
