@@ -7,6 +7,7 @@ const math = create(all, {
 
 export enum FloatCalculations {
   add = 'add',
+  multiply = 'multiply',
   subtract = 'subtract',
   greaterThan = 'greaterThan',
   greaterThanOrEqual = 'greaterThanOrEqual',
@@ -20,6 +21,9 @@ export function doFloatCalculation(operation: FloatCalculations, input1: number,
   const calculator: {[operation in FloatCalculations]: () => number} = {
     [FloatCalculations.add]: () => {
       return math.number(math.add(math.bignumber(input1), math.bignumber(input2)));
+    },
+    [FloatCalculations.multiply]: () => {
+      return math.number(math.multiply(input1, input2));
     },
     [FloatCalculations.subtract]: () => {
       return math.number(math.subtract(math.bignumber(input1), math.bignumber(input2)));

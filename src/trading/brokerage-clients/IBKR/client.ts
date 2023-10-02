@@ -7,6 +7,7 @@ import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrderStatusResp
 import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
 import {log} from '../../../utils/miscellaneous';
 import {setTimeout} from 'node:timers/promises';
+import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
 
 export class IBKRClient extends BrokerageClient {
   protected orderTypes = {
@@ -50,11 +51,12 @@ export class IBKRClient extends BrokerageClient {
 
   async getSnapshot(conid: string): Promise<Snapshot> {
     if (process.env.SIMULATE_SNAPSHOT) {
+      const simulatedPrice = getSimulatedPrice();
+
       return {
-        bid: getSimulatedPrice(),
-        ask: getSimulatedPrice(),
-        last: getSimulatedPrice(),
-        // last: getManualPrice(),
+        bid: doFloatCalculation(FloatCalculations.subtract, simulatedPrice, 0.01),
+        ask: simulatedPrice,
+        last: simulatedPrice,
       };
     }
 

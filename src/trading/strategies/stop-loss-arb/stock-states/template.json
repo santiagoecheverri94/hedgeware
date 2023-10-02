@@ -1,6 +1,8 @@
 {
   "uncrossedBuyingSkips": 1,
   "brokerageId": "",
+  "brokerageTradingCostPerShare": 0.005,
+  "sharesPerInterval": 10,
   "numContracts": 0,
   "position": 0,
   "intervals": [
