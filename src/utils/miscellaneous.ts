@@ -6,7 +6,14 @@ export function log(msg: string): void {
 }
 
 export function getCurrentTimeStamp(): string {
-  return `${moment().format('MM-DD-YYYY')} at ${moment().format('hh:mma')}`;
+  return `${getCurrentTimeInNewYork().format('MM-DD-YYYY')} at ${getCurrentTimeInNewYork().format('hh:mma ET')}`;
+}
+
+function getCurrentTimeInNewYork(): moment.Moment {
+  const hoursFormat = 'hh:mma';
+  const marketTimezone = 'America/New_York';
+
+  return moment(moment().tz(marketTimezone).format(hoursFormat), hoursFormat);
 }
 
 export function stopSystem(errorMsg: string): void {
@@ -21,7 +28,7 @@ export function isMarketOpen(openingTimeET = '9:40', closingTimeET = '3:50'): bo
   const hoursFormat = 'hh:mma';
   const marketTimezone = 'America/New_York';
 
-  const currentTimeInNewYork = moment(moment().tz(marketTimezone).format(hoursFormat), hoursFormat);
+  const currentTimeInNewYork = getCurrentTimeInNewYork();
   const marketOpens = moment(`${openingTimeET}am`, hoursFormat);
   const marketCloses = moment(`${closingTimeET}pm`, hoursFormat);
 

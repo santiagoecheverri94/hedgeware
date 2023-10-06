@@ -58,7 +58,7 @@ export async function startStopLossArb(): Promise<void> {
 
 async function getStocks(): Promise<string[]> {
   const fileNames = await getFileNamesWithinFolder(getStockStatesFolderPath());
-  return fileNames.filter(fileName => !fileName.includes('template') && !fileName.includes('_skip'));
+  return fileNames.filter(fileName => !['template', '_skip', 'results'].some(excludedFileName => fileName.includes(excludedFileName)));
 }
 
 function getStockStatesFolderPath(): string {
@@ -142,7 +142,9 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
 
     checkCrossings(stock, stockState, bid, ask);
 
-    if (!process.env.SIMULATE_SNAPSHOT) {
+    if (process.env.SIMULATE_SNAPSHOT) {
+      await writeJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
+    } else {
       writeJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
     }
   }
