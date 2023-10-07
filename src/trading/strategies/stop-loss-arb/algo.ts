@@ -58,7 +58,7 @@ export async function startStopLossArb(): Promise<void> {
 
 async function getStocks(): Promise<string[]> {
   const fileNames = await getFileNamesWithinFolder(getStockStatesFolderPath());
-  return fileNames.filter(fileName => !['template', '_skip', 'results'].some(excludedFileName => fileName.includes(excludedFileName)));
+  return fileNames.filter(fileName => !['template', 'skip', 'results'].some(excludedFileName => fileName.includes(excludedFileName)));
 }
 
 function getStockStatesFolderPath(): string {
@@ -217,7 +217,7 @@ function getNumToSell(stockState: StockState, bid: number): number {
   const {intervals, position} = stockState;
 
   let newPosition = position;
-  const indexesToExecute: number[] = [];
+  let indexesToExecute: number[] = [];
   for (const [i, interval] of intervals.entries()) {
     if (doFloatCalculation(FloatCalculations.lessThanOrEqual, bid, interval[OrderSides.SELL].price)  && interval[OrderSides.SELL].active && interval[OrderSides.SELL].crossed && newPosition > interval.positionLimit) {
       indexesToExecute.push(i);
@@ -226,13 +226,23 @@ function getNumToSell(stockState: StockState, bid: number): number {
   }
 
   if (indexesToExecute.length > 0) {
+    let maxLossSaleIndex: number | undefined;
     const lowestSaleToExecute = indexesToExecute[0];
     for (let i = 0; i < lowestSaleToExecute; i++) {
       const interval = intervals[i];
 
-      if (interval[OrderSides.SELL].active && i !== lowestSaleToExecute - stockState.uncrossedBuyingSkips) {
+      // if (interval[OrderSides.SELL].active && i !== lowestSaleToExecute - stockState.uncrossedBuyingSkips) {
+      if (interval[OrderSides.SELL].active) {
         indexesToExecute.unshift(i);
+
+        if (maxLossSaleIndex === undefined) {
+          maxLossSaleIndex = i;
+        }
       }
+    }
+
+    if (maxLossSaleIndex !== undefined) {
+      indexesToExecute = indexesToExecute.filter(index => index !== maxLossSaleIndex);
     }
 
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);

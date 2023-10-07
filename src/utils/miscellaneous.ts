@@ -6,7 +6,7 @@ export function log(msg: string): void {
 }
 
 export function getCurrentTimeStamp(): string {
-  return `${getCurrentTimeInNewYork().format('MM-DD-YYYY')} at ${getCurrentTimeInNewYork().format('hh:mma ET')}`;
+  return `${getCurrentTimeInNewYork().format('MM-DD-YYYY')} at ${getCurrentTimeInNewYork().format('hh:mma')} ET`;
 }
 
 function getCurrentTimeInNewYork(): moment.Moment {
