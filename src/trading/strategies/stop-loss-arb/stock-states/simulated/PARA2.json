@@ -1,5 +1,5 @@
 {
-  "uncrossedBuyingSkips": 3,
+  "uncrossedBuyingSkips": 2,
   "brokerageId": "393897513",
   "brokerageTradingCostPerShare": 0.005,
   "sharesPerInterval": 10,
@@ -180,20 +180,6 @@
       },
       "BUY": {
         "price": 11.74,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 0,
-      "SELL": {
-        "price": 11.9,
-        "active": false,
-        "crossed": false,
-        "boughtAt": 11.99
-      },
-      "BUY": {
-        "price": 11.64,
         "active": true,
         "crossed": true
       }

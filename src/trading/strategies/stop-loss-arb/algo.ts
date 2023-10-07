@@ -265,6 +265,8 @@ function getNumToSell(stockState: StockState, bid: number): number {
   return indexesToExecute.length;
 }
 
+let stocksRealizedPnLs: {[stock: string]: number[]} = {};
+
 async function debugSimulatedPrices(bid: number, ask: number, stock: string, stockState: StockState): Promise<StockState> {
   const upperBound = doFloatCalculation(FloatCalculations.add, stockState.intervals[0][OrderSides.SELL].price, 0.5);
   if (doFloatCalculation(FloatCalculations.greaterThan, bid, upperBound)) {
@@ -272,6 +274,19 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
 
     if (stockState.position < 100) {
       debugger;
+    }
+
+    if (!stocksRealizedPnLs[stock]) {
+      stocksRealizedPnLs[stock] = [];
+    }
+    const realizedPnLs = stocksRealizedPnLs[stock];
+
+    realizedPnLs.push(stockState.realizedPnL);
+    if (realizedPnLs.length === 100) {
+      const averagePnL = realizedPnLs.reduce((sum, realizedPnL) => sum + realizedPnL, 0) / realizedPnLs.length;
+      console.log(`averagePnL: ${averagePnL}`);
+      debugger;
+      stocksRealizedPnLs[stock] = [];
     }
 
     restartSimulatedPrice();
@@ -282,8 +297,21 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
   if (doFloatCalculation(FloatCalculations.lessThan, ask, lowerBound)) {
     console.log(`stock: ${stock}, ask: ${ask}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
 
-    if (stockState.position > (stockState.sharesPerInterval * stockState.uncrossedBuyingSkips) || stockState.position < 0) {
+    if (stockState.position > 10 || stockState.position < 0) {
       debugger;
+    }
+
+    if (!stocksRealizedPnLs[stock]) {
+      stocksRealizedPnLs[stock] = [];
+    }
+    const realizedPnLs = stocksRealizedPnLs[stock];
+
+    realizedPnLs.push(stockState.realizedPnL);
+    if (realizedPnLs.length === 100) {
+      const averagePnL = realizedPnLs.reduce((sum, realizedPnL) => sum + realizedPnL, 0) / realizedPnLs.length;
+      console.log(`averagePnL: ${averagePnL}`);
+      debugger;
+      stocksRealizedPnLs[stock] = [];
     }
 
     restartSimulatedPrice();

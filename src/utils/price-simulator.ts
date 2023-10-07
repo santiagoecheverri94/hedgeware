@@ -10,7 +10,7 @@ export function getSimulatedPrice(): number {
 function getRandomPrice(): number {
   const tickDown = doFloatCalculation(FloatCalculations.subtract, randomPrice, 0.01);
   const tickUp = doFloatCalculation(FloatCalculations.add, randomPrice, 0.01);
-  randomPrice = Math.random() < 0.49 ? tickDown : tickUp;
+  randomPrice = Math.random() < 0.51 ? tickDown : tickUp;
 
   return randomPrice;
 }
