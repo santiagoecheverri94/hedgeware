@@ -1,9 +1,9 @@
 import { FloatCalculations, doFloatCalculation } from "../../../utils/float-calculator";
 import { jsonPrettyPrint, syncWriteJSONFile } from "../../../utils/miscellaneous";
-import { SmoothingInterval, StockState, getStockStateFilePath } from "./algo";
+import { IntervalTypes, SmoothingInterval, StockState, getStockStateFilePath } from "./algo";
 
-const MAX_SHARES = 200;
-const INTERVAL_PER_POSITION = 3;
+const MAX_SHARES = 220;
+const INTERVAL_PER_POSITION = 4;
 
 export function createNewStockState({
   stock,
@@ -69,13 +69,14 @@ function getLongIntervals({
   const numIntervals = MAX_SHARES / sharesPerInterval;
 
   let absoluteIndex = 0;
-  for (let i = 0; i < numIntervals; i++) {
+  for (let i = 0; i <= numIntervals; i++) {
     for (let j = 0; j < INTERVAL_PER_POSITION; j++) {
       const spaceFromBaseInterval = doFloatCalculation(FloatCalculations.multiply, absoluteIndex, spaceBetweenIntervals);
       const buyPrice = doFloatCalculation(FloatCalculations.add, initialPrice, spaceFromBaseInterval);
 
       intervals.unshift({
-        positionLimit: sharesPerInterval * (i + 1),
+        type: IntervalTypes.LONG,
+        positionLimit: Math.min(sharesPerInterval * i, 100),
         SELL: {
           price: doFloatCalculation(FloatCalculations.add, buyPrice, intervalProfit),
           active: false,
@@ -110,13 +111,14 @@ function getShortIntervals({
   const numIntervals = MAX_SHARES / sharesPerInterval;
 
   let absoluteIndex = 0;
-  for (let i = 0; i < numIntervals; i++) {
+  for (let i = 0; i <= numIntervals; i++) {
     for (let j = 0; j < INTERVAL_PER_POSITION; j++) {
       const spaceFromBaseInterval = doFloatCalculation(FloatCalculations.multiply, absoluteIndex, spaceBetweenIntervals);
       const sellPrice = doFloatCalculation(FloatCalculations.subtract, initialPrice, spaceFromBaseInterval);
 
       intervals.push({
-        positionLimit: -sharesPerInterval * (i + 1),
+        type: IntervalTypes.SHORT,
+        positionLimit: Math.max(-sharesPerInterval * i, -100),
         SELL: {
           price: sellPrice,
           active: true,
