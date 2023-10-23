@@ -1,5 +1,4 @@
 {
-  "uncrossedBuyingSkips": 3,
   "brokerageId": "393897513",
   "brokerageTradingCostPerShare": 0.005,
   "sharesPerInterval": 10,
@@ -7,571 +6,843 @@
   "position": 0,
   "intervals": [
     {
-      "positionLimit": 140,
+      "positionLimit": 200,
       "SELL": {
-        "price": 16.10,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 16.04,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 140,
-      "SELL": {
-        "price": 16.00,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 15.94,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 140,
-      "SELL": {
-        "price": 15.90,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 15.84,
-        "active": true,
-        "crossed": true
-      }
-    },
-
-    {
-      "positionLimit": 130,
-      "SELL": {
-        "price": 15.80,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 15.74,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 130,
-      "SELL": {
-        "price": 15.70,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 15.64,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 130,
-      "SELL": {
-        "price": 15.60,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 15.54,
-        "active": true,
-        "crossed": true
-      }
-    },
-
-    {
-      "positionLimit": 120,
-      "SELL": {
-        "price": 15.50,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 15.44,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 120,
-      "SELL": {
-        "price": 15.40,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 15.34,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 120,
-      "SELL": {
-        "price": 15.30,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 15.24,
-        "active": true,
-        "crossed": true
-      }
-    },
-
-    {
-      "positionLimit": 110,
-      "SELL": {
-        "price": 15.20,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 15.14,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 110,
-      "SELL": {
-        "price": 15.10,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 15.04,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 110,
-      "SELL": {
-        "price": 15.00,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 14.94,
-        "active": true,
-        "crossed": true
-      }
-    },
-
-    {
-      "positionLimit": 100,
-      "SELL": {
-        "price": 14.90,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 14.84,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 100,
-      "SELL": {
-        "price": 14.80,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 14.74,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 100,
-      "SELL": {
-        "price": 14.70,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 14.64,
-        "active": true,
-        "crossed": true
-      }
-    },
-
-    {
-      "positionLimit": 90,
-      "SELL": {
-        "price": 14.60,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 14.54,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 90,
-      "SELL": {
-        "price": 14.50,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 14.44,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 90,
-      "SELL": {
-        "price": 14.40,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 14.34,
-        "active": true,
-        "crossed": true
-      }
-    },
-
-    {
-      "positionLimit": 80,
-      "SELL": {
-        "price": 14.30,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 14.24,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 80,
-      "SELL": {
-        "price": 14.20,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 14.14,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 80,
-      "SELL": {
-        "price": 14.10,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 14.04,
-        "active": true,
-        "crossed": true
-      }
-    },
-
-    {
-      "positionLimit": 70,
-      "SELL": {
-        "price": 14.00,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 13.94,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 70,
-      "SELL": {
-        "price": 13.90,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 13.84,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 70,
-      "SELL": {
-        "price": 13.80,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 13.74,
-        "active": true,
-        "crossed": true
-      }
-    },
-
-    {
-      "positionLimit": 60,
-      "SELL": {
-        "price": 13.70,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 13.64,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 60,
-      "SELL": {
-        "price": 13.60,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 13.54,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 60,
-      "SELL": {
-        "price": 13.50,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 13.44,
-        "active": true,
-        "crossed": true
-      }
-    },
-
-    {
-      "positionLimit": 50,
-      "SELL": {
-        "price": 13.40,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 13.34,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 50,
-      "SELL": {
-        "price": 13.30,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 13.24,
-        "active": true,
-        "crossed": true
-      }
-    },
-    {
-      "positionLimit": 50,
-      "SELL": {
-        "price": 13.20,
-        "active": false,
-        "crossed": false
-      },
-      "BUY": {
         "price": 13.14,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 13.12,
         "active": true,
-        "crossed": true
+        "crossed": false
       }
     },
-
     {
-      "positionLimit": 40,
+      "positionLimit": 200,
       "SELL": {
-        "price": 13.10,
+        "price": 13.12,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 13.1,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 200,
+      "SELL": {
+        "price": 13.1,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 13.08,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 190,
+      "SELL": {
+        "price": 13.08,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 13.06,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 190,
+      "SELL": {
+        "price": 13.06,
         "active": false,
         "crossed": false
       },
       "BUY": {
         "price": 13.04,
         "active": true,
-        "crossed": true
+        "crossed": false
       }
     },
     {
-      "positionLimit": 40,
+      "positionLimit": 190,
       "SELL": {
-        "price": 13.00,
+        "price": 13.04,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 13.02,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 180,
+      "SELL": {
+        "price": 13.02,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 13,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 180,
+      "SELL": {
+        "price": 13,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.98,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 180,
+      "SELL": {
+        "price": 12.98,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.96,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 170,
+      "SELL": {
+        "price": 12.96,
         "active": false,
         "crossed": false
       },
       "BUY": {
         "price": 12.94,
         "active": true,
-        "crossed": true
+        "crossed": false
       }
     },
     {
-      "positionLimit": 40,
+      "positionLimit": 170,
       "SELL": {
-        "price": 12.90,
+        "price": 12.94,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.92,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 170,
+      "SELL": {
+        "price": 12.92,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.9,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 160,
+      "SELL": {
+        "price": 12.9,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.88,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 160,
+      "SELL": {
+        "price": 12.88,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.86,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 160,
+      "SELL": {
+        "price": 12.86,
         "active": false,
         "crossed": false
       },
       "BUY": {
         "price": 12.84,
         "active": true,
-        "crossed": true
+        "crossed": false
       }
     },
-
     {
-      "positionLimit": 30,
+      "positionLimit": 150,
       "SELL": {
-        "price": 12.80,
+        "price": 12.84,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.82,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 150,
+      "SELL": {
+        "price": 12.82,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.8,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 150,
+      "SELL": {
+        "price": 12.8,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.78,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 140,
+      "SELL": {
+        "price": 12.78,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.76,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 140,
+      "SELL": {
+        "price": 12.76,
         "active": false,
         "crossed": false
       },
       "BUY": {
         "price": 12.74,
         "active": true,
-        "crossed": true
+        "crossed": false
       }
     },
     {
-      "positionLimit": 30,
+      "positionLimit": 140,
       "SELL": {
-        "price": 12.70,
+        "price": 12.74,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.72,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 130,
+      "SELL": {
+        "price": 12.72,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.7,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 130,
+      "SELL": {
+        "price": 12.7,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.68,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 130,
+      "SELL": {
+        "price": 12.68,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.66,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 120,
+      "SELL": {
+        "price": 12.66,
         "active": false,
         "crossed": false
       },
       "BUY": {
         "price": 12.64,
         "active": true,
-        "crossed": true
+        "crossed": false
       }
     },
     {
-      "positionLimit": 30,
+      "positionLimit": 120,
       "SELL": {
-        "price": 12.60,
+        "price": 12.64,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.62,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 120,
+      "SELL": {
+        "price": 12.62,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.6,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 110,
+      "SELL": {
+        "price": 12.6,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.58,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 110,
+      "SELL": {
+        "price": 12.58,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.56,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 110,
+      "SELL": {
+        "price": 12.56,
         "active": false,
         "crossed": false
       },
       "BUY": {
         "price": 12.54,
         "active": true,
-        "crossed": true
+        "crossed": false
       }
     },
-
     {
-      "positionLimit": 20,
+      "positionLimit": 100,
       "SELL": {
-        "price": 12.50,
+        "price": 12.54,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.52,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 100,
+      "SELL": {
+        "price": 12.52,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.5,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 100,
+      "SELL": {
+        "price": 12.5,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.48,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 90,
+      "SELL": {
+        "price": 12.48,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.46,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 90,
+      "SELL": {
+        "price": 12.46,
         "active": false,
         "crossed": false
       },
       "BUY": {
         "price": 12.44,
         "active": true,
-        "crossed": true
+        "crossed": false
       }
     },
     {
-      "positionLimit": 20,
+      "positionLimit": 90,
       "SELL": {
-        "price": 12.40,
+        "price": 12.44,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.42,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 80,
+      "SELL": {
+        "price": 12.42,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.4,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 80,
+      "SELL": {
+        "price": 12.4,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.38,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 80,
+      "SELL": {
+        "price": 12.38,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.36,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 70,
+      "SELL": {
+        "price": 12.36,
         "active": false,
         "crossed": false
       },
       "BUY": {
         "price": 12.34,
         "active": true,
-        "crossed": true
+        "crossed": false
       }
     },
     {
-      "positionLimit": 20,
+      "positionLimit": 70,
       "SELL": {
-        "price": 12.30,
+        "price": 12.34,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.32,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 70,
+      "SELL": {
+        "price": 12.32,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.3,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 60,
+      "SELL": {
+        "price": 12.3,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.28,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 60,
+      "SELL": {
+        "price": 12.28,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.26,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 60,
+      "SELL": {
+        "price": 12.26,
         "active": false,
         "crossed": false
       },
       "BUY": {
         "price": 12.24,
         "active": true,
-        "crossed": true
+        "crossed": false
       }
     },
-
     {
-      "positionLimit": 10,
+      "positionLimit": 50,
       "SELL": {
-        "price": 12.20,
+        "price": 12.24,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.22,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 50,
+      "SELL": {
+        "price": 12.22,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.2,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 50,
+      "SELL": {
+        "price": 12.2,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.18,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 40,
+      "SELL": {
+        "price": 12.18,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.16,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 40,
+      "SELL": {
+        "price": 12.16,
         "active": false,
         "crossed": false
       },
       "BUY": {
         "price": 12.14,
         "active": true,
-        "crossed": true
+        "crossed": false
       }
     },
     {
-      "positionLimit": 10,
+      "positionLimit": 40,
       "SELL": {
-        "price": 12.10,
+        "price": 12.14,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.12,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 30,
+      "SELL": {
+        "price": 12.12,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.1,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 30,
+      "SELL": {
+        "price": 12.1,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.08,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 30,
+      "SELL": {
+        "price": 12.08,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.06,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 20,
+      "SELL": {
+        "price": 12.06,
         "active": false,
         "crossed": false
       },
       "BUY": {
         "price": 12.04,
         "active": true,
-        "crossed": true
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 20,
+      "SELL": {
+        "price": 12.04,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.02,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 20,
+      "SELL": {
+        "price": 12.02,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12,
+        "active": true,
+        "crossed": false
       }
     },
     {
       "positionLimit": 10,
       "SELL": {
-        "price": 12.00,
+        "price": 12,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.98,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 10,
+      "SELL": {
+        "price": 11.98,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.96,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": 10,
+      "SELL": {
+        "price": 11.96,
         "active": false,
         "crossed": false
       },
       "BUY": {
         "price": 11.94,
         "active": true,
-        "crossed": true
+        "crossed": false
       }
     },
-
     {
       "positionLimit": -10,
       "SELL": {
-        "price": 11.90,
+        "price": 11.94,
         "active": true,
-        "crossed": true
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.92,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -10,
+      "SELL": {
+        "price": 11.92,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.9,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -10,
+      "SELL": {
+        "price": 11.9,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.88,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -20,
+      "SELL": {
+        "price": 11.88,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.86,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -20,
+      "SELL": {
+        "price": 11.86,
+        "active": true,
+        "crossed": false
       },
       "BUY": {
         "price": 11.84,
@@ -580,11 +851,63 @@
       }
     },
     {
-      "positionLimit": -10,
+      "positionLimit": -20,
       "SELL": {
-        "price": 11.80,
+        "price": 11.84,
         "active": true,
-        "crossed": true
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.82,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -30,
+      "SELL": {
+        "price": 11.82,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.8,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -30,
+      "SELL": {
+        "price": 11.8,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.78,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -30,
+      "SELL": {
+        "price": 11.78,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.76,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -40,
+      "SELL": {
+        "price": 11.76,
+        "active": true,
+        "crossed": false
       },
       "BUY": {
         "price": 11.74,
@@ -593,11 +916,63 @@
       }
     },
     {
-      "positionLimit": -10,
+      "positionLimit": -40,
       "SELL": {
-        "price": 11.70,
+        "price": 11.74,
         "active": true,
-        "crossed": true
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.72,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -40,
+      "SELL": {
+        "price": 11.72,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.7,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -50,
+      "SELL": {
+        "price": 11.7,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.68,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -50,
+      "SELL": {
+        "price": 11.68,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.66,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -50,
+      "SELL": {
+        "price": 11.66,
+        "active": true,
+        "crossed": false
       },
       "BUY": {
         "price": 11.64,
@@ -605,13 +980,64 @@
         "crossed": false
       }
     },
-
     {
-      "positionLimit": -20,
+      "positionLimit": -60,
       "SELL": {
-        "price": 11.60,
+        "price": 11.64,
         "active": true,
-        "crossed": true
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.62,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -60,
+      "SELL": {
+        "price": 11.62,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.6,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -60,
+      "SELL": {
+        "price": 11.6,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.58,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -70,
+      "SELL": {
+        "price": 11.58,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.56,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -70,
+      "SELL": {
+        "price": 11.56,
+        "active": true,
+        "crossed": false
       },
       "BUY": {
         "price": 11.54,
@@ -620,11 +1046,63 @@
       }
     },
     {
-      "positionLimit": -20,
+      "positionLimit": -70,
       "SELL": {
-        "price": 11.50,
+        "price": 11.54,
         "active": true,
-        "crossed": true
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.52,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -80,
+      "SELL": {
+        "price": 11.52,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.5,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -80,
+      "SELL": {
+        "price": 11.5,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.48,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -80,
+      "SELL": {
+        "price": 11.48,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.46,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -90,
+      "SELL": {
+        "price": 11.46,
+        "active": true,
+        "crossed": false
       },
       "BUY": {
         "price": 11.44,
@@ -633,11 +1111,63 @@
       }
     },
     {
-      "positionLimit": -20,
+      "positionLimit": -90,
       "SELL": {
-        "price": 11.40,
+        "price": 11.44,
         "active": true,
-        "crossed": true
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.42,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -90,
+      "SELL": {
+        "price": 11.42,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.4,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -100,
+      "SELL": {
+        "price": 11.4,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.38,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -100,
+      "SELL": {
+        "price": 11.38,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.36,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -100,
+      "SELL": {
+        "price": 11.36,
+        "active": true,
+        "crossed": false
       },
       "BUY": {
         "price": 11.34,
@@ -645,13 +1175,64 @@
         "crossed": false
       }
     },
-
     {
-      "positionLimit": -30,
+      "positionLimit": -110,
       "SELL": {
-        "price": 11.30,
+        "price": 11.34,
         "active": true,
-        "crossed": true
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.32,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -110,
+      "SELL": {
+        "price": 11.32,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.3,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -110,
+      "SELL": {
+        "price": 11.3,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.28,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -120,
+      "SELL": {
+        "price": 11.28,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.26,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -120,
+      "SELL": {
+        "price": 11.26,
+        "active": true,
+        "crossed": false
       },
       "BUY": {
         "price": 11.24,
@@ -660,11 +1241,63 @@
       }
     },
     {
-      "positionLimit": -30,
+      "positionLimit": -120,
       "SELL": {
-        "price": 11.20,
+        "price": 11.24,
         "active": true,
-        "crossed": true
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.22,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -130,
+      "SELL": {
+        "price": 11.22,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.2,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -130,
+      "SELL": {
+        "price": 11.2,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.18,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -130,
+      "SELL": {
+        "price": 11.18,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.16,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -140,
+      "SELL": {
+        "price": 11.16,
+        "active": true,
+        "crossed": false
       },
       "BUY": {
         "price": 11.14,
@@ -673,11 +1306,63 @@
       }
     },
     {
-      "positionLimit": -30,
+      "positionLimit": -140,
       "SELL": {
-        "price": 11.10,
+        "price": 11.14,
         "active": true,
-        "crossed": true
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.12,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -140,
+      "SELL": {
+        "price": 11.12,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.1,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -150,
+      "SELL": {
+        "price": 11.1,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.08,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -150,
+      "SELL": {
+        "price": 11.08,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.06,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -150,
+      "SELL": {
+        "price": 11.06,
+        "active": true,
+        "crossed": false
       },
       "BUY": {
         "price": 11.04,
@@ -685,13 +1370,64 @@
         "crossed": false
       }
     },
-
     {
-      "positionLimit": -40,
+      "positionLimit": -160,
       "SELL": {
-        "price": 11.00,
+        "price": 11.04,
         "active": true,
-        "crossed": true
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.02,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -160,
+      "SELL": {
+        "price": 11.02,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -160,
+      "SELL": {
+        "price": 11,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 10.98,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -170,
+      "SELL": {
+        "price": 10.98,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 10.96,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -170,
+      "SELL": {
+        "price": 10.96,
+        "active": true,
+        "crossed": false
       },
       "BUY": {
         "price": 10.94,
@@ -700,11 +1436,63 @@
       }
     },
     {
-      "positionLimit": -40,
+      "positionLimit": -170,
       "SELL": {
-        "price": 10.90,
+        "price": 10.94,
         "active": true,
-        "crossed": true
+        "crossed": false
+      },
+      "BUY": {
+        "price": 10.92,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -180,
+      "SELL": {
+        "price": 10.92,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 10.9,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -180,
+      "SELL": {
+        "price": 10.9,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 10.88,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -180,
+      "SELL": {
+        "price": 10.88,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 10.86,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -190,
+      "SELL": {
+        "price": 10.86,
+        "active": true,
+        "crossed": false
       },
       "BUY": {
         "price": 10.84,
@@ -713,401 +1501,66 @@
       }
     },
     {
-      "positionLimit": -40,
+      "positionLimit": -190,
       "SELL": {
-        "price": 10.80,
+        "price": 10.84,
         "active": true,
-        "crossed": true
+        "crossed": false
+      },
+      "BUY": {
+        "price": 10.82,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -190,
+      "SELL": {
+        "price": 10.82,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 10.8,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -200,
+      "SELL": {
+        "price": 10.8,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 10.78,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -200,
+      "SELL": {
+        "price": 10.78,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 10.76,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "positionLimit": -200,
+      "SELL": {
+        "price": 10.76,
+        "active": true,
+        "crossed": false
       },
       "BUY": {
         "price": 10.74,
-        "active": false,
-        "crossed": false
-      }
-    },
-
-    {
-      "positionLimit": -50,
-      "SELL": {
-        "price": 10.70,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 10.64,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -50,
-      "SELL": {
-        "price": 10.60,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 10.54,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -50,
-      "SELL": {
-        "price": 10.50,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 10.44,
-        "active": false,
-        "crossed": false
-      }
-    },
-
-    {
-      "positionLimit": -60,
-      "SELL": {
-        "price": 10.40,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 10.34,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -60,
-      "SELL": {
-        "price": 10.30,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 10.24,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -60,
-      "SELL": {
-        "price": 10.20,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 10.14,
-        "active": false,
-        "crossed": false
-      }
-    },
-
-    {
-      "positionLimit": -70,
-      "SELL": {
-        "price": 10.10,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 10.04,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -70,
-      "SELL": {
-        "price": 10.00,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 9.94,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -70,
-      "SELL": {
-        "price": 9.90,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 9.84,
-        "active": false,
-        "crossed": false
-      }
-    },
-
-    {
-      "positionLimit": -80,
-      "SELL": {
-        "price": 9.80,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 9.74,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -80,
-      "SELL": {
-        "price": 9.70,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 9.64,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -80,
-      "SELL": {
-        "price": 9.60,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 9.54,
-        "active": false,
-        "crossed": false
-      }
-    },
-
-    {
-      "positionLimit": -90,
-      "SELL": {
-        "price": 9.50,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 9.44,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -90,
-      "SELL": {
-        "price": 9.40,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 9.34,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -90,
-      "SELL": {
-        "price": 9.30,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 9.24,
-        "active": false,
-        "crossed": false
-      }
-    },
-
-    {
-      "positionLimit": -100,
-      "SELL": {
-        "price": 9.20,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 9.14,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -100,
-      "SELL": {
-        "price": 9.10,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 9.04,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -100,
-      "SELL": {
-        "price": 9.00,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 8.94,
-        "active": false,
-        "crossed": false
-      }
-    },
-
-    {
-      "positionLimit": -110,
-      "SELL": {
-        "price": 8.90,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 8.84,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -110,
-      "SELL": {
-        "price": 8.80,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 8.74,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -110,
-      "SELL": {
-        "price": 8.70,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 8.64,
-        "active": false,
-        "crossed": false
-      }
-    },
-
-    {
-      "positionLimit": -120,
-      "SELL": {
-        "price": 8.60,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 8.54,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -120,
-      "SELL": {
-        "price": 8.50,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 8.44,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -120,
-      "SELL": {
-        "price": 8.40,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 8.34,
-        "active": false,
-        "crossed": false
-      }
-    },
-
-    {
-      "positionLimit": -130,
-      "SELL": {
-        "price": 8.30,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 8.24,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -130,
-      "SELL": {
-        "price": 8.20,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 8.14,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -130,
-      "SELL": {
-        "price": 8.10,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 8.04,
-        "active": false,
-        "crossed": false
-      }
-    },
-
-    {
-      "positionLimit": -140,
-      "SELL": {
-        "price": 8.00,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 7.94,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "positionLimit": -140,
-      "SELL": {
-        "price": 7.90,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 7.84,
         "active": false,
         "crossed": false
       }

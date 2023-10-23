@@ -5,23 +5,23 @@ import {IBKRClient} from '../../brokerage-clients/IBKR/client';
 import {OrderSides} from '../../brokerage-clients/brokerage-client';
 import {setTimeout} from 'node:timers/promises';
 
-interface SmoothingInterval {
+export interface SmoothingInterval {
   positionLimit: number;
   [OrderSides.SELL]: {
     active: boolean;
     crossed: boolean;
     price: number;
-    boughtAt: number;
+    boughtAt?: number;
   };
   [OrderSides.BUY]: {
     active: boolean;
     crossed: boolean;
     price: number;
+    soldAt?: number;
   };
 }
 
-interface StockState {
-  uncrossedBuyingSkips: number;
+export interface StockState {
   brokerageId: string;
   brokerageTradingCostPerShare: number;
   sharesPerInterval: number,
@@ -78,7 +78,7 @@ async function getStockStates(stocks: string[]): Promise<{ [stock: string]: Stoc
   return states;
 }
 
-function getStockStateFilePath(stock: string): string {
+export function getStockStateFilePath(stock: string): string {
   return `${getStockStatesFolderPath()}\\${stock}.json`;
 }
 
@@ -266,6 +266,8 @@ function getNumToSell(stockState: StockState, bid: number): number {
 let stocksRealizedPnLs: {[stock: string]: number[]} = {};
 
 async function debugSimulatedPrices(bid: number, ask: number, stock: string, stockState: StockState): Promise<StockState> {
+  const NUM_PNL_SAMPLES = 3000;
+  
   const upperBound = doFloatCalculation(FloatCalculations.add, stockState.intervals[0][OrderSides.SELL].price, 0.5);
   if (doFloatCalculation(FloatCalculations.greaterThan, bid, upperBound)) {
     console.log(`stock: ${stock}, bid: ${bid}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
@@ -281,7 +283,7 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
     const realizedPnLs = stocksRealizedPnLs[stock];
 
     realizedPnLs.push(stockState.realizedPnL);
-    if (realizedPnLs.length === 300) {
+    if (realizedPnLs.length === NUM_PNL_SAMPLES) {
       const averagePnL = realizedPnLs.reduce((sum, realizedPnL) => sum + realizedPnL, 0) / realizedPnLs.length;
       console.log(`averagePnL: ${averagePnL}`);
       debugger;
@@ -307,7 +309,7 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
     const realizedPnLs = stocksRealizedPnLs[stock];
 
     realizedPnLs.push(stockState.realizedPnL);
-    if (realizedPnLs.length === 300) {
+    if (realizedPnLs.length === NUM_PNL_SAMPLES) {
       const averagePnL = realizedPnLs.reduce((sum, realizedPnL) => sum + realizedPnL, 0) / realizedPnLs.length;
       console.log(`averagePnL: ${averagePnL}`);
       debugger;
