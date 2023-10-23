@@ -1,6 +1,6 @@
 import {FloatCalculations, doFloatCalculation} from './float-calculator';
 
-const INITIAL_PRICE = 12.54;
+const INITIAL_PRICE = 11.62;
 let randomPrice = INITIAL_PRICE;
 
 export function getSimulatedPrice(): number {
@@ -10,7 +10,8 @@ export function getSimulatedPrice(): number {
 function getRandomPrice(): number {
   const tickDown = doFloatCalculation(FloatCalculations.subtract, randomPrice, 0.01);
   const tickUp = doFloatCalculation(FloatCalculations.add, randomPrice, 0.01);
-  randomPrice = Math.random() < 0.51 ? tickDown : tickUp;
+  const probabilityOfTickDown = Math.random();
+  randomPrice = probabilityOfTickDown < 0.50 ? tickDown : tickUp;
 
   return randomPrice;
 }

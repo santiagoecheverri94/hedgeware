@@ -1,5 +1,5 @@
 import moment from 'moment-timezone';
-import {promises as fsPromises} from 'node:fs';
+import {promises as fsPromises, writeFileSync} from 'node:fs';
 
 export function log(msg: string): void {
   console.log(`\r\n${getCurrentTimeStamp()} : ${msg}\r\n`);
@@ -41,8 +41,12 @@ export async function readJSONFile<T>(filePath: string): Promise<T> {
   return JSON.parse(file);
 }
 
-export async function writeJSONFile(filePath: string, jsonString: string): Promise<void> {
+export async function asyncWriteJSONFile(filePath: string, jsonString: string): Promise<void> {
   await fsPromises.writeFile(filePath, jsonString);
+}
+
+export function syncWriteJSONFile(filePath: string, jsonString: string): void {
+  writeFileSync(filePath, jsonString);
 }
 
 export function jsonPrettyPrint(obj: unknown): string {
