@@ -23,16 +23,19 @@ export abstract class BrokerageClient {
     brokerageIdOfSecurity,
     currentPosition,
     newPosition,
+    snapshot,
   }: {
     brokerageIdOfSecurity: string,
     currentPosition: number,
     newPosition: number,
+    snapshot: Snapshot,
   }): Promise<void> {
     return setSecurityPosition({
       brokerageClient: this,
       brokerageIdOfSecurity,
       newPosition,
       currentPosition,
+      snapshot,
     });
   }
 }

@@ -2,8 +2,8 @@ import { FloatCalculations, doFloatCalculation } from "../../../utils/float-calc
 import { jsonPrettyPrint, syncWriteJSONFile } from "../../../utils/miscellaneous";
 import { IntervalTypes, SmoothingInterval, StockState, getStockStateFilePath } from "./algo";
 
-const MAX_SHARES = 220;
-const INTERVAL_PER_POSITION = 4;
+const MAX_SHARES = 100;
+const INTERVAL_PER_POSITION = 1;
 
 export function createNewStockState({
   stock,
@@ -76,7 +76,7 @@ function getLongIntervals({
 
       intervals.unshift({
         type: IntervalTypes.LONG,
-        positionLimit: Math.min(sharesPerInterval * i, 100),
+        positionLimit: sharesPerInterval * i,
         SELL: {
           price: doFloatCalculation(FloatCalculations.add, buyPrice, intervalProfit),
           active: false,
@@ -118,7 +118,7 @@ function getShortIntervals({
 
       intervals.push({
         type: IntervalTypes.SHORT,
-        positionLimit: Math.max(-sharesPerInterval * i, -100),
+        positionLimit: -sharesPerInterval * i,
         SELL: {
           price: sellPrice,
           active: true,

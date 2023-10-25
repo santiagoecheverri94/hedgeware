@@ -1,4 +1,4 @@
-import {BrokerageClient, OrderDetails, OrderSides, OrderStatus, OrderTypes, TimesInForce} from '../brokerage-client';
+import {BrokerageClient, OrderDetails, OrderSides, OrderStatus, OrderTypes, Snapshot, TimesInForce} from '../brokerage-client';
 import {setTimeout} from 'node:timers/promises';
 
 export async function setSecurityPosition({
@@ -6,11 +6,13 @@ export async function setSecurityPosition({
   brokerageIdOfSecurity,
   currentPosition,
   newPosition,
+  snapshot,
 }: {
   brokerageClient: BrokerageClient,
   brokerageIdOfSecurity: string,
   currentPosition: number,
   newPosition: number,
+  snapshot: Snapshot,
 }): Promise<void> {
   if (currentPosition === newPosition) {
     return;
@@ -18,7 +20,7 @@ export async function setSecurityPosition({
 
   const side = determineIfOrderNeedBeBuyOrSell(currentPosition, newPosition);
   const quantity = getOrderQuantity(currentPosition, newPosition);
-  const price = await getOrderPrice({brokerageClient, brokerageIdOfSecurity, orderSide: side});
+  const price = await getOrderPrice({snapshot, orderSide: side});
 
   const orderDetails: OrderDetails = {
     brokerageIdOfSecurity,
@@ -88,16 +90,12 @@ function getOrderQuantity(currentPosition: number, newPosition: number): number 
 }
 
 async function getOrderPrice({
-  brokerageClient,
-  brokerageIdOfSecurity,
+  snapshot,
   orderSide,
 }: {
-  brokerageClient: BrokerageClient,
-  brokerageIdOfSecurity: string,
+  snapshot: Snapshot,
   orderSide: OrderSides,
 }): Promise<number> {
-  const snapshot = await brokerageClient.getSnapshot(brokerageIdOfSecurity);
-
   if (orderSide === OrderSides.BUY) {
     return snapshot.ask;
   }

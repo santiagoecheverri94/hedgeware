@@ -254,5 +254,6 @@ async function covercalls(security: TargetSecurity) {
     brokerageIdOfSecurity: security.stock.brokerageId,
     currentPosition: security.stock.state.numCurrentlyOwned,
     newPosition: numSharesNeeded,
+    snapshot: await brokerageClient.getSnapshot(security.stock.brokerageId),
   });
 }

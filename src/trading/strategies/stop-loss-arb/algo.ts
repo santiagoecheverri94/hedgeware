@@ -96,7 +96,8 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
   }
 
   // 1)
-  const {bid, ask} = await brokerageClient.getSnapshot(stockState.brokerageId);
+  const snapshot = await brokerageClient.getSnapshot(stockState.brokerageId);
+  const {bid, ask} = snapshot;
   const crossingHappened = checkCrossings(stock, stockState, bid, ask);
 
   if (!process.env.SIMULATE_SNAPSHOT && crossingHappened) {
@@ -126,6 +127,7 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
       brokerageIdOfSecurity: stockState.brokerageId,
       currentPosition: stockState.position * stockState.numContracts,
       newPosition: newPosition * stockState.numContracts,
+      snapshot,
     });
 
     const tradingLog: typeof stockState.tradingLogs[number] = {
@@ -185,10 +187,7 @@ function getNumToBuy(stockState: StockState, ask: number): number {
     const interval = intervals[i];
 
     if (doFloatCalculation(FloatCalculations.greaterThanOrEqual, ask, interval[OrderSides.BUY].price) && interval[OrderSides.BUY].active && interval[OrderSides.BUY].crossed) {
-      if (interval.type == IntervalTypes.LONG && newPosition <= interval.positionLimit) {
-        indexesToExecute.push(i);
-        newPosition += stockState.sharesPerInterval;
-      } else if (interval.type == IntervalTypes.SHORT && newPosition < interval.positionLimit) {
+      if (newPosition < interval.positionLimit) {
         indexesToExecute.push(i);
         newPosition += stockState.sharesPerInterval;
       }
@@ -196,14 +195,6 @@ function getNumToBuy(stockState: StockState, ask: number): number {
   }
 
   if (indexesToExecute.length > 0) {
-    // for (let i = intervals.length - 1; i > indexesToExecute[0]; i--) {
-    //   const interval = intervals[i];
-
-    //   if (interval[OrderSides.BUY].active && i !== indexesToExecute[indexesToExecute.length - 1] + stockState.uncrossedBuyingSkips) {
-    //     indexesToExecute.push(i);
-    //   }
-    // }
-
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.realizedPnL = doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, tradingCosts);
   }
@@ -222,16 +213,13 @@ function getNumToBuy(stockState: StockState, ask: number): number {
     } else if (interval.type === IntervalTypes.SHORT) {
       const unscaledSalePnL = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.BUY].soldAt!, ask);
       const salePnL = doFloatCalculation(FloatCalculations.multiply, unscaledSalePnL, stockState.sharesPerInterval);
-      if (doFloatCalculation(FloatCalculations.greaterThan, 0, salePnL)) {
-        console.log(`ask: ${ask}`);
-        console.log(interval);
-      }
       stockState.realizedPnL = doFloatCalculation(FloatCalculations.add, stockState.realizedPnL, salePnL);
     }
   }
 
   return indexesToExecute.length;
 }
+
 
 function getNumToSell(stockState: StockState, bid: number): number {
   const {intervals, position} = stockState;
@@ -240,10 +228,7 @@ function getNumToSell(stockState: StockState, bid: number): number {
   let indexesToExecute: number[] = [];
   for (const [i, interval] of intervals.entries()) {
     if (doFloatCalculation(FloatCalculations.lessThanOrEqual, bid, interval[OrderSides.SELL].price)  && interval[OrderSides.SELL].active && interval[OrderSides.SELL].crossed) {
-      if (interval.type == IntervalTypes.LONG && newPosition > interval.positionLimit) {
-        indexesToExecute.push(i);
-        newPosition -= stockState.sharesPerInterval;
-      } else if (interval.type == IntervalTypes.SHORT && newPosition >= interval.positionLimit) {
+      if (newPosition > interval.positionLimit) {
         indexesToExecute.push(i);
         newPosition -= stockState.sharesPerInterval;
       }
@@ -251,25 +236,6 @@ function getNumToSell(stockState: StockState, bid: number): number {
   }
 
   if (indexesToExecute.length > 0) {
-    // let maxLossSaleIndex: number | undefined;
-    // const lowestSaleToExecute = indexesToExecute[0];
-    // for (let i = 0; i < lowestSaleToExecute; i++) {
-    //   const interval = intervals[i];
-
-    //   // if (interval[OrderSides.SELL].active && i !== lowestSaleToExecute - stockState.uncrossedBuyingSkips) {
-    //   if (interval[OrderSides.SELL].active) {
-    //     indexesToExecute.unshift(i);
-
-    //     if (maxLossSaleIndex === undefined) {
-    //       maxLossSaleIndex = i;
-    //     }
-    //   }
-    // }
-
-    // if (maxLossSaleIndex !== undefined) {
-    //   indexesToExecute = indexesToExecute.filter(index => index !== maxLossSaleIndex);
-    // }
-
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.realizedPnL = doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, tradingCosts);
   }
@@ -286,10 +252,6 @@ function getNumToSell(stockState: StockState, bid: number): number {
     if (interval.type === IntervalTypes.LONG) {
       const unscaledSalePnL = doFloatCalculation(FloatCalculations.subtract, bid, interval[OrderSides.SELL].boughtAt!);
       const salePnL = doFloatCalculation(FloatCalculations.multiply, unscaledSalePnL, stockState.sharesPerInterval);
-      if (doFloatCalculation(FloatCalculations.greaterThan, 0, salePnL)) {
-        console.log(`bid: ${bid}`);
-        console.log(interval);
-      }
       stockState.realizedPnL = doFloatCalculation(FloatCalculations.add, stockState.realizedPnL, salePnL);
     } else if (interval.type === IntervalTypes.SHORT) {
       interval[OrderSides.BUY].soldAt = bid;
