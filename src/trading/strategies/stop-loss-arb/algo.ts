@@ -193,7 +193,7 @@ function getNumToBuy(stockState: StockState, {bid, ask}: Snapshot): number {
     const interval = intervals[i];
 
     if (doFloatCalculation(FloatCalculations.greaterThanOrEqual, ask, interval[OrderSides.BUY].price) && interval[OrderSides.BUY].active && interval[OrderSides.BUY].crossed) {
-      if (newPosition < interval.positionLimit) {
+      if (interval.type === IntervalTypes.LONG && newPosition == interval.positionLimit || newPosition < interval.positionLimit) {
         indexesToExecute.push(i);
         newPosition += stockState.sharesPerInterval;
       }
@@ -223,6 +223,7 @@ function getNumToBuy(stockState: StockState, {bid, ask}: Snapshot): number {
     stockState.realizedPnL = doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, tradingCosts);
 
     insertClonedShortIntervals(stockState, indexesToExecute, bid);
+    removeResolvedClonedIntervalsAbove(stockState, indexesToExecute);
   }
 
   return indexesToExecute.length;
@@ -257,7 +258,7 @@ function insertClonedShortIntervals(stockState: StockState, indexesToExecute: nu
     const intervalsAboveAndIncludingOriginal = newIntervals.slice(0, originalIndexInNewIntervals + 1);
     const intervalsBelowOriginal = newIntervals.slice(originalIndexInNewIntervals + 1);
 
-    intervalsBelowOriginal.forEach((interval, index) => {
+    intervalsBelowOriginal.forEach(interval => {
       interval[OrderSides.SELL].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.SELL].price, stockState.spaceBetweenIntervals);
       interval[OrderSides.BUY].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.BUY].price, stockState.spaceBetweenIntervals);
     });
@@ -272,6 +273,50 @@ function insertClonedShortIntervals(stockState: StockState, indexesToExecute: nu
   stockState.intervals = newIntervals;
 }
 
+function removeResolvedClonedIntervalsAbove(stockState: StockState, indexesToExecute: number[]): void {
+  let newIntervals: SmoothingInterval[] = [...stockState.intervals];
+
+  for (const indexToExecute of indexesToExecute) {
+    const originalInterval = stockState.intervals[indexToExecute];
+    const originalIndexInNewIntervals = newIntervals.findIndex(interval => interval === stockState.intervals[indexToExecute]);
+    
+    let intervalsAboveOriginal = newIntervals.slice(0, originalIndexInNewIntervals);
+    let numRemoved = 0;
+    intervalsAboveOriginal = intervalsAboveOriginal.filter(interval => {
+      const isIntervalOfAnotherPosition = interval.positionLimit !== originalInterval.positionLimit;
+      if (isIntervalOfAnotherPosition) {
+        return true;
+      }
+
+      const isSellActiveShortIntervalOfSamePosition = interval.type === IntervalTypes.SHORT && interval[OrderSides.SELL].active;
+      const isBuyActiveLongIntervalOfSamePosition = interval.type === IntervalTypes.LONG && interval[OrderSides.BUY].active;
+
+      if (!isSellActiveShortIntervalOfSamePosition && !isBuyActiveLongIntervalOfSamePosition) {
+        return true;
+      }
+
+      numRemoved++;
+      return false;
+    });
+
+    if (numRemoved > 0) {
+      intervalsAboveOriginal.forEach(interval => {
+        const shiftPriceBy = doFloatCalculation(FloatCalculations.multiply, numRemoved, stockState.spaceBetweenIntervals);
+        interval[OrderSides.SELL].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.SELL].price, shiftPriceBy);
+        interval[OrderSides.BUY].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.BUY].price, shiftPriceBy);
+      });
+
+      const intervalsBelowAndIncludingOriginal = newIntervals.slice(originalIndexInNewIntervals);
+      newIntervals = [
+        ...intervalsAboveOriginal,
+        ...intervalsBelowAndIncludingOriginal,
+      ];
+    }
+  }
+
+  stockState.intervals = newIntervals;
+}
+
 function getNumToSell(stockState: StockState, {bid, ask}: Snapshot): number {
   const {intervals, position} = stockState;
 
@@ -279,16 +324,11 @@ function getNumToSell(stockState: StockState, {bid, ask}: Snapshot): number {
   let indexesToExecute: number[] = [];
   for (const [i, interval] of intervals.entries()) {
     if (doFloatCalculation(FloatCalculations.lessThanOrEqual, bid, interval[OrderSides.SELL].price)  && interval[OrderSides.SELL].active && interval[OrderSides.SELL].crossed) {
-      if (newPosition > interval.positionLimit) {
+      if (interval.type === IntervalTypes.SHORT && newPosition == interval.positionLimit || newPosition > interval.positionLimit) {
         indexesToExecute.push(i);
         newPosition -= stockState.sharesPerInterval;
       }
     }
-  }
-
-  if (indexesToExecute.length > 0) {
-    const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
-    stockState.realizedPnL = doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, tradingCosts);
   }
 
   for (const index of indexesToExecute) {
@@ -309,7 +349,103 @@ function getNumToSell(stockState: StockState, {bid, ask}: Snapshot): number {
     }
   }
 
+  if (indexesToExecute.length > 0) {
+    const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
+    stockState.realizedPnL = doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, tradingCosts);
+  
+    insertClonedLongIntervals(stockState, indexesToExecute, ask);
+    removeResolvedClonedIntervalsBelow(stockState, indexesToExecute);
+  }
+
   return indexesToExecute.length;
+}
+
+function insertClonedLongIntervals(stockState: StockState, indexesToExecute: number[], ask: number): void {
+  let newIntervals: SmoothingInterval[] = [...stockState.intervals];
+
+  for (const indexToExecute of indexesToExecute) {
+    if (doFloatCalculation(FloatCalculations.lessThan, ask, stockState.intervals[indexToExecute][OrderSides.BUY].price)) {
+      continue;
+    }
+
+    const originalIndexInNewIntervals = newIntervals.findIndex(interval => interval === stockState.intervals[indexToExecute]);
+
+    const newLongIntervalBuyPrice = doFloatCalculation(FloatCalculations.add, stockState.intervals[indexToExecute][OrderSides.BUY].price, stockState.spaceBetweenIntervals);
+    const newLongInterval: SmoothingInterval = {
+      type: IntervalTypes.LONG,
+      positionLimit: stockState.intervals[indexToExecute].positionLimit,
+      SELL: {
+        active: false,
+        crossed: false,
+        price: doFloatCalculation(FloatCalculations.add, newLongIntervalBuyPrice, stockState.intervalProfit),
+      },
+      BUY: {
+        active: true,
+        crossed: false,
+        price: newLongIntervalBuyPrice,
+      }
+    };
+
+    const intervalsAboveOriginal = newIntervals.slice(0, originalIndexInNewIntervals);
+    const intervalsBelowAndIncludingOriginal = newIntervals.slice(originalIndexInNewIntervals);
+
+    intervalsAboveOriginal.forEach(interval => {
+      interval[OrderSides.SELL].price = doFloatCalculation(FloatCalculations.add, interval[OrderSides.SELL].price, stockState.spaceBetweenIntervals);
+      interval[OrderSides.BUY].price = doFloatCalculation(FloatCalculations.add, interval[OrderSides.BUY].price, stockState.spaceBetweenIntervals);
+    });
+
+    newIntervals = [
+      ...intervalsAboveOriginal,
+      newLongInterval,
+      ...intervalsBelowAndIncludingOriginal,
+    ];
+  }
+
+  stockState.intervals = newIntervals;
+}
+
+function removeResolvedClonedIntervalsBelow(stockState: StockState, indexesToExecute: number[]): void {
+  let newIntervals: SmoothingInterval[] = [...stockState.intervals];
+
+  for (const indexToExecute of indexesToExecute) {
+    const originalInterval = stockState.intervals[indexToExecute];
+    const originalIndexInNewIntervals = newIntervals.findIndex(interval => interval === stockState.intervals[indexToExecute]);
+    
+    let numRemoved = 0;
+    let intervalsBelowOriginal = newIntervals.slice(originalIndexInNewIntervals + 1);
+    intervalsBelowOriginal = intervalsBelowOriginal.filter(interval => {
+      const isIntervalOfAnotherPosition = interval.positionLimit !== originalInterval.positionLimit;
+      if (isIntervalOfAnotherPosition) {
+        return true;
+      }
+
+      const isSellActiveShortIntervalOfSamePosition = interval.type === IntervalTypes.SHORT && interval[OrderSides.SELL].active;
+      const isBuyActiveLongIntervalOfSamePosition = interval.type === IntervalTypes.LONG && interval[OrderSides.BUY].active;
+
+      if (!isSellActiveShortIntervalOfSamePosition && !isBuyActiveLongIntervalOfSamePosition) {
+        return true;
+      }
+
+      numRemoved++;
+      return false;
+    });
+
+    if (numRemoved > 0) {
+      intervalsBelowOriginal.forEach(interval => {
+        const shiftPriceBy = doFloatCalculation(FloatCalculations.multiply, numRemoved, stockState.spaceBetweenIntervals);
+        interval[OrderSides.SELL].price = doFloatCalculation(FloatCalculations.add, interval[OrderSides.SELL].price, shiftPriceBy);
+        interval[OrderSides.BUY].price = doFloatCalculation(FloatCalculations.add, interval[OrderSides.BUY].price, shiftPriceBy);
+      });
+
+      const intervalsAboveAndIncludingOriginal = newIntervals.slice(0, originalIndexInNewIntervals + 1);
+      newIntervals = [
+        ...intervalsAboveAndIncludingOriginal,
+        ...intervalsBelowOriginal,
+      ];
+    }
+  }
+
+  stockState.intervals = newIntervals;
 }
 
 let stocksRealizedPnLs: {[stock: string]: number[]} = {};
@@ -347,7 +483,7 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
   if (doFloatCalculation(FloatCalculations.lessThan, ask, lowerBound)) {
     console.log(`stock: ${stock}, ask: ${ask}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
 
-    if (stockState.position > -100) {
+    if (stockState.position > 10) { // ) -100) {
       syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
       debugger;
     }
