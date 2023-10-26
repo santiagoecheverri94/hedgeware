@@ -254,13 +254,22 @@ function insertClonedShortIntervals(stockState: StockState, indexesToExecute: nu
       }
     };
 
-    // TODO fix the price of everything before the new interval
+    const intervalsAboveAndIncludingOriginal = newIntervals.slice(0, originalIndexInNewIntervals + 1);
+    const intervalsBelowOriginal = newIntervals.slice(originalIndexInNewIntervals + 1);
+
+    intervalsBelowOriginal.forEach((interval, index) => {
+      interval[OrderSides.SELL].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.SELL].price, stockState.spaceBetweenIntervals);
+      interval[OrderSides.BUY].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.BUY].price, stockState.spaceBetweenIntervals);
+    });
+
     newIntervals = [
-      ...newIntervals.slice(0, originalIndexInNewIntervals + 1),
+      ...intervalsAboveAndIncludingOriginal,
       newShortInterval,
-      ...newIntervals.slice(originalIndexInNewIntervals + 1),
+      ...intervalsBelowOriginal,
     ];
   }
+
+  stockState.intervals = newIntervals;
 }
 
 function getNumToSell(stockState: StockState, {bid, ask}: Snapshot): number {
