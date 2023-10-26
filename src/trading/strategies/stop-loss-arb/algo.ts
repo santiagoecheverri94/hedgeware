@@ -2,7 +2,7 @@ import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calcul
 import {getCurrentTimeStamp, getFileNamesWithinFolder, isMarketOpen, jsonPrettyPrint, log, readJSONFile, asyncWriteJSONFile, syncWriteJSONFile} from '../../../utils/miscellaneous';
 import {restartSimulatedPrice} from '../../../utils/price-simulator';
 import {IBKRClient} from '../../brokerage-clients/IBKR/client';
-import {OrderSides} from '../../brokerage-clients/brokerage-client';
+import {OrderSides, Snapshot} from '../../brokerage-clients/brokerage-client';
 import {setTimeout} from 'node:timers/promises';
 
 export enum IntervalTypes {
@@ -98,8 +98,7 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
 
   // 1)
   const snapshot = await brokerageClient.getSnapshot(stockState.brokerageId);
-  const {bid, ask} = snapshot;
-  const crossingHappened = checkCrossings(stock, stockState, bid, ask);
+  const crossingHappened = checkCrossings(stock, stockState, snapshot);
 
   if (!process.env.SIMULATE_SNAPSHOT && crossingHappened) {
     // log(`"${stock}" crossed, bid: ${bid}, ask: ${ask}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
@@ -107,12 +106,12 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
   }
 
   // 2)
-  const numToBuy = getNumToBuy(stockState, ask);
+  const numToBuy = getNumToBuy(stockState, snapshot);
 
   // 3)
   let numToSell = 0;
   if (numToBuy === 0) {
-    numToSell = getNumToSell(stockState, bid);
+    numToSell = getNumToSell(stockState, snapshot);
   }
 
   // 4)
@@ -135,7 +134,7 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
     const tradingLog: typeof stockState.tradingLogs[number] = {
       action: numToBuy > 0 ? OrderSides.BUY : OrderSides.SELL,
       timeStamp: getCurrentTimeStamp(),
-      price: numToBuy > 0 ? ask : bid,
+      price: numToBuy > 0 ? snapshot.ask : snapshot.bid,
       previousPosition: stockState.position,
       newPosition,
       realizedPnLOfTrade: doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, previousPnL),
@@ -151,7 +150,7 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
 
     stockState.position = newPosition;
 
-    checkCrossings(stock, stockState, bid, ask);
+    checkCrossings(stock, stockState, snapshot);
 
     if (process.env.SIMULATE_SNAPSHOT) {
       syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
@@ -161,10 +160,10 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
   }
 
   // 5)
-  return {bid, ask};
+  return snapshot;
 }
 
-function checkCrossings(stock: string, stockState: StockState, bid: number, ask: number): boolean {
+function checkCrossings(stock: string, stockState: StockState, {bid, ask}: Snapshot): boolean {
   const {intervals} = stockState;
 
   let crossingHappened = false;
@@ -183,7 +182,7 @@ function checkCrossings(stock: string, stockState: StockState, bid: number, ask:
   return crossingHappened;
 }
 
-function getNumToBuy(stockState: StockState, ask: number): number {
+function getNumToBuy(stockState: StockState, {bid, ask}: Snapshot): number {
   const {intervals, position} = stockState;
 
   let newPosition = position;
@@ -220,13 +219,25 @@ function getNumToBuy(stockState: StockState, ask: number): number {
   if (indexesToExecute.length > 0) {
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.realizedPnL = doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, tradingCosts);
+
+    insertClonedShortIntervals(stockState, indexesToExecute, bid);
   }
 
   return indexesToExecute.length;
 }
 
+function insertClonedShortIntervals(stockState: StockState, indexesToExecute: number[], bid: number): void {
+  for (const indexToExecute of indexesToExecute) {
+    if (doFloatCalculation(FloatCalculations.greaterThan, bid, stockState.intervals[indexToExecute][OrderSides.SELL].price)) {
+      continue;
+    }
 
-function getNumToSell(stockState: StockState, bid: number): number {
+    
+
+  }
+}
+
+function getNumToSell(stockState: StockState, {bid, ask}: Snapshot): number {
   const {intervals, position} = stockState;
 
   let newPosition = position;

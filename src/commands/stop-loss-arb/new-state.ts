@@ -2,7 +2,7 @@ import {Args, Command, Flags} from '@oclif/core'
 import { createNewStockState } from '../../trading/strategies/stop-loss-arb/new-state'
 
 export default class StopLossArbNewState extends Command {
-  static description = 'describe the command here'
+  static description = '';
 
   static examples = [
     '<%= config.bin %> <%= command.id %>',
@@ -14,9 +14,7 @@ export default class StopLossArbNewState extends Command {
     initialPrice: Flags.string({char: 'p', description: 'initial price of stock', required: true}),
   }
 
-  static args = {
-    file: Args.string({description: 'file to read'}),
-  }
+  static args = {}
 
   public async run(): Promise<void> {
     const {flags} = await this.parse(StopLossArbNewState)
