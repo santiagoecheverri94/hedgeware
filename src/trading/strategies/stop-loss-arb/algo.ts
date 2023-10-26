@@ -40,6 +40,7 @@ export interface StockState {
     price: number;
     previousPosition: number;
     newPosition: number;
+    realizedPnLOfTrade: number;
   }[];
   realizedPnL: number;
 }
@@ -101,7 +102,7 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
   const crossingHappened = checkCrossings(stock, stockState, bid, ask);
 
   if (!process.env.SIMULATE_SNAPSHOT && crossingHappened) {
-    log(`"${stock}" crossed, bid: ${bid}, ask: ${ask}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
+    // log(`"${stock}" crossed, bid: ${bid}, ask: ${ask}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
     asyncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
   }
 
@@ -116,6 +117,7 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
 
   // 4)
   let newPosition: number | undefined;
+  const previousPnL = stockState.realizedPnL;
   if (numToBuy > 0) {
     newPosition = stockState.position + (stockState.sharesPerInterval * numToBuy);
   } else if (numToSell > 0) {
@@ -136,6 +138,7 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
       price: numToBuy > 0 ? ask : bid,
       previousPosition: stockState.position,
       newPosition,
+      realizedPnLOfTrade: doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, previousPnL),
     };
 
     stockState.tradingLogs.push(tradingLog);
@@ -150,7 +153,9 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
 
     checkCrossings(stock, stockState, bid, ask);
 
-    if (!process.env.SIMULATE_SNAPSHOT) {
+    if (process.env.SIMULATE_SNAPSHOT) {
+      syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
+    } else {
       asyncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
     }
   }
