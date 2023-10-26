@@ -199,11 +199,6 @@ function getNumToBuy(stockState: StockState, ask: number): number {
     }
   }
 
-  if (indexesToExecute.length > 0) {
-    const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
-    stockState.realizedPnL = doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, tradingCosts);
-  }
-
   for (const index of indexesToExecute) {
     const interval = intervals[index];
 
@@ -220,6 +215,11 @@ function getNumToBuy(stockState: StockState, ask: number): number {
       const salePnL = doFloatCalculation(FloatCalculations.multiply, unscaledSalePnL, stockState.sharesPerInterval);
       stockState.realizedPnL = doFloatCalculation(FloatCalculations.add, stockState.realizedPnL, salePnL);
     }
+  }
+
+  if (indexesToExecute.length > 0) {
+    const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
+    stockState.realizedPnL = doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, tradingCosts);
   }
 
   return indexesToExecute.length;
