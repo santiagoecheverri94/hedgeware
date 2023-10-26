@@ -44,6 +44,8 @@ export function createNewStockState({
     brokerageId,
     brokerageTradingCostPerShare,
     sharesPerInterval,
+    intervalProfit,
+    spaceBetweenIntervals,
     numContracts,
     position: initialPosition,
     intervals: [...longIntervals, ...shortIntervals],
