@@ -5,7 +5,7 @@
   "intervalProfit": 0.05,
   "spaceBetweenIntervals": 0.1,
   "numContracts": 1,
-  "position": 0,
+  "position": 10,
   "intervals": [
     {
       "type": "LONG",
@@ -18,7 +18,7 @@
       "BUY": {
         "price": 12.92,
         "active": true,
-        "crossed": false
+        "crossed": true
       }
     },
     {
@@ -32,7 +32,7 @@
       "BUY": {
         "price": 12.82,
         "active": true,
-        "crossed": false
+        "crossed": true
       }
     },
     {
@@ -46,7 +46,7 @@
       "BUY": {
         "price": 12.72,
         "active": true,
-        "crossed": false
+        "crossed": true
       }
     },
     {
@@ -60,7 +60,7 @@
       "BUY": {
         "price": 12.62,
         "active": true,
-        "crossed": false
+        "crossed": true
       }
     },
     {
@@ -74,7 +74,7 @@
       "BUY": {
         "price": 12.52,
         "active": true,
-        "crossed": false
+        "crossed": true
       }
     },
     {
@@ -88,7 +88,7 @@
       "BUY": {
         "price": 12.42,
         "active": true,
-        "crossed": false
+        "crossed": true
       }
     },
     {
@@ -102,7 +102,7 @@
       "BUY": {
         "price": 12.32,
         "active": true,
-        "crossed": false
+        "crossed": true
       }
     },
     {
@@ -116,7 +116,7 @@
       "BUY": {
         "price": 12.22,
         "active": true,
-        "crossed": false
+        "crossed": true
       }
     },
     {
@@ -130,7 +130,7 @@
       "BUY": {
         "price": 12.12,
         "active": true,
-        "crossed": false
+        "crossed": true
       }
     },
     {
@@ -138,16 +138,40 @@
       "positionLimit": 10,
       "SELL": {
         "price": 12.07,
-        "active": false,
-        "crossed": false
+        "active": true,
+        "crossed": false,
+        "boughtAt": 12.02
       },
       "BUY": {
         "price": 12.02,
-        "active": true,
+        "active": false,
         "crossed": false
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": 10,
+      "SELL": {
+        "active": true,
+        "crossed": true,
+        "price": 11.97
+      },
+      "BUY": {
+        "active": false,
+        "crossed": false,
+        "price": 11.92
       }
     }
   ],
-  "tradingLogs": [],
-  "realizedPnL": 0
+  "tradingLogs": [
+    {
+      "action": "BUY",
+      "timeStamp": "10-27-2023 at 01:09am ET",
+      "price": 12.02,
+      "previousPosition": 0,
+      "newPosition": 10,
+      "realizedPnLOfTrade": 0
+    }
+  ],
+  "realizedPnL": -0.05
 }
