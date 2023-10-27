@@ -2,7 +2,6 @@ import { FloatCalculations, doFloatCalculation } from "../../../utils/float-calc
 import { jsonPrettyPrint, syncWriteJSONFile } from "../../../utils/miscellaneous";
 import { IntervalTypes, SmoothingInterval, StockState, getStockStateFilePath } from "./algo";
 
-const MAX_SHARES = 100;
 const INTERVAL_PER_POSITION = 1;
 
 export function createNewStockState({
@@ -11,6 +10,7 @@ export function createNewStockState({
   brokerageTradingCostPerShare,
   sharesPerInterval,
   numContracts,
+  targetPosition,
   initialPosition,
   initialPrice,
   intervalProfit,
@@ -21,6 +21,7 @@ export function createNewStockState({
   brokerageTradingCostPerShare: number
   sharesPerInterval: number
   numContracts: number
+  targetPosition: number
   initialPosition: number
   initialPrice: number
   intervalProfit: number
@@ -31,6 +32,7 @@ export function createNewStockState({
     intervalProfit,
     spaceBetweenIntervals,
     sharesPerInterval,
+    targetPosition,
   });
 
   const shortIntervals: SmoothingInterval[] = getShortIntervals({
@@ -38,6 +40,7 @@ export function createNewStockState({
     intervalProfit,
     spaceBetweenIntervals,
     sharesPerInterval,
+    targetPosition,
   });
 
   const newState: StockState = {
@@ -47,6 +50,7 @@ export function createNewStockState({
     intervalProfit,
     spaceBetweenIntervals,
     numContracts,
+    targetPosition,
     position: initialPosition,
     intervals: [...longIntervals, ...shortIntervals],
     tradingLogs: [],
@@ -61,14 +65,16 @@ function getLongIntervals({
   intervalProfit,
   spaceBetweenIntervals,
   sharesPerInterval,
+  targetPosition,
 }: {
   initialPrice: number
   intervalProfit: number
   spaceBetweenIntervals: number
   sharesPerInterval: number
+  targetPosition: number
 }): SmoothingInterval[] {
   const intervals: SmoothingInterval[] = [];
-  const numIntervals = MAX_SHARES / sharesPerInterval;
+  const numIntervals = targetPosition / sharesPerInterval;
 
   let absoluteIndex = 0;
   for (let i = 0; i <= numIntervals; i++) {
@@ -103,14 +109,16 @@ function getShortIntervals({
   intervalProfit,
   spaceBetweenIntervals,
   sharesPerInterval,
+  targetPosition,
 }: {
   initialPrice: number
   intervalProfit: number
   spaceBetweenIntervals: number
   sharesPerInterval: number
+  targetPosition: number
 }): SmoothingInterval[] {
   const intervals: SmoothingInterval[] = [];
-  const numIntervals = MAX_SHARES / sharesPerInterval;
+  const numIntervals = targetPosition / sharesPerInterval;
 
   let absoluteIndex = 0;
   for (let i = 0; i <= numIntervals; i++) {

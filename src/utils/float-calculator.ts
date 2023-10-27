@@ -9,6 +9,7 @@ export enum FloatCalculations {
   add = 'add',
   multiply = 'multiply',
   subtract = 'subtract',
+  divide = 'divide',
   greaterThan = 'greaterThan',
   greaterThanOrEqual = 'greaterThanOrEqual',
   lessThan = 'lessThan',
@@ -27,6 +28,9 @@ export function doFloatCalculation(operation: FloatCalculations, input1: number,
     },
     [FloatCalculations.subtract]: () => {
       return math.number(math.subtract(math.bignumber(input1), math.bignumber(input2)));
+    },
+    [FloatCalculations.divide]: () => {
+      return math.number(math.divide(math.bignumber(input1) as any, math.bignumber(input2) as any));
     },
     [FloatCalculations.greaterThan]: () => {
       const result = math.compare(math.bignumber(input1), math.bignumber(input2));

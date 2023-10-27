@@ -5,8 +5,23 @@
   "intervalProfit": 0.02,
   "spaceBetweenIntervals": 0.02,
   "numContracts": 1,
+  "targetPosition": 110,
   "position": 0,
   "intervals": [
+    {
+      "type": "LONG",
+      "positionLimit": 110,
+      "SELL": {
+        "price": 12.16,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.14,
+        "active": true,
+        "crossed": false
+      }
+    },
     {
       "type": "LONG",
       "positionLimit": 100,
@@ -311,6 +326,20 @@
       },
       "BUY": {
         "price": 11.7,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -110,
+      "SELL": {
+        "price": 11.7,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.68,
         "active": false,
         "crossed": false
       }
