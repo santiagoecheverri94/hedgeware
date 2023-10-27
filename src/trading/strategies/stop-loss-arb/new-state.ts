@@ -48,7 +48,7 @@ export function createNewStockState({
     spaceBetweenIntervals,
     numContracts,
     position: initialPosition,
-    intervals: [...longIntervals], // [...longIntervals, ...shortIntervals],
+    intervals: [...longIntervals, ...shortIntervals],
     tradingLogs: [],
     realizedPnL: 0,
   };

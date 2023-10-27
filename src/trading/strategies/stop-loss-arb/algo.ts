@@ -193,8 +193,8 @@ function getNumToBuy(stockState: StockState, {bid, ask}: Snapshot): number {
     const interval = intervals[i];
 
     if (doFloatCalculation(FloatCalculations.greaterThanOrEqual, ask, interval[OrderSides.BUY].price) && interval[OrderSides.BUY].active && interval[OrderSides.BUY].crossed) {
-      // if (interval.type === IntervalTypes.LONG && newPosition == interval.positionLimit || newPosition < interval.positionLimit) {
-      if (newPosition <= interval.positionLimit) {
+      if (interval.type === IntervalTypes.LONG && newPosition == interval.positionLimit || newPosition < interval.positionLimit) {
+      // if (newPosition < interval.positionLimit) {
         indexesToExecute.push(i);
         newPosition += stockState.sharesPerInterval;
       }
@@ -224,8 +224,8 @@ function getNumToBuy(stockState: StockState, {bid, ask}: Snapshot): number {
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.realizedPnL = doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, tradingCosts);
 
-    insertClonedShortIntervals(stockState, indexesToExecute, bid);
-    removeResolvedClonedIntervalsAbove(stockState, indexesToExecute);
+    // insertClonedShortIntervals(stockState, indexesToExecute, bid);
+    // removeResolvedClonedIntervalsAbove(stockState, indexesToExecute);
   }
 
   return indexesToExecute.length;
@@ -326,8 +326,8 @@ function getNumToSell(stockState: StockState, {bid, ask}: Snapshot): number {
   let indexesToExecute: number[] = [];
   for (const [i, interval] of intervals.entries()) {
     if (doFloatCalculation(FloatCalculations.lessThanOrEqual, bid, interval[OrderSides.SELL].price)  && interval[OrderSides.SELL].active && interval[OrderSides.SELL].crossed) {
-      // if (interval.type === IntervalTypes.SHORT && newPosition == interval.positionLimit || newPosition > interval.positionLimit) {
-      if (newPosition > interval.positionLimit) {
+      if (interval.type === IntervalTypes.SHORT && newPosition == interval.positionLimit || newPosition > interval.positionLimit) {
+      // if (newPosition > interval.positionLimit) {
         indexesToExecute.push(i);
         newPosition -= stockState.sharesPerInterval;
       }
@@ -357,8 +357,8 @@ function getNumToSell(stockState: StockState, {bid, ask}: Snapshot): number {
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.realizedPnL = doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, tradingCosts);
   
-    insertClonedLongIntervals(stockState, indexesToExecute, ask);
-    removeResolvedClonedIntervalsBelow(stockState, indexesToExecute);
+    // insertClonedLongIntervals(stockState, indexesToExecute, ask);
+    // removeResolvedClonedIntervalsBelow(stockState, indexesToExecute);
   }
 
   return indexesToExecute.length;
