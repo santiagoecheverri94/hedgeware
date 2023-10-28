@@ -447,8 +447,8 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
     if (samples.length === NUM_SAMPLES) {
       debugger;
 
-      const averageDistance = samples.reduce((sum, sample) => sum + sample.distance, 0) / samples.length;
-      const averagePnL = samples.reduce((sum, sample) => sum + sample.realizedPnL, 0) / samples.length;
+      const averageDistance = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.distance), 0), samples.length);
+      const averagePnL = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.realizedPnL), 0), samples.length);
       console.log(`averageDistance: ${averageDistance}`);
       console.log(`averagePnL: ${averagePnL}`);
       testSamples[stock] = [];
