@@ -441,7 +441,7 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
 
     samples.push({
       upOrDown: 'up',
-      distance: doFloatCalculation(FloatCalculations.subtract, stockState.tradingLogs[stockState.tradingLogs.length - 1].price, bid),
+      distance: doFloatCalculation(FloatCalculations.subtract, stockState.tradingLogs[stockState.tradingLogs.length - 1].price, 11.92),
       realizedPnL: stockState.realizedPnL,
     });
     if (samples.length === NUM_SAMPLES) {
