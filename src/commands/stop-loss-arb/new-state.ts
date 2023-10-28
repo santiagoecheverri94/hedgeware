@@ -25,11 +25,11 @@ export default class StopLossArbNewState extends Command {
       brokerageTradingCostPerShare: 0.005,
       sharesPerInterval: 10,
       numContracts: 1,
-      targetPosition: 110,
+      targetPosition: 100,
       initialPosition: 0,
       initialPrice: parseFloat(flags.initialPrice),
       intervalProfit: 0.02,
-      spaceBetweenIntervals: 0.02,
+      spaceBetweenIntervals: 0.04,
     });
   }
 }
