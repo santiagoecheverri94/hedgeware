@@ -195,7 +195,6 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number {
     const interval = intervals[i];
 
     if (doFloatCalculation(FloatCalculations.greaterThanOrEqual, ask, interval[OrderSides.BUY].price) && interval[OrderSides.BUY].active && interval[OrderSides.BUY].crossed) {
-      // if (interval.type === IntervalTypes.LONG && newPosition == interval.positionLimit || newPosition < interval.positionLimit) {
       if (newPosition < interval.positionLimit) {
         indexesToExecute.push(i);
         newPosition += stockState.sharesPerInterval;
@@ -226,14 +225,14 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number {
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.realizedPnL = doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, tradingCosts);
 
-    // removeResolvedClonedIntervalsAbove(stockState, indexesToExecute);
-    insertShortIntervalAtTheBottom(stockState, newPosition);
+    insertShortTailIntervalAtTheBottom(stockState, newPosition);
+    removeResolvedLongTailIntervalsAtTheTop(stockState, indexesToExecute);
   }
 
   return indexesToExecute.length;
 }
 
-function insertShortIntervalAtTheBottom(stockState: StockState, newPosition: number): void {
+function insertShortTailIntervalAtTheBottom(stockState: StockState, newPosition: number): void {
   if (-newPosition <= -stockState.targetPosition) {
     return;
   }
@@ -258,48 +257,25 @@ function insertShortIntervalAtTheBottom(stockState: StockState, newPosition: num
   stockState.intervals.push(newShortInterval);
 }
 
-function removeResolvedClonedIntervalsAbove(stockState: StockState, indexesToExecute: number[]): void {
-  let newIntervals: SmoothingInterval[] = [...stockState.intervals];
+function removeResolvedLongTailIntervalsAtTheTop(stockState: StockState, indexesToExecute: number[]): void {
+  const resolvedLongTailIntervalsIndexes: number[] = [];
 
-  for (const indexToExecute of indexesToExecute) {
-    const originalInterval = stockState.intervals[indexToExecute];
-    const originalIndexInNewIntervals = newIntervals.findIndex(interval => interval === stockState.intervals[indexToExecute]);
-    
-    let intervalsAboveOriginal = newIntervals.slice(0, originalIndexInNewIntervals);
-    let numRemoved = 0;
-    intervalsAboveOriginal = intervalsAboveOriginal.filter(interval => {
-      const isIntervalOfAnotherPosition = interval.positionLimit !== originalInterval.positionLimit;
-      if (isIntervalOfAnotherPosition) {
-        return true;
-      }
+  for (let intervalIndex = 0; intervalIndex < stockState.intervals.length; intervalIndex++) {
+    if (resolvedLongTailIntervalsIndexes.length === indexesToExecute.length) {
+      break;
+    }
 
-      const isSellActiveShortIntervalOfSamePosition = interval.type === IntervalTypes.SHORT && interval[OrderSides.SELL].active;
-      const isBuyActiveLongIntervalOfSamePosition = interval.type === IntervalTypes.LONG && interval[OrderSides.BUY].active;
+    if (stockState.intervals[intervalIndex + 1].positionLimit < stockState.targetPosition) {
+      break;
+    }
 
-      if (!isSellActiveShortIntervalOfSamePosition && !isBuyActiveLongIntervalOfSamePosition) {
-        return true;
-      }
-
-      numRemoved++;
-      return false;
-    });
-
-    if (numRemoved > 0) {
-      intervalsAboveOriginal.forEach(interval => {
-        const shiftPriceBy = doFloatCalculation(FloatCalculations.multiply, numRemoved, stockState.spaceBetweenIntervals);
-        interval[OrderSides.SELL].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.SELL].price, shiftPriceBy);
-        interval[OrderSides.BUY].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.BUY].price, shiftPriceBy);
-      });
-
-      const intervalsBelowAndIncludingOriginal = newIntervals.slice(originalIndexInNewIntervals);
-      newIntervals = [
-        ...intervalsAboveOriginal,
-        ...intervalsBelowAndIncludingOriginal,
-      ];
+    const interval = stockState.intervals[intervalIndex];
+    if (interval.type === IntervalTypes.LONG && interval[OrderSides.BUY].active) {
+      resolvedLongTailIntervalsIndexes.push(intervalIndex);
     }
   }
 
-  stockState.intervals = newIntervals;
+  stockState.intervals = stockState.intervals.filter((_, index) => !resolvedLongTailIntervalsIndexes.includes(index));
 }
 
 function getNumToSell(stockState: StockState, {bid}: Snapshot): number {
@@ -309,7 +285,6 @@ function getNumToSell(stockState: StockState, {bid}: Snapshot): number {
   let indexesToExecute: number[] = [];
   for (const [i, interval] of intervals.entries()) {
     if (doFloatCalculation(FloatCalculations.lessThanOrEqual, bid, interval[OrderSides.SELL].price)  && interval[OrderSides.SELL].active && interval[OrderSides.SELL].crossed) {
-      // if (interval.type === IntervalTypes.SHORT && newPosition == interval.positionLimit || newPosition > interval.positionLimit) {
       if (newPosition > interval.positionLimit) {
         indexesToExecute.push(i);
         newPosition -= stockState.sharesPerInterval;
@@ -340,14 +315,14 @@ function getNumToSell(stockState: StockState, {bid}: Snapshot): number {
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.realizedPnL = doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, tradingCosts);
   
-    // removeResolvedClonedIntervalsBelow(stockState, indexesToExecute);
-    insertLongIntervalAtTheTop(stockState, newPosition);
+    insertLongTailIntervalAtTheTop(stockState, newPosition);
+    removeResolvedShortTailIntervalsAtTheBottom(stockState, indexesToExecute);
   }
 
   return indexesToExecute.length;
 }
 
-function insertLongIntervalAtTheTop(stockState: StockState, newPosition: number): void {
+function insertLongTailIntervalAtTheTop(stockState: StockState, newPosition: number): void {
   if (newPosition >= stockState.targetPosition) {
     return;
   }
@@ -372,48 +347,25 @@ function insertLongIntervalAtTheTop(stockState: StockState, newPosition: number)
   stockState.intervals.unshift(newLongInterval);
 }
 
-function removeResolvedClonedIntervalsBelow(stockState: StockState, indexesToExecute: number[]): void {
-  let newIntervals: SmoothingInterval[] = [...stockState.intervals];
+function removeResolvedShortTailIntervalsAtTheBottom(stockState: StockState, indexesToExecute: number[]): void {
+  const resolvedShortTailIntervalsIndexes: number[] = [];
 
-  for (const indexToExecute of indexesToExecute) {
-    const originalInterval = stockState.intervals[indexToExecute];
-    const originalIndexInNewIntervals = newIntervals.findIndex(interval => interval === stockState.intervals[indexToExecute]);
-    
-    let numRemoved = 0;
-    let intervalsBelowOriginal = newIntervals.slice(originalIndexInNewIntervals + 1);
-    intervalsBelowOriginal = intervalsBelowOriginal.filter(interval => {
-      const isIntervalOfAnotherPosition = interval.positionLimit !== originalInterval.positionLimit;
-      if (isIntervalOfAnotherPosition) {
-        return true;
-      }
+  for (let intervalIndex = stockState.intervals.length - 1; intervalIndex >= 0; intervalIndex--) {
+    if (resolvedShortTailIntervalsIndexes.length === indexesToExecute.length) {
+      break;
+    }
 
-      const isSellActiveShortIntervalOfSamePosition = interval.type === IntervalTypes.SHORT && interval[OrderSides.SELL].active;
-      const isBuyActiveLongIntervalOfSamePosition = interval.type === IntervalTypes.LONG && interval[OrderSides.BUY].active;
+    if (stockState.intervals[intervalIndex - 1].positionLimit > -stockState.targetPosition) {
+      break;
+    }
 
-      if (!isSellActiveShortIntervalOfSamePosition && !isBuyActiveLongIntervalOfSamePosition) {
-        return true;
-      }
-
-      numRemoved++;
-      return false;
-    });
-
-    if (numRemoved > 0) {
-      intervalsBelowOriginal.forEach(interval => {
-        const shiftPriceBy = doFloatCalculation(FloatCalculations.multiply, numRemoved, stockState.spaceBetweenIntervals);
-        interval[OrderSides.SELL].price = doFloatCalculation(FloatCalculations.add, interval[OrderSides.SELL].price, shiftPriceBy);
-        interval[OrderSides.BUY].price = doFloatCalculation(FloatCalculations.add, interval[OrderSides.BUY].price, shiftPriceBy);
-      });
-
-      const intervalsAboveAndIncludingOriginal = newIntervals.slice(0, originalIndexInNewIntervals + 1);
-      newIntervals = [
-        ...intervalsAboveAndIncludingOriginal,
-        ...intervalsBelowOriginal,
-      ];
+    const interval = stockState.intervals[intervalIndex];
+    if (interval.type === IntervalTypes.SHORT && interval[OrderSides.SELL].active) {
+      resolvedShortTailIntervalsIndexes.push(intervalIndex);
     }
   }
 
-  stockState.intervals = newIntervals;
+  stockState.intervals = stockState.intervals.filter((_, index) => !resolvedShortTailIntervalsIndexes.includes(index));
 }
 
 let testSamples: {[stock: string]: {
@@ -429,7 +381,7 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
   if (doFloatCalculation(FloatCalculations.greaterThan, bid, upperBound)) {
     console.log(`stock: ${stock}, bid: ${bid}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
 
-    if (stockState.position < 100) {
+    if (stockState.position < stockState.targetPosition) {
       syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
       debugger;
     }
@@ -462,7 +414,7 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
   if (doFloatCalculation(FloatCalculations.lessThan, ask, lowerBound)) {
     console.log(`stock: ${stock}, ask: ${ask}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
 
-    if (stockState.position > -100) {
+    if (stockState.position > -stockState.targetPosition) {
       syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
       debugger;
     }
