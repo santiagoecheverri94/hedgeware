@@ -28,7 +28,7 @@ export default class StopLossArbNewState extends Command {
       initialPosition: 0,
       initialPrice: parseFloat(flags.initialPrice),
       intervalProfit: 0.02,
-      spaceBetweenIntervals: 0.02,
+      spaceBetweenIntervals: 0.07,
     });
   }
 }

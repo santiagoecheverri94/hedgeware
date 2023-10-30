@@ -34,7 +34,7 @@ export function createNewStockState({
   });
 
   const shortIntervals: SmoothingInterval[] = getShortIntervals({
-    initialPrice,
+    initialPrice: doFloatCalculation(FloatCalculations.subtract, initialPrice, doFloatCalculation(FloatCalculations.subtract, spaceBetweenIntervals, intervalProfit)),
     intervalProfit,
     spaceBetweenIntervals,
     sharesPerInterval,
@@ -45,12 +45,13 @@ export function createNewStockState({
     brokerageTradingCostPerShare,
     sharesPerInterval,
     intervalProfit,
+    initialPrice,
     spaceBetweenIntervals,
     numContracts,
     position: initialPosition,
     intervals: [...longIntervals, ...shortIntervals],
     tradingLogs: [],
-    realizedPnL: 0,
+    accountValue: 0,
   };
 
   syncWriteJSONFile(getStockStateFilePath(`${stock}`), jsonPrettyPrint(newState));
