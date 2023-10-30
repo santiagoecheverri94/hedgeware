@@ -34,6 +34,7 @@ export interface StockState {
   spaceBetweenIntervals: number;
   numContracts: number;
   position: number;
+  targetPosition: number;
   intervals: SmoothingInterval[];
   tradingLogs: {
     timeStamp: string;
@@ -455,7 +456,7 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
 }
 
 async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up' | 'down', stock: string, stockState: StockState): Promise<StockState> {
-  console.log(`stock: ${stock}, ${bidOrAsk(upperOrLowerBound)}: ${snapshot[bidOrAsk(upperOrLowerBound)]}, position: ${stockState.position}, accountValue: ${stockState.accountValue}`);
+  console.log(`stock: ${stock}, bound: ${upperOrLowerBound}, ${bidOrAsk(upperOrLowerBound)}: ${snapshot[bidOrAsk(upperOrLowerBound)]}, position: ${stockState.position}, accountValue: ${stockState.accountValue}`);
 
   const finalTransactionValue = doFloatCalculation(FloatCalculations.multiply, Math.abs(stockState.position), snapshot[bidOrAsk(upperOrLowerBound)]);
   stockState.accountValue = doFloatCalculation(upperOrLowerBound === 'up' ? FloatCalculations.add : FloatCalculations.subtract, stockState.accountValue, finalTransactionValue);
@@ -464,7 +465,7 @@ async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up
   stockState.accountValue = doFloatCalculation(FloatCalculations.subtract, stockState.accountValue, finalTradingCosts);
   
   syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
-  if (upperOrLowerBound === 'up' ? stockState.position < 100 : stockState.position > -100) {
+  if (upperOrLowerBound === 'up' ? stockState.position < stockState.targetPosition : stockState.position > -stockState.targetPosition) {
     debugger;
   }
 
