@@ -197,7 +197,8 @@ function getNumToBuy(stockState: StockState, {bid, ask}: Snapshot): number {
     const interval = intervals[i];
 
     if (doFloatCalculation(FloatCalculations.greaterThanOrEqual, ask, interval[OrderSides.BUY].price) && interval[OrderSides.BUY].active && interval[OrderSides.BUY].crossed) {
-      if (newPosition < interval.positionLimit) {
+      if (interval.type === IntervalTypes.LONG && newPosition == interval.positionLimit || newPosition < interval.positionLimit) {
+      // if (newPosition < interval.positionLimit) {
         indexesToExecute.unshift(i);
         newPosition += stockState.sharesPerInterval;
       }
@@ -251,9 +252,9 @@ function insertShortTailIntervalAtTheBottom({
   bid: number,
 }): void {
   const topIntervalBought = stockState.intervals[indexesToExecute[0]];
-  if (doFloatCalculation(FloatCalculations.greaterThan, bid, topIntervalBought[OrderSides.SELL].price)) {
-    return;
-  }
+  // if (doFloatCalculation(FloatCalculations.greaterThan, bid, topIntervalBought[OrderSides.SELL].price)) {
+  //   return;
+  // }
 
   if (-newPosition <= -stockState.targetPosition) {
     return;
@@ -320,7 +321,8 @@ function getNumToSell(stockState: StockState, {bid, ask}: Snapshot): number {
   let indexesToExecute: number[] = [];
   for (const [i, interval] of intervals.entries()) {
     if (doFloatCalculation(FloatCalculations.lessThanOrEqual, bid, interval[OrderSides.SELL].price)  && interval[OrderSides.SELL].active && interval[OrderSides.SELL].crossed) {
-      if (newPosition > interval.positionLimit) {
+      if (interval.type === IntervalTypes.SHORT && newPosition == interval.positionLimit || newPosition > interval.positionLimit) {
+      // if (newPosition >= interval.positionLimit) {
         indexesToExecute.push(i);
         newPosition -= stockState.sharesPerInterval;
       }
@@ -374,9 +376,9 @@ function insertLongTailIntervalAtTheTop({
   ask: number,
 }): void {
   const bottomIntervalSold = stockState.intervals[indexesToExecute[indexesToExecute.length - 1]];
-  if (doFloatCalculation(FloatCalculations.lessThan, ask, bottomIntervalSold[OrderSides.BUY].price)) {
-    return;
-  }
+  // if (doFloatCalculation(FloatCalculations.lessThan, ask, bottomIntervalSold[OrderSides.BUY].price)) {
+  //   return;
+  // }
 
   if (newPosition >= stockState.targetPosition) {
     return;
@@ -449,8 +451,8 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
   if (doFloatCalculation(FloatCalculations.greaterThan, bid, upperBound)) {
     console.log(`stock: ${stock}, bid: ${bid}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
 
+    syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
     if (stockState.position < stockState.targetPosition) {
-      syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
       debugger;
     }
 
@@ -482,8 +484,8 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
   if (doFloatCalculation(FloatCalculations.lessThan, ask, lowerBound)) {
     console.log(`stock: ${stock}, ask: ${ask}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
 
+    syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
     if (stockState.position > -stockState.targetPosition) {
-      syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
       debugger;
     }
 
