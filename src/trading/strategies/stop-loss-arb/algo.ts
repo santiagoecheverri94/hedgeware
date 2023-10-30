@@ -42,7 +42,6 @@ export interface StockState {
     price: number;
     previousPosition: number;
     newPosition: number;
-    realizedPnLOfTrade: number;
   }[];
   realizedPnL: number;
 }
@@ -103,7 +102,7 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
   const crossingHappened = checkCrossings(stock, stockState, snapshot);
 
   if (!process.env.SIMULATE_SNAPSHOT && crossingHappened) {
-    // log(`"${stock}" crossed, bid: ${bid}, ask: ${ask}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
+    log(`"${stock}" crossed, bid: ${snapshot.bid}, ask: ${snapshot.ask}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
     asyncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
   }
 
@@ -139,7 +138,6 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
       price: numToBuy > 0 ? snapshot.ask : snapshot.bid,
       previousPosition: stockState.position,
       newPosition,
-      realizedPnLOfTrade: doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, previousPnL),
     };
 
     stockState.tradingLogs.push(tradingLog);
@@ -154,9 +152,7 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
 
     checkCrossings(stock, stockState, snapshot);
 
-    if (process.env.SIMULATE_SNAPSHOT) {
-      syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
-    } else {
+    if (!process.env.SIMULATE_SNAPSHOT) {
       asyncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
     }
   }
@@ -487,7 +483,7 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
   if (doFloatCalculation(FloatCalculations.lessThan, ask, lowerBound)) {
     console.log(`stock: ${stock}, ask: ${ask}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
 
-    if (stockState.position > 10) { // ) -100) {
+    if (stockState.position > -100) {
       syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
       debugger;
     }
