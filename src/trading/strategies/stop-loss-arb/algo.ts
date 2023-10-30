@@ -45,8 +45,8 @@ export interface StockState {
     price: number;
     previousPosition: number;
     newPosition: number;
-    realizedPnLOfTrade: number;
   }[];
+  accountValue: number;
   realizedPnL: number;
 }
 
@@ -106,7 +106,6 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
   const crossingHappened = checkCrossings(stock, stockState, snapshot);
 
   if (!process.env.SIMULATE_SNAPSHOT && crossingHappened) {
-    // log(`"${stock}" crossed, bid: ${bid}, ask: ${ask}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
     asyncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
   }
 
@@ -121,7 +120,6 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
 
   // 4)
   let newPosition: number | undefined;
-  const previousPnL = stockState.realizedPnL;
   // TODO: consier moving these branches to inside getNumBuy and getNumSell
   if (numToBuy > 0) {
     newPosition = stockState.position + (stockState.sharesPerInterval * numToBuy);
@@ -143,7 +141,6 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
       price: numToBuy > 0 ? snapshot.ask : snapshot.bid,
       previousPosition: stockState.position,
       newPosition,
-      realizedPnLOfTrade: doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, previousPnL),
     };
 
     stockState.tradingLogs.push(tradingLog);
@@ -227,6 +224,10 @@ function getNumToBuy(stockState: StockState, {bid, ask}: Snapshot): number {
   if (indexesToExecute.length > 0) {
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.realizedPnL = doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, tradingCosts);
+
+    const purchaseValue = doFloatCalculation(FloatCalculations.multiply, stockState.sharesPerInterval, ask);
+    stockState.accountValue = doFloatCalculation(FloatCalculations.subtract, stockState.accountValue, purchaseValue);
+    stockState.accountValue = doFloatCalculation(FloatCalculations.subtract, stockState.accountValue, tradingCosts);
 
     insertShortTailIntervalAtTheBottom({
       stockState,
@@ -322,7 +323,7 @@ function getNumToSell(stockState: StockState, {bid, ask}: Snapshot): number {
   for (const [i, interval] of intervals.entries()) {
     if (doFloatCalculation(FloatCalculations.lessThanOrEqual, bid, interval[OrderSides.SELL].price)  && interval[OrderSides.SELL].active && interval[OrderSides.SELL].crossed) {
       if (interval.type === IntervalTypes.SHORT && newPosition == interval.positionLimit || newPosition > interval.positionLimit) {
-      // if (newPosition >= interval.positionLimit) {
+      // if (newPosition > interval.positionLimit) {
         indexesToExecute.push(i);
         newPosition -= stockState.sharesPerInterval;
       }
@@ -351,6 +352,10 @@ function getNumToSell(stockState: StockState, {bid, ask}: Snapshot): number {
   if (indexesToExecute.length > 0) {
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.realizedPnL = doFloatCalculation(FloatCalculations.subtract, stockState.realizedPnL, tradingCosts);
+
+    const saleValue = doFloatCalculation(FloatCalculations.multiply, stockState.sharesPerInterval, ask);
+    stockState.accountValue = doFloatCalculation(FloatCalculations.add, stockState.accountValue, saleValue);
+    stockState.accountValue = doFloatCalculation(FloatCalculations.subtract, stockState.accountValue, tradingCosts);
   
     insertLongTailIntervalAtTheTop({
       stockState,
@@ -442,6 +447,7 @@ let testSamples: {[stock: string]: {
   distance: number;
   upOrDown: 'up' | 'down';
   realizedPnL: number;
+  accountValue: number;
 }[]} = {};
 
 async function debugSimulatedPrices(bid: number, ask: number, stock: string, stockState: StockState): Promise<StockState> {
@@ -451,8 +457,12 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
   if (doFloatCalculation(FloatCalculations.greaterThan, bid, upperBound)) {
     console.log(`stock: ${stock}, bid: ${bid}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
 
+    const finalSaleValue = doFloatCalculation(FloatCalculations.multiply, stockState.position, bid);
+    stockState.accountValue = doFloatCalculation(FloatCalculations.add, stockState.accountValue, finalSaleValue);
+    const finalTradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, stockState.position);
+    stockState.accountValue = doFloatCalculation(FloatCalculations.subtract, stockState.accountValue, finalTradingCosts);
     syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
-    if (stockState.position < stockState.targetPosition) {
+    if (stockState.position < 100) {
       debugger;
     }
 
@@ -465,14 +475,17 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
       upOrDown: 'up',
       distance: doFloatCalculation(FloatCalculations.subtract, stockState.tradingLogs[stockState.tradingLogs.length - 1].price, 11.92),
       realizedPnL: stockState.realizedPnL,
+      accountValue: stockState.accountValue,
     });
     if (samples.length === NUM_SAMPLES) {
       debugger;
 
       const averageDistance = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.distance), 0), samples.length);
       const averagePnL = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.realizedPnL), 0), samples.length);
+      const averageAccountValue = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.accountValue), 0), samples.length);
       console.log(`averageDistance: ${averageDistance}`);
       console.log(`averagePnL: ${averagePnL}`);
+      console.log(`averageAccountValue: ${averageAccountValue}`);
       testSamples[stock] = [];
     }
 
@@ -484,8 +497,12 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
   if (doFloatCalculation(FloatCalculations.lessThan, ask, lowerBound)) {
     console.log(`stock: ${stock}, ask: ${ask}, position: ${stockState.position}, realizedPnL: ${stockState.realizedPnL}`);
 
+    const finalPurchaseValue = doFloatCalculation(FloatCalculations.multiply, Math.abs(stockState.position), ask);
+    stockState.accountValue = doFloatCalculation(FloatCalculations.subtract, stockState.accountValue, finalPurchaseValue);
+    const finalTradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, Math.abs(stockState.position));
+    stockState.accountValue = doFloatCalculation(FloatCalculations.subtract, stockState.accountValue, finalTradingCosts);
     syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
-    if (stockState.position > -stockState.targetPosition) {
+    if (stockState.position > -100) {
       debugger;
     }
 
@@ -498,14 +515,17 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
       upOrDown: 'down',
       distance: doFloatCalculation(FloatCalculations.subtract, 11.92, stockState.tradingLogs[stockState.tradingLogs.length - 1].price),
       realizedPnL: stockState.realizedPnL,
+      accountValue: stockState.accountValue,
     });
     if (samples.length === NUM_SAMPLES) {
       debugger;
 
       const averageDistance = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.distance), 0), samples.length);
       const averagePnL = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.realizedPnL), 0), samples.length);
+      const averageAccountValue = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.accountValue), 0), samples.length);
       console.log(`averageDistance: ${averageDistance}`);
       console.log(`averagePnL: ${averagePnL}`);
+      console.log(`averageAccountValue: ${averageAccountValue}`);
       testSamples[stock] = [];
     }
 

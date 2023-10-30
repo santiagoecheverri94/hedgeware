@@ -36,7 +36,7 @@ export function createNewStockState({
   });
 
   const shortIntervals: SmoothingInterval[] = getShortIntervals({
-    initialPrice,
+    initialPrice: doFloatCalculation(FloatCalculations.subtract, initialPrice, doFloatCalculation(FloatCalculations.subtract, spaceBetweenIntervals, intervalProfit)),
     intervalProfit,
     spaceBetweenIntervals,
     sharesPerInterval,
@@ -54,6 +54,7 @@ export function createNewStockState({
     position: initialPosition,
     intervals: [...longIntervals, ...shortIntervals],
     tradingLogs: [],
+    accountValue: 0,
     realizedPnL: 0,
   };
 
