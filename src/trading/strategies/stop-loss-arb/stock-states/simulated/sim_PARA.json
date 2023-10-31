@@ -4,28 +4,70 @@
   "sharesPerInterval": 10,
   "intervalProfit": 0.02,
   "initialPrice": 11.92,
-  "spaceBetweenIntervals": 0.07,
+  "spaceBetweenIntervals": 0.04,
   "numContracts": 1,
   "position": 0,
-  "targetPosition": 10,
+  "targetPosition": 50,
   "intervals": [
     {
       "type": "LONG",
-      "positionLimit": 10,
+      "positionLimit": 50,
       "SELL": {
-        "price": 12.01,
+        "price": 12.1,
         "active": false,
         "crossed": false
       },
       "BUY": {
-        "price": 11.99,
+        "price": 12.08,
         "active": true,
         "crossed": false
       }
     },
     {
       "type": "LONG",
-      "positionLimit": 0,
+      "positionLimit": 40,
+      "SELL": {
+        "price": 12.06,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.04,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 30,
+      "SELL": {
+        "price": 12.02,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 20,
+      "SELL": {
+        "price": 11.98,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 11.96,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 10,
       "SELL": {
         "price": 11.94,
         "active": false,
@@ -34,34 +76,6 @@
       "BUY": {
         "price": 11.92,
         "active": true,
-        "crossed": false
-      }
-    },
-    {
-      "type": "SHORT",
-      "positionLimit": 0,
-      "SELL": {
-        "price": 11.87,
-        "active": true,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 11.85,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "type": "SHORT",
-      "positionLimit": -10,
-      "SELL": {
-        "price": 11.8,
-        "active": true,
-        "crossed": false
-      },
-      "BUY": {
-        "price": 11.78,
-        "active": false,
         "crossed": false
       }
     }

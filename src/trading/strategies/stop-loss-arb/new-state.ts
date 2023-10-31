@@ -51,7 +51,7 @@ export function createNewStockState({
     numContracts,
     position: 0,
     targetPosition,
-    intervals: [...longIntervals, ...shortIntervals],
+    intervals: [...longIntervals], // , ...shortIntervals],
     tradingLogs: [],
     accountValue: 0,
   };
@@ -76,7 +76,7 @@ function getLongIntervals({
   const numIntervals = targetPosition / sharesPerInterval;
 
   let absoluteIndex = 0;
-  for (let i = 0; i <= numIntervals; i++) {
+  for (let i = 1 /* 0 */; i <= numIntervals; i++) {
     for (let j = 0; j < INTERVAL_PER_POSITION; j++) {
       const spaceFromBaseInterval = doFloatCalculation(FloatCalculations.multiply, absoluteIndex, spaceBetweenIntervals);
       const buyPrice = doFloatCalculation(FloatCalculations.add, initialPrice, spaceFromBaseInterval);

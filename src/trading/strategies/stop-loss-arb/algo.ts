@@ -213,54 +213,50 @@ function getNumToBuy(stockState: StockState, {bid, ask}: Snapshot): number {
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.accountValue = doFloatCalculation(FloatCalculations.subtract, stockState.accountValue, tradingCosts);
 
-    // insertClonedShortIntervals(stockState, indexesToExecute, bid);
+    insertBackupSellActiveInterval(stockState, indexesToExecute, bid);
     // removeResolvedClonedIntervalsAbove(stockState, indexesToExecute);
   }
 
   return indexesToExecute.length;
 }
 
-function insertClonedShortIntervals(stockState: StockState, indexesToExecute: number[], bid: number): void {
-  let newIntervals: SmoothingInterval[] = [...stockState.intervals];
-
-  const indexToExecute = indexesToExecute[0];
-  if (doFloatCalculation(FloatCalculations.greaterThan, bid, stockState.intervals[indexToExecute][OrderSides.SELL].price)) {
+function insertBackupSellActiveInterval(stockState: StockState, indexesToExecute: number[], bid: number): void {
+  const originalInterval = stockState.intervals[indexesToExecute[0]];
+  if (doFloatCalculation(FloatCalculations.greaterThan, bid, originalInterval[OrderSides.SELL].price)) {
     return;
   }
 
-  const originalIndexInNewIntervals = newIntervals.findIndex(interval => interval === stockState.intervals[indexToExecute]);
+  // const backupSellActiveIntervalSellPrice = doFloatCalculation(FloatCalculations.subtract, originalInterval[OrderSides.SELL].price, stockState.spaceBetweenIntervals);
+  // const newInterval: SmoothingInterval = {
+  //   type: IntervalTypes.SHORT,
+  //   positionLimit: originalInterval.positionLimit,
+  //   SELL: {
+  //     active: true,
+  //     crossed: false,
+  //     price: backupSellActiveIntervalSellPrice,
+  //   },
+  //   BUY: {
+  //     active: false,
+  //     crossed: false,
+  //     price: doFloatCalculation(FloatCalculations.subtract, backupSellActiveIntervalSellPrice, stockState.intervalProfit),
+  //   }
+  // };
 
-  const newShortIntervalSellPrice = doFloatCalculation(FloatCalculations.subtract, stockState.intervals[indexToExecute][OrderSides.SELL].price, stockState.spaceBetweenIntervals);
-  const newShortInterval: SmoothingInterval = {
-    type: IntervalTypes.SHORT,
-    positionLimit: stockState.intervals[indexToExecute].positionLimit,
-    SELL: {
-      active: true,
-      crossed: false,
-      price: newShortIntervalSellPrice,
-    },
-    BUY: {
-      active: false,
-      crossed: false,
-      price: doFloatCalculation(FloatCalculations.subtract, newShortIntervalSellPrice, stockState.intervalProfit),
-    }
-  };
+  // const intervalsAboveAndIncludingOriginal = newIntervals.slice(0, originalIndexInNewIntervals + 1);
+  // const intervalsBelowOriginal = newIntervals.slice(originalIndexInNewIntervals + 1);
 
-  const intervalsAboveAndIncludingOriginal = newIntervals.slice(0, originalIndexInNewIntervals + 1);
-  const intervalsBelowOriginal = newIntervals.slice(originalIndexInNewIntervals + 1);
+  // intervalsBelowOriginal.forEach(interval => {
+  //   interval[OrderSides.SELL].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.SELL].price, stockState.spaceBetweenIntervals);
+  //   interval[OrderSides.BUY].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.BUY].price, stockState.spaceBetweenIntervals);
+  // });
 
-  intervalsBelowOriginal.forEach(interval => {
-    interval[OrderSides.SELL].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.SELL].price, stockState.spaceBetweenIntervals);
-    interval[OrderSides.BUY].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.BUY].price, stockState.spaceBetweenIntervals);
-  });
+  // newIntervals = [
+  //   ...intervalsAboveAndIncludingOriginal,
+  //   newInterval,
+  //   ...intervalsBelowOriginal,
+  // ];
 
-  newIntervals = [
-    ...intervalsAboveAndIncludingOriginal,
-    newShortInterval,
-    ...intervalsBelowOriginal,
-  ];
-
-  stockState.intervals = newIntervals;
+  // stockState.intervals = newIntervals;
 }
 
 function removeResolvedClonedIntervalsAbove(stockState: StockState, indexesToExecute: number[]): void {
@@ -456,40 +452,44 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
 }
 
 async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up' | 'down', stock: string, stockState: StockState): Promise<StockState> {
-  console.log(`stock: ${stock}, bound: ${upperOrLowerBound}, ${bidOrAsk(upperOrLowerBound)}: ${snapshot[bidOrAsk(upperOrLowerBound)]}, position: ${stockState.position}, accountValue: ${stockState.accountValue}`);
+  if (stockState.tradingLogs.length > 0) {  
+    console.log(`stock: ${stock}, bound: ${upperOrLowerBound}, ${bidOrAsk(upperOrLowerBound)}: ${snapshot[bidOrAsk(upperOrLowerBound)]}, position: ${stockState.position}, accountValue: ${stockState.accountValue}`);
 
-  const finalTransactionValue = doFloatCalculation(FloatCalculations.multiply, Math.abs(stockState.position), snapshot[bidOrAsk(upperOrLowerBound)]);
-  stockState.accountValue = doFloatCalculation(upperOrLowerBound === 'up' ? FloatCalculations.add : FloatCalculations.subtract, stockState.accountValue, finalTransactionValue);
-  
-  const finalTradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, Math.abs(stockState.position));
-  stockState.accountValue = doFloatCalculation(FloatCalculations.subtract, stockState.accountValue, finalTradingCosts);
-  
-  syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
-  if (upperOrLowerBound === 'up' ? stockState.position < stockState.targetPosition : stockState.position > -stockState.targetPosition) {
-    debugger;
-  }
+    const finalTransactionValue = doFloatCalculation(FloatCalculations.multiply, Math.abs(stockState.position), snapshot[bidOrAsk(upperOrLowerBound)]);
+    stockState.accountValue = doFloatCalculation(upperOrLowerBound === 'up' ? FloatCalculations.add : FloatCalculations.subtract, stockState.accountValue, finalTransactionValue);
+    
+    const finalTradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, Math.abs(stockState.position));
+    stockState.accountValue = doFloatCalculation(FloatCalculations.subtract, stockState.accountValue, finalTradingCosts);
+    
+    syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
+    if (upperOrLowerBound === 'up' && stockState.position < stockState.targetPosition) {
+      debugger;
+    } else if (upperOrLowerBound === 'down' && stockState.position > 10) { // > -stockState.targetPosition) {
+      debugger;
+    }
 
-  const NUM_SAMPLES = 225;
+    const NUM_SAMPLES = 225;
 
-  if (!testSamples[stock]) {
-    testSamples[stock] = [];
-  }
-  const samples = testSamples[stock];
+    if (!testSamples[stock]) {
+      testSamples[stock] = [];
+    }
+    const samples = testSamples[stock];
 
-  samples.push({
-    upOrDown: upperOrLowerBound,
-    distance: Math.abs(doFloatCalculation(FloatCalculations.subtract, stockState.tradingLogs[stockState.tradingLogs.length - 1].price, stockState.initialPrice)),
-    accountValue: stockState.accountValue,
-  });
+    samples.push({
+      upOrDown: upperOrLowerBound,
+      distance: Math.abs(doFloatCalculation(FloatCalculations.subtract, stockState.tradingLogs[stockState.tradingLogs.length - 1].price, stockState.initialPrice)),
+      accountValue: stockState.accountValue,
+    });
 
-  if (samples.length === NUM_SAMPLES) {
-    debugger;
+    if (samples.length === NUM_SAMPLES) {
+      debugger;
 
-    const averageDistance = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.distance), 0), samples.length);
-    const averageAccountValue = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.accountValue), 0), samples.length);
-    console.log(`averageDistance: ${averageDistance}`);
-    console.log(`averageAccountValue: ${averageAccountValue}`);
-    testSamples[stock] = [];
+      const averageDistance = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.distance), 0), samples.length);
+      const averageAccountValue = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.accountValue), 0), samples.length);
+      console.log(`averageDistance: ${averageDistance}`);
+      console.log(`averageAccountValue: ${averageAccountValue}`);
+      testSamples[stock] = [];
+    }
   }
 
   restartSimulatedPrice();
