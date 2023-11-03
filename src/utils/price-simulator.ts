@@ -1,13 +1,19 @@
 import {FloatCalculations, doFloatCalculation} from './float-calculator';
 
-const INITIAL_PRICE = 11.90;
-let randomPrice = INITIAL_PRICE;
+const INITIAL_PRICE = 13.75;
+let randomPrice: number;
 
 export function getSimulatedPrice(): number {
   return getRandomPrice();
 }
 
 function getRandomPrice(): number {
+  if (!randomPrice) {
+    restartRandomPrice();
+
+    return randomPrice;
+  }
+
   const tickDown = doFloatCalculation(FloatCalculations.subtract, randomPrice, 0.01);
   const tickUp = doFloatCalculation(FloatCalculations.add, randomPrice, 0.01);
   const probabilityOfTickDown = Math.random();

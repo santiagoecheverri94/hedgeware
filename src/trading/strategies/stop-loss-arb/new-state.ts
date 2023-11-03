@@ -1,40 +1,23 @@
 import { FloatCalculations, doFloatCalculation } from "../../../utils/float-calculator";
-import { jsonPrettyPrint, syncWriteJSONFile } from "../../../utils/miscellaneous";
+import { jsonPrettyPrint, readJSONFile, syncWriteJSONFile } from "../../../utils/miscellaneous";
 import { IntervalTypes, SmoothingInterval, StockState, getStockStateFilePath } from "./algo";
 
-const INTERVAL_PER_POSITION = 1;
-
-export function createNewStockState({
-  stock,
-  brokerageId,
-  brokerageTradingCostPerShare,
-  sharesPerInterval,
-  numContracts,
-  targetPosition,
-  initialPrice,
-  intervalProfit,
-  spaceBetweenIntervals,
-}: {
-  stock: string
-  brokerageId: string
-  brokerageTradingCostPerShare: number
-  sharesPerInterval: number
-  numContracts: number
-  targetPosition: number
-  initialPrice: number
-  intervalProfit: number
-  spaceBetweenIntervals: number
-}) {
-  const longIntervals: SmoothingInterval[] = getLongIntervals({
-    initialPrice,
+export async function createNewStockState(stock: string) {
+  const {
+    brokerageId,
+    brokerageTradingCostPerShare,
+    sharesPerInterval,
+    numContracts,
     targetPosition,
+    initialPrice,
     intervalProfit,
     spaceBetweenIntervals,
-    sharesPerInterval,
-  });
+    initialAccountValue,
+    accountValue,
+  } = await readJSONFile<StockState>(getStockStateFilePath(stock));
 
-  const shortIntervals: SmoothingInterval[] = getShortIntervals({
-    initialPrice: doFloatCalculation(FloatCalculations.subtract, initialPrice, doFloatCalculation(FloatCalculations.subtract, spaceBetweenIntervals, intervalProfit)),
+  const longIntervals: SmoothingInterval[] = getLongIntervals({
+    initialPrice,
     targetPosition,
     intervalProfit,
     spaceBetweenIntervals,
@@ -44,16 +27,17 @@ export function createNewStockState({
   const newState: StockState = {
     brokerageId,
     brokerageTradingCostPerShare,
+    initialAccountValue,
+    targetPosition,
     sharesPerInterval,
+    position: 0,
     intervalProfit,
     initialPrice,
     spaceBetweenIntervals,
     numContracts,
-    position: 0,
-    targetPosition,
     intervals: [...longIntervals], // , ...shortIntervals],
+    accountValue: initialAccountValue,
     tradingLogs: [],
-    accountValue: 0,
   };
 
   syncWriteJSONFile(getStockStateFilePath(`${stock}`), jsonPrettyPrint(newState));
@@ -72,32 +56,97 @@ function getLongIntervals({
   spaceBetweenIntervals: number
   sharesPerInterval: number
 }): SmoothingInterval[] {
+  return [
+    ...getUpperLongIntervals({
+      initialPrice,
+      targetPosition,
+      intervalProfit,
+      spaceBetweenIntervals,
+      sharesPerInterval,
+    }),
+    ...getLowerLongIntervals({
+      initialPrice,
+      targetPosition,
+      intervalProfit,
+      spaceBetweenIntervals,
+      sharesPerInterval,
+    }),
+  ];
+}
+
+function getUpperLongIntervals({
+  initialPrice,
+  targetPosition,
+  intervalProfit,
+  spaceBetweenIntervals,
+  sharesPerInterval,
+}: {
+  initialPrice: number
+  targetPosition: number
+  intervalProfit: number
+  spaceBetweenIntervals: number
+  sharesPerInterval: number
+}): SmoothingInterval[] {
   const intervals: SmoothingInterval[] = [];
-  const numIntervals = targetPosition / sharesPerInterval;
+  const numIntervals = (targetPosition / 2) / sharesPerInterval;
 
-  let absoluteIndex = 0;
-  for (let i = 1 /* 0 */; i <= numIntervals; i++) {
-    for (let j = 0; j < INTERVAL_PER_POSITION; j++) {
-      const spaceFromBaseInterval = doFloatCalculation(FloatCalculations.multiply, absoluteIndex, spaceBetweenIntervals);
-      const buyPrice = doFloatCalculation(FloatCalculations.add, initialPrice, spaceFromBaseInterval);
+  for (let i = 1; i <= numIntervals; i++) {
+    const spaceFromBaseInterval = doFloatCalculation(FloatCalculations.multiply, i, spaceBetweenIntervals);
+    const buyPrice = doFloatCalculation(FloatCalculations.add, initialPrice, spaceFromBaseInterval);
 
-      intervals.unshift({
-        type: IntervalTypes.LONG,
-        positionLimit: sharesPerInterval * i,
-        SELL: {
-          price: doFloatCalculation(FloatCalculations.add, buyPrice, intervalProfit),
-          active: false,
-          crossed: false,
-        },
-        BUY: {
-          price: buyPrice,
-          active: true,
-          crossed: false,
-        }
-      });
+    intervals.unshift({
+      type: IntervalTypes.LONG,
+      positionLimit: (targetPosition / 2) + sharesPerInterval * i,
+      SELL: {
+        price: doFloatCalculation(FloatCalculations.add, buyPrice, intervalProfit),
+        active: false,
+        crossed: false,
+      },
+      BUY: {
+        price: buyPrice,
+        active: true,
+        crossed: true,
+      }
+    });
+  }
 
-      absoluteIndex++;
-    }
+  return intervals;
+}
+
+function getLowerLongIntervals({
+  initialPrice,
+  targetPosition,
+  intervalProfit,
+  spaceBetweenIntervals,
+  sharesPerInterval,
+}: {
+  initialPrice: number
+  targetPosition: number
+  intervalProfit: number
+  spaceBetweenIntervals: number
+  sharesPerInterval: number
+}): SmoothingInterval[] {
+  const intervals: SmoothingInterval[] = [];
+  const numIntervals = (targetPosition / 2) / sharesPerInterval;
+
+  for (let i = 1; i <= numIntervals; i++) {
+    const spaceFromBaseInterval = doFloatCalculation(FloatCalculations.multiply, i - 1, spaceBetweenIntervals);
+    const buyPrice = doFloatCalculation(FloatCalculations.subtract, initialPrice, spaceFromBaseInterval);
+
+    intervals.push({
+      type: IntervalTypes.LONG,
+      positionLimit: sharesPerInterval * (numIntervals - i + 1),
+      SELL: {
+        price: doFloatCalculation(FloatCalculations.add, buyPrice, intervalProfit),
+        active: false,
+        crossed: false,
+      },
+      BUY: {
+        price: buyPrice,
+        active: true,
+        crossed: true,
+      }
+    });
   }
 
   return intervals;
@@ -121,27 +170,25 @@ function getShortIntervals({
 
   let absoluteIndex = 0;
   for (let i = 0; i <= numIntervals; i++) {
-    for (let j = 0; j < INTERVAL_PER_POSITION; j++) {
-      const spaceFromBaseInterval = doFloatCalculation(FloatCalculations.multiply, absoluteIndex, spaceBetweenIntervals);
-      const sellPrice = doFloatCalculation(FloatCalculations.subtract, initialPrice, spaceFromBaseInterval);
+    const spaceFromBaseInterval = doFloatCalculation(FloatCalculations.multiply, absoluteIndex, spaceBetweenIntervals);
+    const sellPrice = doFloatCalculation(FloatCalculations.subtract, initialPrice, spaceFromBaseInterval);
 
-      intervals.push({
-        type: IntervalTypes.SHORT,
-        positionLimit: -sharesPerInterval * i,
-        SELL: {
-          price: sellPrice,
-          active: true,
-          crossed: false,
-        },
-        BUY: {
-          price: doFloatCalculation(FloatCalculations.subtract, sellPrice, intervalProfit),
-          active: false,
-          crossed: false,
-        }
-      });
+    intervals.push({
+      type: IntervalTypes.SHORT,
+      positionLimit: -sharesPerInterval * i,
+      SELL: {
+        price: sellPrice,
+        active: true,
+        crossed: true,
+      },
+      BUY: {
+        price: doFloatCalculation(FloatCalculations.subtract, sellPrice, intervalProfit),
+        active: false,
+        crossed: false,
+      }
+    });
 
-      absoluteIndex++;
-    }
+    absoluteIndex++;
   }
 
   return intervals;
