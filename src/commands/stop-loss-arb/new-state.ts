@@ -12,12 +12,13 @@ export default class StopLossArbNewState extends Command {
 
   static args = {
     stock: Args.string({description: 'stock to trade', required: true}),
+    premiumSold: Args.string({description: 'amount of premium sold', default: '0'}),
   }
 
   public async run(): Promise<void> {
     const {args} = await this.parse(StopLossArbNewState)
 
-    await createNewStockState(args.stock);
+    await createNewStockState(args.stock, parseFloat(args.premiumSold));
     this.exit();
   }
 }

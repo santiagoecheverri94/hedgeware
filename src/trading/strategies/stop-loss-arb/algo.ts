@@ -43,7 +43,6 @@ export interface StockState {
     previousPosition: number;
     newPosition: number;
   }[];
-  initialAccountValue: number;
   accountValue: number;
 }
 
@@ -188,9 +187,7 @@ function getNumToBuy(stockState: StockState, {bid, ask}: Snapshot): number {
     const interval = intervals[i];
 
     if (doFloatCalculation(FloatCalculations.greaterThanOrEqual, ask, interval[OrderSides.BUY].price) && interval[OrderSides.BUY].active && interval[OrderSides.BUY].crossed) {
-      // if (newPosition < interval.positionLimit) {
       if (interval.type === IntervalTypes.LONG && newPosition == interval.positionLimit || newPosition < interval.positionLimit) {
-      // if (newPosition <= interval.positionLimit) {
         indexesToExecute.unshift(i);
         newPosition += stockState.sharesPerInterval;
       }
@@ -255,9 +252,7 @@ function getNumToSell(stockState: StockState, {bid, ask}: Snapshot): number {
   let indexesToExecute: number[] = [];
   for (const [i, interval] of intervals.entries()) {
     if (doFloatCalculation(FloatCalculations.lessThanOrEqual, bid, interval[OrderSides.SELL].price)  && interval[OrderSides.SELL].active && interval[OrderSides.SELL].crossed) {
-      // if (newPosition > interval.positionLimit) {
       if (interval.type === IntervalTypes.SHORT && newPosition == interval.positionLimit || newPosition > interval.positionLimit) {
-      // if (newPosition >= interval.positionLimit) {
         indexesToExecute.push(i);
         newPosition -= stockState.sharesPerInterval;
       }
@@ -336,50 +331,46 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
 }
 
 async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up' | 'down', stock: string, stockState: StockState): Promise<StockState> {
-  if (stockState.tradingLogs.length > 0) {  
-    let finalTransactionValue = doFloatCalculation(FloatCalculations.multiply, Math.abs(stockState.position), snapshot[bidOrAsk(upperOrLowerBound)]);
+  if (stockState.tradingLogs.length === 0) {
+    restartSimulatedPrice();
+    return (await getStockStates([stock]))[stock];
+  }
 
-    if (upperOrLowerBound === 'up') {
-      const topOptionFinalTransactionValue = doFloatCalculation(FloatCalculations.multiply, Math.abs(stockState.position) - 100, 14.5);
-      const lowerOptionFinalTransactionValue = doFloatCalculation(FloatCalculations.multiply, 100, doFloatCalculation(FloatCalculations.subtract, stockState.initialPrice, doFloatCalculation(FloatCalculations.divide, stockState.initialAccountValue, 100)));
-      finalTransactionValue = doFloatCalculation(FloatCalculations.add, topOptionFinalTransactionValue, lowerOptionFinalTransactionValue);
-    }
+  const finalTransactionValue = doFloatCalculation(FloatCalculations.multiply, Math.abs(stockState.position), snapshot[bidOrAsk(upperOrLowerBound)]);
+  stockState.accountValue = doFloatCalculation(upperOrLowerBound === 'up' ? FloatCalculations.add : FloatCalculations.subtract, stockState.accountValue, finalTransactionValue);
+  
+  const finalTradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, Math.abs(stockState.position));
+  stockState.accountValue = doFloatCalculation(FloatCalculations.subtract, stockState.accountValue, finalTradingCosts);
 
-    stockState.accountValue = doFloatCalculation(upperOrLowerBound === 'up' ? FloatCalculations.add : FloatCalculations.add, stockState.accountValue, finalTransactionValue);
-    
-    const finalTradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, Math.abs(stockState.position));
-    stockState.accountValue = doFloatCalculation(FloatCalculations.subtract, stockState.accountValue, finalTradingCosts);
+  console.log(`stock: ${stock}, bound: ${upperOrLowerBound}, ${bidOrAsk(upperOrLowerBound)}: ${snapshot[bidOrAsk(upperOrLowerBound)]}, position: ${stockState.position}, accountValue: ${stockState.accountValue}`);
+  syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
+  if (upperOrLowerBound === 'up' && stockState.position < stockState.targetPosition) { // doFloatCalculation(FloatCalculations.lessThan, stockState.accountValue, 0))
+    debugger;
+  } else if (upperOrLowerBound === 'down' && stockState.position > -stockState.targetPosition) {
+    debugger;
+  }
 
-    console.log(`stock: ${stock}, bound: ${upperOrLowerBound}, ${bidOrAsk(upperOrLowerBound)}: ${snapshot[bidOrAsk(upperOrLowerBound)]}, position: ${stockState.position}, accountValue: ${stockState.accountValue}`);
-    syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
-    if (upperOrLowerBound === 'up') { // && doFloatCalculation(FloatCalculations.lessThan, stockState.accountValue, 0)) { // && stockState.position < stockState.targetPosition) {
-      debugger;
-    } else if (upperOrLowerBound === 'down') { // && stockState.position > stockState.sharesPerInterval) {
-      debugger;
-    }
+  const NUM_SAMPLES = 100;
 
-    const NUM_SAMPLES = 225;
+  if (!testSamples[stock]) {
+    testSamples[stock] = [];
+  }
+  const samples = testSamples[stock];
 
-    if (!testSamples[stock]) {
-      testSamples[stock] = [];
-    }
-    const samples = testSamples[stock];
+  samples.push({
+    upOrDown: upperOrLowerBound,
+    distance: Math.abs(doFloatCalculation(FloatCalculations.subtract, stockState.tradingLogs[stockState.tradingLogs.length - 1].price, stockState.initialPrice)),
+    accountValue: stockState.accountValue,
+  });
 
-    samples.push({
-      upOrDown: upperOrLowerBound,
-      distance: Math.abs(doFloatCalculation(FloatCalculations.subtract, stockState.tradingLogs[stockState.tradingLogs.length - 1].price, stockState.initialPrice)),
-      accountValue: stockState.accountValue,
-    });
+  if (samples.length === NUM_SAMPLES) {
+    debugger;
 
-    if (samples.length === NUM_SAMPLES) {
-      // debugger;
-
-      const averageDistance = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.distance), 0), samples.length);
-      const averageAccountValue = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.accountValue), 0), samples.length);
-      console.log(`averageDistance: ${averageDistance}`);
-      console.log(`averageAccountValue: ${averageAccountValue}`);
-      testSamples[stock] = [];
-    }
+    const averageDistance = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.distance), 0), samples.length);
+    const averageAccountValue = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.accountValue), 0), samples.length);
+    console.log(`averageDistance: ${averageDistance}`);
+    console.log(`averageAccountValue: ${averageAccountValue}`);
+    testSamples[stock] = [];
   }
 
   restartSimulatedPrice();
@@ -387,5 +378,5 @@ async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up
 }
 
 function bidOrAsk(upperOrLowerBound: 'up' | 'down'): 'bid' | 'ask' {
-  return upperOrLowerBound === 'up' ? 'bid' : 'bid';
+  return upperOrLowerBound === 'up' ? 'bid' : 'ask';
 }

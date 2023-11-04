@@ -2,7 +2,7 @@ import { FloatCalculations, doFloatCalculation } from "../../../utils/float-calc
 import { jsonPrettyPrint, readJSONFile, syncWriteJSONFile } from "../../../utils/miscellaneous";
 import { IntervalTypes, SmoothingInterval, StockState, getStockStateFilePath } from "./algo";
 
-export async function createNewStockState(stock: string) {
+export async function createNewStockState(stock: string, premiumSold: number) {
   const {
     brokerageId,
     brokerageTradingCostPerShare,
@@ -12,7 +12,6 @@ export async function createNewStockState(stock: string) {
     initialPrice,
     intervalProfit,
     spaceBetweenIntervals,
-    initialAccountValue,
     accountValue,
   } = await readJSONFile<StockState>(getStockStateFilePath(stock));
 
@@ -27,7 +26,6 @@ export async function createNewStockState(stock: string) {
   const newState: StockState = {
     brokerageId,
     brokerageTradingCostPerShare,
-    initialAccountValue,
     targetPosition,
     sharesPerInterval,
     position: 0,
@@ -36,7 +34,7 @@ export async function createNewStockState(stock: string) {
     spaceBetweenIntervals,
     numContracts,
     intervals: [...longIntervals], // , ...shortIntervals],
-    accountValue: initialAccountValue,
+    accountValue: premiumSold,
     tradingLogs: [],
   };
 
