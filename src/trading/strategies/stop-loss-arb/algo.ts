@@ -141,7 +141,7 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
       newPosition,
     };
 
-    stockState.tradingLogs.push(tradingLog);
+    stockState.tradingLogs.unshift(tradingLog);
 
     log(`Changed position for ${stock} (${stockState.numContracts} constracts): ${jsonPrettyPrint({
       price: tradingLog.price,
@@ -243,8 +243,8 @@ function correctBadBuyIfRequired(stockState: StockState, indexesToExecute: numbe
   topIntervalExecuted[OrderSides.SELL].crossed = false;
 
   stockState.intervals.forEach(interval => {
-    doFloatCalculation(FloatCalculations.add, interval[OrderSides.BUY].price, stockState.spaceBetweenIntervals);
-    doFloatCalculation(FloatCalculations.add, interval[OrderSides.SELL].price, stockState.spaceBetweenIntervals);
+    interval[OrderSides.BUY].price = doFloatCalculation(FloatCalculations.add, interval[OrderSides.BUY].price, stockState.spaceBetweenIntervals);
+    interval[OrderSides.SELL].price = doFloatCalculation(FloatCalculations.add, interval[OrderSides.SELL].price, stockState.spaceBetweenIntervals);
   });
 }
 
@@ -308,8 +308,8 @@ function correctBadSellIfRequired(stockState: StockState, indexesToExecute: numb
   bottomIntervalExecuted[OrderSides.BUY].crossed = false;
 
   stockState.intervals.forEach(interval => {
-    doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.BUY].price, stockState.spaceBetweenIntervals);
-    doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.SELL].price, stockState.spaceBetweenIntervals);
+    interval[OrderSides.BUY].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.BUY].price, stockState.spaceBetweenIntervals);
+    interval[OrderSides.SELL].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.SELL].price, stockState.spaceBetweenIntervals);
   });
 }
 
@@ -345,10 +345,10 @@ async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up
 
   console.log(`stock: ${stock}, bound: ${upperOrLowerBound}, ${bidOrAsk(upperOrLowerBound)}: ${snapshot[bidOrAsk(upperOrLowerBound)]}, position: ${stockState.position}, accountValue: ${stockState.accountValue}`);
   syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
-  if (upperOrLowerBound === 'up') { // && stockState.position < stockState.targetPosition) { // doFloatCalculation(FloatCalculations.lessThan, stockState.accountValue, 0))
+  if (upperOrLowerBound === 'up' && doFloatCalculation(FloatCalculations.lessThan, stockState.accountValue, 0)) { // && stockState.position < stockState.targetPosition) { //
     debugger;
   } else if (upperOrLowerBound === 'down') { // && stockState.position > -stockState.targetPosition) {
-    debugger;
+    // debugger;
   }
 
   const NUM_SAMPLES = 100;

@@ -3,15 +3,15 @@
   "brokerageTradingCostPerShare": 0.005,
   "targetPosition": 100,
   "sharesPerInterval": 20,
+  "spaceBetweenIntervals": 0.05,
   "intervalProfit": 0.01,
+  "numContracts": 1,
   "premiumSold": 0.51,
   "callStrikePrice": 15,
   "initialPrice": 13.74,
   "putStrikePrice": 12.5,
-  "spaceBetweenIntervals": 0.05,
-  "numContracts": 1,
   "position": 0,
-  "accountValue": 0,
+  "accountValue": 51,
   "intervals": [
     {
       "type": "LONG",
