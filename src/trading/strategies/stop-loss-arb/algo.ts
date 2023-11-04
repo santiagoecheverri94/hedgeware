@@ -30,7 +30,10 @@ export interface StockState {
   brokerageTradingCostPerShare: number;
   sharesPerInterval: number,
   intervalProfit: number;
+  premiumSold: number;
+  callStrikePrice: number;
   initialPrice: number;
+  putStrikePrice: number;
   spaceBetweenIntervals: number;
   numContracts: number;
   position: number;
@@ -317,13 +320,11 @@ let testSamples: {[stock: string]: {
 }[]} = {};
 
 async function debugSimulatedPrices(bid: number, ask: number, stock: string, stockState: StockState): Promise<StockState> {
-  const upperBound = doFloatCalculation(FloatCalculations.add, stockState.intervals[0][OrderSides.SELL].price, 0.02);
-  if (doFloatCalculation(FloatCalculations.greaterThan, bid, upperBound)) {
+  if (doFloatCalculation(FloatCalculations.equal, bid, stockState.callStrikePrice)) {
     return debugUpperOrLowerBound({bid, ask} as Snapshot, 'up', stock, stockState);
   }
 
-  const lowerBound = doFloatCalculation(FloatCalculations.subtract, stockState.intervals[stockState.intervals.length - 1][OrderSides.BUY].price, 0.02);
-  if (doFloatCalculation(FloatCalculations.lessThan, ask, lowerBound)) {
+  if (doFloatCalculation(FloatCalculations.equal, ask, stockState.putStrikePrice)) {
     return debugUpperOrLowerBound({bid, ask} as Snapshot, 'down', stock, stockState);
   }
 
@@ -344,9 +345,9 @@ async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up
 
   console.log(`stock: ${stock}, bound: ${upperOrLowerBound}, ${bidOrAsk(upperOrLowerBound)}: ${snapshot[bidOrAsk(upperOrLowerBound)]}, position: ${stockState.position}, accountValue: ${stockState.accountValue}`);
   syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
-  if (upperOrLowerBound === 'up' && stockState.position < stockState.targetPosition) { // doFloatCalculation(FloatCalculations.lessThan, stockState.accountValue, 0))
+  if (upperOrLowerBound === 'up') { // && stockState.position < stockState.targetPosition) { // doFloatCalculation(FloatCalculations.lessThan, stockState.accountValue, 0))
     debugger;
-  } else if (upperOrLowerBound === 'down' && stockState.position > -stockState.targetPosition) {
+  } else if (upperOrLowerBound === 'down') { // && stockState.position > -stockState.targetPosition) {
     debugger;
   }
 

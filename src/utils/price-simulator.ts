@@ -1,6 +1,6 @@
 import {FloatCalculations, doFloatCalculation} from './float-calculator';
 
-const INITIAL_PRICE = 13.75;
+const INITIAL_PRICE = 13.72;
 let randomPrice: number;
 
 export function getSimulatedPrice(): number {
