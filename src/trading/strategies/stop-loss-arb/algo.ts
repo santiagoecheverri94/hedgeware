@@ -345,13 +345,13 @@ async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up
 
   console.log(`stock: ${stock}, bound: ${upperOrLowerBound}, ${bidOrAsk(upperOrLowerBound)}: ${snapshot[bidOrAsk(upperOrLowerBound)]}, position: ${stockState.position}, accountValue: ${stockState.accountValue}`);
   syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
-  if (upperOrLowerBound === 'up' && doFloatCalculation(FloatCalculations.lessThan, stockState.accountValue, 0)) { // && stockState.position < stockState.targetPosition) { //
+  if (upperOrLowerBound === 'up' && stockState.position < stockState.targetPosition) {
     debugger;
-  } else if (upperOrLowerBound === 'down') { // && stockState.position > -stockState.targetPosition) {
-    // debugger;
+  } else if (upperOrLowerBound === 'down' && stockState.position > -stockState.targetPosition) {
+    debugger;
   }
 
-  const NUM_SAMPLES = 100;
+  const NUM_SAMPLES = 1_000;
 
   if (!testSamples[stock]) {
     testSamples[stock] = [];
@@ -360,7 +360,7 @@ async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up
 
   samples.push({
     upOrDown: upperOrLowerBound,
-    distance: Math.abs(doFloatCalculation(FloatCalculations.subtract, stockState.tradingLogs[stockState.tradingLogs.length - 1].price, stockState.initialPrice)),
+    distance: Math.abs(doFloatCalculation(FloatCalculations.subtract, stockState.tradingLogs[0].price, stockState.initialPrice)),
     accountValue: stockState.accountValue,
   });
 
@@ -369,6 +369,7 @@ async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up
 
     const averageDistance = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.distance), 0), samples.length);
     const averageAccountValue = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.accountValue), 0), samples.length);
+    console.log(`maxDistance: ${Math.max(...samples.map(sample => sample.distance))}`);
     console.log(`averageDistance: ${averageDistance}`);
     console.log(`averageAccountValue: ${averageAccountValue}`);
     testSamples[stock] = [];
