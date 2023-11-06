@@ -1,5 +1,6 @@
 import moment from 'moment-timezone';
 import {promises as fsPromises, writeFileSync} from 'node:fs';
+import {setTimeout} from 'node:timers/promises';
 
 export function log(msg: string): void {
   console.log(`\r\n${getCurrentTimeStamp()} : ${msg}\r\n`);
@@ -10,7 +11,7 @@ export function getCurrentTimeStamp(): string {
 }
 
 function getCurrentTimeInNewYork(): moment.Moment {
-  const hoursFormat = 'hh:mma';
+  const hoursFormat = 'hh:mma:ss';
   const marketTimezone = 'America/New_York';
 
   return moment(moment().tz(marketTimezone).format(hoursFormat), hoursFormat);
@@ -20,20 +21,45 @@ export function stopSystem(errorMsg: string): void {
   throw new Error(errorMsg);
 }
 
-export function isMarketOpen(openingTimeET = '9:40', closingTimeET = '3:50'): boolean {
+export async function isMarketOpen(): Promise<boolean> {
   if (process.env.SIMULATE_SNAPSHOT) {
     return true;
   }
 
   const hoursFormat = 'hh:mma';
-  const marketTimezone = 'America/New_York';
-
+  const marketOpens = moment('9:31am', hoursFormat);
+  const marketCloses = moment('3:50pm', hoursFormat);
   const currentTimeInNewYork = getCurrentTimeInNewYork();
-  const marketOpens = moment(`${openingTimeET}am`, hoursFormat);
-  const marketCloses = moment(`${closingTimeET}pm`, hoursFormat);
 
-  const isMarketHours = currentTimeInNewYork.isBetween(marketOpens, marketCloses);
-  return isMarketHours;
+  if (currentTimeInNewYork.isBefore(marketOpens)) {
+    const timeUntilMarketOpens = marketOpens.diff(currentTimeInNewYork);
+    await setTimeout(timeUntilMarketOpens);
+    return true;
+  }
+
+  if (currentTimeInNewYork.isBetween(marketOpens, marketCloses)) {
+    return true;
+  }
+
+  if (currentTimeInNewYork.isAfter(marketCloses) && !isFriday(currentTimeInNewYork)) {
+    const timeUntilMarketOpens = marketOpens.add(getNumDaysUntilMarketOpens(currentTimeInNewYork), 'days').diff(currentTimeInNewYork);
+    await setTimeout(timeUntilMarketOpens);
+    return true;
+  }
+
+  return false;
+}
+
+function getNumDaysUntilMarketOpens(currentTimeInNewYork: moment.Moment): number {
+  if (isFriday(currentTimeInNewYork)) {
+    return 3;
+  }
+
+  return 1;
+}
+
+function isFriday(currentTimeInNewYork: moment.Moment): boolean {
+  return currentTimeInNewYork.day() === 5;
 }
 
 export async function readJSONFile<T>(filePath: string): Promise<T> {

@@ -80,13 +80,13 @@ const targetSecurities: TargetSecurity[] = [
 export async function startFishingDeepValueCalls(): Promise<void> {
   await updateState();
 
-  while (isMarketOpen() && await shouldSellMoreCalls()) {
+  while (await isMarketOpen() && await shouldSellMoreCalls()) {
     await sellCalls();
     await coverCallsIfNeeded();
   }
 
   let exitMessage = 'Finished fishing for now because ';
-  const isMarketHours = isMarketOpen();
+  const isMarketHours = await isMarketOpen();
   exitMessage += (isMarketHours ? 'all calls have been sold for the month!' : 'the market has closed for today.');
   log(exitMessage);
 
