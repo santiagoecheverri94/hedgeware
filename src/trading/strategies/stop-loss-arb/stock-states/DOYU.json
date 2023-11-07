@@ -10,8 +10,10 @@
   "callStrikePrice": 0,
   "initialPrice": 0.84,
   "putStrikePrice": 0,
-  "position": 34,
-  "accountValue": -29.3046,
+  "position": 0,
+  "lastSignificantPrice": 0.84,
+  "transitoryValue": 0,
+  "unrealizedValue": 0,
   "intervals": [
     {
       "type": "LONG",
@@ -60,13 +62,13 @@
       "positionLimit": 0,
       "SELL": {
         "price": 0.84,
-        "active": true,
+        "active": false,
         "crossed": false
       },
       "BUY": {
         "price": 0.84,
-        "active": false,
-        "crossed": false
+        "active": true,
+        "crossed": true
       }
     },
     {
@@ -126,27 +128,5 @@
       }
     }
   ],
-  "tradingLogs": [
-    {
-      "action": "BUY",
-      "timeStamp": "11-06-2023 at 03:38pm ET",
-      "price": 0.8488,
-      "previousPosition": 0,
-      "newPosition": 34
-    },
-    {
-      "action": "SELL",
-      "timeStamp": "11-06-2023 at 03:38pm ET",
-      "price": 0.8369,
-      "previousPosition": 34,
-      "newPosition": 0
-    },
-    {
-      "action": "BUY",
-      "timeStamp": "11-06-2023 at 03:32pm ET",
-      "price": 0.85,
-      "previousPosition": 0,
-      "newPosition": 34
-    }
-  ]
+  "tradingLogs": []
 }

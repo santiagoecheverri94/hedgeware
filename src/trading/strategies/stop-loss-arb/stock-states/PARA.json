@@ -7,22 +7,24 @@
   "intervalProfit": 0.01,
   "numContracts": 1,
   "premiumSold": 0.33,
-  "callStrikePrice": 15.5,
-  "initialPrice": 12.62,
-  "putStrikePrice": 12,
-  "position": 34,
-  "accountValue": -406.45,
+  "callStrikePrice": 14,
+  "initialPrice": 12.69,
+  "putStrikePrice": 11.5,
+  "position": 0,
+  "lastSignificantPrice": 12.69,
+  "transitoryValue": 33,
+  "unrealizedValue": 33,
   "intervals": [
     {
       "type": "LONG",
       "positionLimit": 102,
       "SELL": {
-        "price": 12.83,
+        "price": 12.85,
         "active": false,
         "crossed": false
       },
       "BUY": {
-        "price": 12.82,
+        "price": 12.84,
         "active": true,
         "crossed": true
       }
@@ -31,12 +33,12 @@
       "type": "LONG",
       "positionLimit": 68,
       "SELL": {
-        "price": 12.78,
+        "price": 12.8,
         "active": false,
         "crossed": false
       },
       "BUY": {
-        "price": 12.77,
+        "price": 12.79,
         "active": true,
         "crossed": true
       }
@@ -45,12 +47,12 @@
       "type": "LONG",
       "positionLimit": 34,
       "SELL": {
-        "price": 12.73,
+        "price": 12.75,
         "active": false,
         "crossed": false
       },
       "BUY": {
-        "price": 12.72,
+        "price": 12.74,
         "active": true,
         "crossed": true
       }
@@ -59,26 +61,26 @@
       "type": "LONG",
       "positionLimit": 0,
       "SELL": {
-        "price": 12.68,
-        "active": true,
+        "price": 12.7,
+        "active": false,
         "crossed": false
       },
       "BUY": {
-        "price": 12.67,
-        "active": false,
-        "crossed": false
+        "price": 12.69,
+        "active": true,
+        "crossed": true
       }
     },
     {
       "type": "SHORT",
       "positionLimit": 0,
       "SELL": {
-        "price": 12.63,
+        "price": 12.65,
         "active": true,
         "crossed": true
       },
       "BUY": {
-        "price": 12.62,
+        "price": 12.64,
         "active": false,
         "crossed": false
       }
@@ -87,12 +89,12 @@
       "type": "SHORT",
       "positionLimit": -34,
       "SELL": {
-        "price": 12.58,
+        "price": 12.6,
         "active": true,
         "crossed": true
       },
       "BUY": {
-        "price": 12.57,
+        "price": 12.59,
         "active": false,
         "crossed": false
       }
@@ -101,12 +103,12 @@
       "type": "SHORT",
       "positionLimit": -68,
       "SELL": {
-        "price": 12.53,
+        "price": 12.55,
         "active": true,
         "crossed": true
       },
       "BUY": {
-        "price": 12.52,
+        "price": 12.54,
         "active": false,
         "crossed": false
       }
@@ -115,73 +117,16 @@
       "type": "SHORT",
       "positionLimit": -102,
       "SELL": {
-        "price": 12.48,
+        "price": 12.5,
         "active": true,
         "crossed": true
       },
       "BUY": {
-        "price": 12.47,
+        "price": 12.49,
         "active": false,
         "crossed": false
       }
     }
   ],
-  "tradingLogs": [
-    {
-      "action": "BUY",
-      "timeStamp": "11-06-2023 at 03:45pm ET",
-      "price": 12.67,
-      "previousPosition": 0,
-      "newPosition": 34
-    },
-    {
-      "action": "SELL",
-      "timeStamp": "11-06-2023 at 03:45pm ET",
-      "price": 12.63,
-      "previousPosition": 34,
-      "newPosition": 0
-    },
-    {
-      "action": "BUY",
-      "timeStamp": "11-06-2023 at 03:40pm ET",
-      "price": 12.67,
-      "previousPosition": 0,
-      "newPosition": 34
-    },
-    {
-      "action": "BUY",
-      "timeStamp": "11-06-2023 at 03:36pm ET",
-      "price": 12.62,
-      "previousPosition": -34,
-      "newPosition": 0
-    },
-    {
-      "action": "SELL",
-      "timeStamp": "11-06-2023 at 03:36pm ET",
-      "price": 12.58,
-      "previousPosition": 0,
-      "newPosition": -34
-    },
-    {
-      "action": "BUY",
-      "timeStamp": "11-06-2023 at 03:35pm ET",
-      "price": 12.62,
-      "previousPosition": -34,
-      "newPosition": 0
-    },
-    {
-      "action": "BUY",
-      "timeStamp": "11-06-2023 at 03:34pm ET",
-      "price": 12.57,
-      "previousPosition": -68,
-      "newPosition": -34
-    },
-    {
-      "action": "SELL",
-      "timeStamp": "11-06-2023 at 03:33pm ET",
-      "price": 12.53,
-      "previousPosition": 0,
-      "newPosition": -68
-    }
-  ]
+  "tradingLogs": []
 }
