@@ -1,0 +1,138 @@
+{
+  "brokerageId": "554208351",
+  "brokerageTradingCostPerShare": 0.005,
+  "targetPosition": 102,
+  "sharesPerInterval": 34,
+  "spaceBetweenIntervals": 0.05,
+  "intervalProfit": 0.01,
+  "numContracts": 1,
+  "premiumSold": 0.32,
+  "callStrikePrice": 13.5,
+  "initialPrice": 12.62,
+  "putStrikePrice": 10,
+  "position": -136,
+  "accountValue": 1573.56,
+  "intervals": [
+    {
+      "type": "LONG",
+      "positionLimit": 102,
+      "SELL": {
+        "price": 12.78,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.77,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 68,
+      "SELL": {
+        "price": 12.73,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.72,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 34,
+      "SELL": {
+        "price": 12.68,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.67,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 0,
+      "SELL": {
+        "price": 12.63,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.62,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": 0,
+      "SELL": {
+        "price": 12.58,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.57,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -34,
+      "SELL": {
+        "price": 12.53,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.52,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -68,
+      "SELL": {
+        "price": 12.48,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.47,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -102,
+      "SELL": {
+        "price": 12.43,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.42,
+        "active": true,
+        "crossed": true
+      }
+    }
+  ],
+  "tradingLogs": [
+    {
+      "action": "SELL",
+      "timeStamp": "11-06-2023 at 03:32pm ET",
+      "price": 11.34,
+      "previousPosition": 0,
+      "newPosition": -136
+    }
+  ]
+}

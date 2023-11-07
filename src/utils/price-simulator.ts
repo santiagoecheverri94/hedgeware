@@ -17,8 +17,8 @@ function getRandomPrice(): number {
   const tickDown = doFloatCalculation(FloatCalculations.subtract, randomPrice, 0.01);
   const tickUp = doFloatCalculation(FloatCalculations.add, randomPrice, 0.01);
   const probabilityOfTickDown = Math.random();
-  randomPrice = doFloatCalculation(FloatCalculations.lessThanOrEqual, probabilityOfTickDown, 0.467)
-    ? tickDown : tickUp;
+  randomPrice = doFloatCalculation(FloatCalculations.lessThanOrEqual, probabilityOfTickDown, 0.467) ?
+    tickDown : tickUp;
 
   return randomPrice;
 }

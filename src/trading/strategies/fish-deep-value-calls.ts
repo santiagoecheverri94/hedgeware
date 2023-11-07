@@ -1,8 +1,8 @@
-import {Brokerages, getBrokerageClient} from '../brokerage-clients/factory';
 import {isMarketOpen, log} from '../../utils/miscellaneous';
 import {FloatCalculations, doFloatCalculation} from '../../utils/float-calculator';
-import {OrderDetails, OrderSides, OrderTypes, TimesInForce} from '../brokerage-clients/brokerage-client';
+import {BrokerageClient, OrderDetails, OrderSides, OrderTypes, TimesInForce} from '../brokerage-clients/brokerage-client';
 import {setTimeout} from 'node:timers/promises';
+import {IBKRClient} from '../brokerage-clients/IBKR/client';
 
 interface CallDetails {
   brokerageId: string;
@@ -30,7 +30,7 @@ interface TargetSecurity {
   call: CallDetails,
 }
 
-const brokerageClient = getBrokerageClient(Brokerages.IBKR);
+let brokerageClient: BrokerageClient;
 
 const targetSecurities: TargetSecurity[] = [
   {
@@ -78,6 +78,8 @@ const targetSecurities: TargetSecurity[] = [
 ];
 
 export async function startFishingDeepValueCalls(): Promise<void> {
+  brokerageClient = new IBKRClient();
+
   await updateState();
 
   while (await isMarketOpen() && await shouldSellMoreCalls()) {

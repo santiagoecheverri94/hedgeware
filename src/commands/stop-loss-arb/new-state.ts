@@ -1,5 +1,5 @@
-import {Args, Command, Flags} from '@oclif/core'
-import { createNewStockState } from '../../trading/strategies/stop-loss-arb/new-state'
+import {Args, Command} from '@oclif/core';
+import {createNewStockState} from '../../trading/strategies/stop-loss-arb/new-state';
 
 export default class StopLossArbNewState extends Command {
   static description = '';
@@ -15,7 +15,7 @@ export default class StopLossArbNewState extends Command {
   }
 
   public async run(): Promise<void> {
-    const {args} = await this.parse(StopLossArbNewState)
+    const {args} = await this.parse(StopLossArbNewState);
 
     await createNewStockState(args.stock);
     this.exit();

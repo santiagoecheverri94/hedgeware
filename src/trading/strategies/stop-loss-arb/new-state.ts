@@ -1,8 +1,8 @@
-import { FloatCalculations, doFloatCalculation } from "../../../utils/float-calculator";
-import { jsonPrettyPrint, readJSONFile, syncWriteJSONFile } from "../../../utils/miscellaneous";
-import { IntervalTypes, SmoothingInterval, StockState, getStockStateFilePath } from "./algo";
+import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
+import {jsonPrettyPrint, readJSONFile, syncWriteJSONFile} from '../../../utils/miscellaneous';
+import {IntervalTypes, SmoothingInterval, StockState, getStockStateFilePath} from './algo';
 
-export async function createNewStockState(stock: string) {
+export async function createNewStockState(stock: string): Promise<void> {
   const {
     brokerageId,
     brokerageTradingCostPerShare,
@@ -46,7 +46,9 @@ export async function createNewStockState(stock: string) {
     initialPrice,
     putStrikePrice,
     position: 0,
-    accountValue: doFloatCalculation(FloatCalculations.multiply, premiumSold, 100),
+    lastSignificantPrice: initialPrice,
+    transitoryValue: doFloatCalculation(FloatCalculations.multiply, premiumSold, 100),
+    unrealizedValue: doFloatCalculation(FloatCalculations.multiply, premiumSold, 100),
     intervals: [...longIntervals, ...shortIntervals],
     tradingLogs: [],
   };
@@ -87,7 +89,7 @@ function getLongIntervals({
         price: buyPrice,
         active: true,
         crossed: true,
-      }
+      },
     });
 
     absoluteIndex++;
@@ -129,7 +131,7 @@ function getShortIntervals({
         price: doFloatCalculation(FloatCalculations.subtract, sellPrice, intervalProfit),
         active: false,
         crossed: false,
-      }
+      },
     });
 
     absoluteIndex++;

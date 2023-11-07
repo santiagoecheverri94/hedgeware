@@ -18,7 +18,7 @@ function getCurrentTimeInNewYork(): moment.Moment {
 }
 
 export function stopSystem(errorMsg: string): void {
-  throw new Error(errorMsg);
+  throw new Error(`${getCurrentTimeStamp()}: ${errorMsg}`);
 }
 
 export async function isMarketOpen(): Promise<boolean> {

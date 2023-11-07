@@ -2,10 +2,10 @@ import {ApisauceInstance} from 'apisauce';
 import {BrokerageClient, OrderDetails, OrderSides, OrderStatus, OrderTypes, SnapShotFields, Snapshot, TimesInForce} from '../brokerage-client';
 import {getUncheckedIBKRApi} from './api';
 import {initiateApiSessionWithTickling} from './tickle';
-import {getManualPrice, getSimulatedPrice} from '../../../utils/price-simulator';
+import {getSimulatedPrice} from '../../../utils/price-simulator';
 import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrderStatusResponse, OrdersResponse, PositionResponse, SnapshotResponse} from './types';
 import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
-import {log} from '../../../utils/miscellaneous';
+import {log, stopSystem} from '../../../utils/miscellaneous';
 import {setTimeout} from 'node:timers/promises';
 import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
 
@@ -34,9 +34,17 @@ export class IBKRClient extends BrokerageClient {
   private sessionId!: string;
   private account!: string;
 
+  constructor() {
+    super();
+
+    if (!process.env.SIMULATE_SNAPSHOT) {
+      this.initiateBrokerageApiConnection();
+    }
+  }
+
   protected async getApi(): Promise<ApisauceInstance> {
     if (!this.sessionId) {
-      await this.initiateBrokerageApiConnection();
+      stopSystem('Session Id not set. Unable to retrieve IBKR Api.');
     }
 
     return getUncheckedIBKRApi();
@@ -75,7 +83,15 @@ export class IBKRClient extends BrokerageClient {
     return this.getSnapshot(conid);
   }
 
+  placeOrderAwaiter: Promise<void> = Promise.resolve();
+
   async placeOrder(orderDetails: OrderDetails): Promise<string> {
+    if (!process.env.SIMULATE_SNAPSHOT) {
+      await this.placeOrderAwaiter;
+      const ONE_SECOND = 1000;
+      this.placeOrderAwaiter = setTimeout(ONE_SECOND);
+    }
+
     const response = await (await this.getApi()).post<OrdersResponse>(`/iserver/account/${this.account}/orders`, {
       orders: [
         {
@@ -85,14 +101,19 @@ export class IBKRClient extends BrokerageClient {
       ],
     });
 
-    if (response.data?.[0].order_id) {
+    if (response.data?.[0]?.order_id) {
       log(`Placed Order with id "${response.data?.[0].order_id}"`);
       console.log(orderDetails);
       return response.data[0].order_id;
     }
 
-    log(`Order-Confirmation Id '${response.data?.[0].id!}' will be used for confirmation.`);
-    return this.confirmOrder(response.data?.[0].id!, orderDetails);
+    if (response.data?.[0]?.id) {
+      log(`Order-Confirmation Id '${response.data?.[0].id}' will be used for confirmation.`);
+      return this.confirmOrder(response.data?.[0].id, orderDetails);
+    }
+
+    log('Failed to place order. Will try again.');
+    return this.placeOrder(orderDetails);
   }
 
   private getIBKROrderDetails(orderDetails: OrderDetails): IBKROrderDetails {
@@ -118,8 +139,15 @@ export class IBKRClient extends BrokerageClient {
       return response.data[0].order_id;
     }
 
-    log(`Order-Confirmation Id '${orderConfirmationId}' requires re-confirmation.`);
-    return this.confirmOrder(response.data?.[0]?.id!, orderDetails);
+    if (response.data?.[0]?.id) {
+      log(`Order-Confirmation Id '${response.data?.[0].id}' requires re-confirmation.`);
+      return this.confirmOrder(response.data?.[0].id, orderDetails);
+    }
+
+    log('Failed to confirm order. Will try again in a second.');
+    const ONE_SECOND = 1000;
+    await setTimeout(ONE_SECOND);
+    return this.confirmOrder(orderConfirmationId, orderDetails);
   }
 
   async modifyOrder(orderId: string, orderDetails: OrderDetails): Promise<string> {
@@ -133,15 +161,24 @@ export class IBKRClient extends BrokerageClient {
       return response.data[0].order_id;
     }
 
-    log(`Modifiying order '${orderId}' requires confirmation.`);
-    return this.confirmOrder(response.data?.[0]?.id!, orderDetails);
+    if (response.data?.[0]?.id) {
+      log(`Modifiying order '${orderId}' requires confirmation.`);
+      return this.confirmOrder(response.data?.[0].id, orderDetails);
+    }
+
+    log('Failed to modify order. Will try again in a second.');
+    const ONE_SECOND = 1000;
+    await setTimeout(ONE_SECOND);
+    return this.modifyOrder(orderId, orderDetails);
   }
 
   async cancelOrder(orderId: string): Promise<void> {
     const response = await (await this.getApi()).delete<CancelOrderResponse>(`/iserver/account/${this.account}/order/${orderId}`);
 
     if (!response.data?.order_id) {
-      log(`Failed to cancel order '${orderId}'. Will try again`);
+      log(`Failed to cancel order '${orderId}'. Will try again in a second.`);
+      const ONE_SECOND = 1000;
+      await setTimeout(ONE_SECOND);
       return this.cancelOrder(orderId);
     }
   }
@@ -160,6 +197,13 @@ export class IBKRClient extends BrokerageClient {
 
     const response = await (await this.getApi()).get<PositionResponse>(`/portfolio/${this.account}/position/${conid}`);
 
-    return response.data?.[0]?.position! || 0;
+    if (response.data?.[0]?.position) {
+      return response.data?.[0]?.position;
+    }
+
+    log(`Failed to get position size for conid '${conid}'. Will try again in a second.`);
+    const ONE_SECOND = 1000;
+    await setTimeout(ONE_SECOND);
+    return this.getPositionSize(conid);
   }
 }

@@ -5,6 +5,9 @@
   ],
   "rules": {
     "semi": ["error", "always"],
-    "no-await-in-loop": "off"
+    "no-await-in-loop": "off",
+    "unicorn/consistent-destructuring": "off",
+    "unicorn/no-array-reduce": "off",
+    "unicorn/no-lonely-if": "off"
   }
 }

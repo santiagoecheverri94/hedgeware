@@ -46,7 +46,9 @@ export interface StockState {
     previousPosition: number;
     newPosition: number;
   }[];
-  accountValue: number;
+  transitoryValue: number;
+  unrealizedValue: number;
+  lastSignificantPrice: number;
 }
 
 const brokerageClient = new IBKRClient();
@@ -141,7 +143,7 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
       newPosition,
     };
 
-    stockState.tradingLogs.unshift(tradingLog);
+    stockState.tradingLogs.push(tradingLog);
 
     log(`Changed position for ${stock} (${stockState.numContracts} constracts): ${jsonPrettyPrint({
       price: tradingLog.price,
@@ -159,6 +161,16 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
   }
 
   // 5)
+  if (isLastPriceChangedSignificantly(stockState, snapshot)) {
+    stockState.lastSignificantPrice = snapshot.last;
+    stockState.unrealizedValue = getUnrealizedValue(stockState, snapshot);
+
+    if (!process.env.SIMULATE_SNAPSHOT) {
+      asyncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
+    }
+  }
+
+  // 6)
   return snapshot;
 }
 
@@ -181,7 +193,7 @@ function checkCrossings(stock: string, stockState: StockState, {bid, ask}: Snaps
   return crossingHappened;
 }
 
-function getNumToBuy(stockState: StockState, {bid, ask}: Snapshot): number {
+function getNumToBuy(stockState: StockState, {ask}: Snapshot): number {
   const {intervals, position} = stockState;
 
   let newPosition = position;
@@ -190,7 +202,7 @@ function getNumToBuy(stockState: StockState, {bid, ask}: Snapshot): number {
     const interval = intervals[i];
 
     if (doFloatCalculation(FloatCalculations.greaterThanOrEqual, ask, interval[OrderSides.BUY].price) && interval[OrderSides.BUY].active && interval[OrderSides.BUY].crossed) {
-      if (interval.type === IntervalTypes.LONG && newPosition == interval.positionLimit || newPosition < interval.positionLimit) {
+      if (interval.type === IntervalTypes.LONG && newPosition === interval.positionLimit || newPosition < interval.positionLimit) {
         indexesToExecute.unshift(i);
         newPosition += stockState.sharesPerInterval;
       }
@@ -209,10 +221,10 @@ function getNumToBuy(stockState: StockState, {bid, ask}: Snapshot): number {
 
   if (indexesToExecute.length > 0) {
     const purchaseValue = doFloatCalculation(FloatCalculations.multiply, stockState.sharesPerInterval * indexesToExecute.length, ask);
-    stockState.accountValue = doFloatCalculation(FloatCalculations.subtract, stockState.accountValue, purchaseValue);
+    stockState.transitoryValue = doFloatCalculation(FloatCalculations.subtract, stockState.transitoryValue, purchaseValue);
 
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
-    stockState.accountValue = doFloatCalculation(FloatCalculations.subtract, stockState.accountValue, tradingCosts);
+    stockState.transitoryValue = doFloatCalculation(FloatCalculations.subtract, stockState.transitoryValue, tradingCosts);
 
     correctBadBuyIfRequired(stockState, indexesToExecute);
   }
@@ -242,20 +254,20 @@ function correctBadBuyIfRequired(stockState: StockState, indexesToExecute: numbe
   topIntervalExecuted[OrderSides.SELL].active = false;
   topIntervalExecuted[OrderSides.SELL].crossed = false;
 
-  stockState.intervals.forEach(interval => {
+  for (const interval of stockState.intervals) {
     interval[OrderSides.BUY].price = doFloatCalculation(FloatCalculations.add, interval[OrderSides.BUY].price, stockState.spaceBetweenIntervals);
     interval[OrderSides.SELL].price = doFloatCalculation(FloatCalculations.add, interval[OrderSides.SELL].price, stockState.spaceBetweenIntervals);
-  });
+  }
 }
 
-function getNumToSell(stockState: StockState, {bid, ask}: Snapshot): number {
+function getNumToSell(stockState: StockState, {bid}: Snapshot): number {
   const {intervals, position} = stockState;
 
   let newPosition = position;
-  let indexesToExecute: number[] = [];
+  const indexesToExecute: number[] = [];
   for (const [i, interval] of intervals.entries()) {
     if (doFloatCalculation(FloatCalculations.lessThanOrEqual, bid, interval[OrderSides.SELL].price)  && interval[OrderSides.SELL].active && interval[OrderSides.SELL].crossed) {
-      if (interval.type === IntervalTypes.SHORT && newPosition == interval.positionLimit || newPosition > interval.positionLimit) {
+      if (interval.type === IntervalTypes.SHORT && newPosition === interval.positionLimit || newPosition > interval.positionLimit) {
         indexesToExecute.push(i);
         newPosition -= stockState.sharesPerInterval;
       }
@@ -274,11 +286,11 @@ function getNumToSell(stockState: StockState, {bid, ask}: Snapshot): number {
 
   if (indexesToExecute.length > 0) {
     const saleValue = doFloatCalculation(FloatCalculations.multiply, stockState.sharesPerInterval * indexesToExecute.length, bid);
-    stockState.accountValue = doFloatCalculation(FloatCalculations.add, stockState.accountValue, saleValue);
+    stockState.transitoryValue = doFloatCalculation(FloatCalculations.add, stockState.transitoryValue, saleValue);
 
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
-    stockState.accountValue = doFloatCalculation(FloatCalculations.subtract, stockState.accountValue, tradingCosts);
-  
+    stockState.transitoryValue = doFloatCalculation(FloatCalculations.subtract, stockState.transitoryValue, tradingCosts);
+
     correctBadSellIfRequired(stockState, indexesToExecute);
   }
 
@@ -307,16 +319,47 @@ function correctBadSellIfRequired(stockState: StockState, indexesToExecute: numb
   bottomIntervalExecuted[OrderSides.BUY].active = false;
   bottomIntervalExecuted[OrderSides.BUY].crossed = false;
 
-  stockState.intervals.forEach(interval => {
+  for (const interval of stockState.intervals) {
     interval[OrderSides.BUY].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.BUY].price, stockState.spaceBetweenIntervals);
     interval[OrderSides.SELL].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.SELL].price, stockState.spaceBetweenIntervals);
-  });
+  }
 }
 
-let testSamples: {[stock: string]: {
+function isLastPriceChangedSignificantly(stockState: StockState, {last}: Snapshot): boolean {
+  const {lastSignificantPrice} = stockState;
+
+  const lastPriceChange = Math.abs(doFloatCalculation(FloatCalculations.subtract, last, lastSignificantPrice));
+
+  return Boolean(doFloatCalculation(FloatCalculations.greaterThanOrEqual, lastPriceChange, 0.1));
+}
+
+function getUnrealizedValue(stockState: StockState, {bid, ask}: Snapshot): number {
+  if (stockState.position === 0) {
+    return stockState.transitoryValue;
+  }
+
+  const optionsUnrealizedClosingPrice = stockState.position > 0 ? Math.min(bid, stockState.callStrikePrice) : Math.max(ask, stockState.putStrikePrice);
+  const extraUnrealizedClosingPrice = stockState.position > 0 ? bid : ask;
+
+  let unrealizedTransactionValue: number;
+  if (Math.abs(stockState.position) <= 100) {
+    unrealizedTransactionValue = doFloatCalculation(FloatCalculations.multiply, Math.abs(stockState.position), optionsUnrealizedClosingPrice);
+  } else {
+    const optionsUnrealizedTransactionValue = doFloatCalculation(FloatCalculations.multiply, 100, optionsUnrealizedClosingPrice);
+    const extraUnrealizedTransactionValue = doFloatCalculation(FloatCalculations.multiply, Math.abs(stockState.position) - 100, extraUnrealizedClosingPrice);
+    unrealizedTransactionValue = doFloatCalculation(FloatCalculations.add, optionsUnrealizedTransactionValue, extraUnrealizedTransactionValue);
+  }
+
+  const unrealizedValue = doFloatCalculation(stockState.position > 0 ? FloatCalculations.add : FloatCalculations.subtract, stockState.transitoryValue, unrealizedTransactionValue);
+  const finalTradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, Math.abs(stockState.position));
+
+  return doFloatCalculation(FloatCalculations.subtract, unrealizedValue, finalTradingCosts);
+}
+
+const testSamples: {[stock: string]: {
   distance: number;
   upOrDown: 'up' | 'down';
-  accountValue: number;
+  unrealizedValue: number;
 }[]} = {};
 
 async function debugSimulatedPrices(bid: number, ask: number, stock: string, stockState: StockState): Promise<StockState> {
@@ -337,13 +380,9 @@ async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up
     return (await getStockStates([stock]))[stock];
   }
 
-  const finalTransactionValue = doFloatCalculation(FloatCalculations.multiply, Math.abs(stockState.position), snapshot[bidOrAsk(upperOrLowerBound)]);
-  stockState.accountValue = doFloatCalculation(upperOrLowerBound === 'up' ? FloatCalculations.add : FloatCalculations.subtract, stockState.accountValue, finalTransactionValue);
-  
-  const finalTradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, Math.abs(stockState.position));
-  stockState.accountValue = doFloatCalculation(FloatCalculations.subtract, stockState.accountValue, finalTradingCosts);
+  stockState.unrealizedValue = getUnrealizedValue(stockState, snapshot);
 
-  console.log(`stock: ${stock}, bound: ${upperOrLowerBound}, ${bidOrAsk(upperOrLowerBound)}: ${snapshot[bidOrAsk(upperOrLowerBound)]}, position: ${stockState.position}, accountValue: ${stockState.accountValue}`);
+  console.log(`stock: ${stock}, bound: ${upperOrLowerBound}, ${bidOrAsk(upperOrLowerBound)}: ${snapshot[bidOrAsk(upperOrLowerBound)]}, position: ${stockState.position}, unrealizedValue: ${stockState.unrealizedValue}`);
   syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
   if (upperOrLowerBound === 'up' && stockState.position < stockState.targetPosition) {
     debugger;
@@ -351,27 +390,28 @@ async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up
     debugger;
   }
 
-  const NUM_SAMPLES = 1_000;
+  const NUM_SAMPLES = 1000;
 
   if (!testSamples[stock]) {
     testSamples[stock] = [];
   }
+
   const samples = testSamples[stock];
 
   samples.push({
     upOrDown: upperOrLowerBound,
     distance: Math.abs(doFloatCalculation(FloatCalculations.subtract, stockState.tradingLogs[0].price, stockState.initialPrice)),
-    accountValue: stockState.accountValue,
+    unrealizedValue: stockState.unrealizedValue,
   });
 
   if (samples.length === NUM_SAMPLES) {
     debugger;
 
     const averageDistance = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.distance), 0), samples.length);
-    const averageAccountValue = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.accountValue), 0), samples.length);
+    const averageUnrealizedValue = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.unrealizedValue), 0), samples.length);
     console.log(`maxDistance: ${Math.max(...samples.map(sample => sample.distance))}`);
     console.log(`averageDistance: ${averageDistance}`);
-    console.log(`averageAccountValue: ${averageAccountValue}`);
+    console.log(`averageUnrealizedValue: ${averageUnrealizedValue}`);
     testSamples[stock] = [];
   }
 
