@@ -86,7 +86,7 @@ export class IBKRClient extends BrokerageClient {
   placeOrderThrottle: Throttle = getNewThrottle();
 
   async placeOrder(orderDetails: OrderDetails): Promise<string> {
-    if (!process.env.SIMULATE_SNAPSHOT) {
+    if (process.env.SIMULATE_SNAPSHOT) {
       const ONE_SECOND = 10_000;
       await doThrottling(this.placeOrderThrottle, ONE_SECOND);
     }

@@ -46,7 +46,7 @@ export async function createNewStockState(stock: string): Promise<void> {
     initialPrice,
     putStrikePrice,
     position: 0,
-    lastSignificantPrice: initialPrice,
+    lastPrice: initialPrice,
     transitoryValue: doFloatCalculation(FloatCalculations.multiply, premiumSold, 100),
     unrealizedValue: doFloatCalculation(FloatCalculations.multiply, premiumSold, 100),
     intervals: [...longIntervals, ...shortIntervals],

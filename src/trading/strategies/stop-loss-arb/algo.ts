@@ -48,7 +48,7 @@ export interface StockState {
   }[];
   transitoryValue: number;
   unrealizedValue: number;
-  lastSignificantPrice: number;
+  lastPrice: number;
 }
 
 const brokerageClient = new IBKRClient();
@@ -161,8 +161,9 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
   }
 
   // 5)
-  if (isLastPriceChangedSignificantly(stockState, snapshot)) {
-    stockState.lastSignificantPrice = snapshot.last;
+  // if (isLastPriceChangedSignificantly(stockState, snapshot)) {
+  if (!doFloatCalculation(FloatCalculations.equal, stockState.lastPrice, snapshot.last)) {
+    stockState.lastPrice = snapshot.last;
     stockState.unrealizedValue = getUnrealizedValue(stockState, snapshot);
 
     if (!process.env.SIMULATE_SNAPSHOT) {
@@ -326,7 +327,7 @@ function correctBadSellIfRequired(stockState: StockState, indexesToExecute: numb
 }
 
 function isLastPriceChangedSignificantly(stockState: StockState, {last}: Snapshot): boolean {
-  const {lastSignificantPrice} = stockState;
+  const {lastPrice: lastSignificantPrice} = stockState;
 
   const lastPriceChange = Math.abs(doFloatCalculation(FloatCalculations.subtract, last, lastSignificantPrice));
 

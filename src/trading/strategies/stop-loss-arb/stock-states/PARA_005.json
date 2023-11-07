@@ -8,16 +8,72 @@
   "numContracts": 1,
   "premiumSold": 0.38,
   "callStrikePrice": 14,
-  "initialPrice": 12.69,
+  "initialPrice": 12.84,
   "putStrikePrice": 11.5,
-  "position": 136,
-  "lastSignificantPrice": 12.9,
-  "transitoryValue": -1742.92,
-  "unrealizedValue": 9.44,
+  "position": 0,
+  "lastPrice": 12.84,
+  "transitoryValue": 32.56,
+  "unrealizedValue": 32.56,
   "intervals": [
     {
       "type": "LONG",
       "positionLimit": 102,
+      "SELL": {
+        "price": 13,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.99,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 68,
+      "SELL": {
+        "price": 12.95,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.94,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 34,
+      "SELL": {
+        "price": 12.9,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.89,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 0,
+      "SELL": {
+        "price": 12.85,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.84,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": 0,
       "SELL": {
         "price": 12.8,
         "active": true,
@@ -30,8 +86,8 @@
       }
     },
     {
-      "type": "LONG",
-      "positionLimit": 68,
+      "type": "SHORT",
+      "positionLimit": -34,
       "SELL": {
         "price": 12.75,
         "active": true,
@@ -44,8 +100,8 @@
       }
     },
     {
-      "type": "LONG",
-      "positionLimit": 34,
+      "type": "SHORT",
+      "positionLimit": -68,
       "SELL": {
         "price": 12.7,
         "active": true,
@@ -58,8 +114,8 @@
       }
     },
     {
-      "type": "LONG",
-      "positionLimit": 0,
+      "type": "SHORT",
+      "positionLimit": -102,
       "SELL": {
         "price": 12.65,
         "active": true,
@@ -70,197 +126,64 @@
         "active": false,
         "crossed": false
       }
-    },
-    {
-      "type": "SHORT",
-      "positionLimit": 0,
-      "SELL": {
-        "price": 12.6,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 12.59,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "type": "SHORT",
-      "positionLimit": -34,
-      "SELL": {
-        "price": 12.55,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 12.54,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "type": "SHORT",
-      "positionLimit": -68,
-      "SELL": {
-        "price": 12.5,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 12.49,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "type": "SHORT",
-      "positionLimit": -102,
-      "SELL": {
-        "price": 12.45,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 12.44,
-        "active": false,
-        "crossed": false
-      }
     }
   ],
   "tradingLogs": [
     {
-      "action": "SELL",
-      "timeStamp": "11-07-2023 at 09:31am ET",
-      "price": 12.58,
-      "previousPosition": 0,
-      "newPosition": -68
-    },
-    {
       "action": "BUY",
-      "timeStamp": "11-07-2023 at 09:31am ET",
-      "price": 12.65,
-      "previousPosition": -68,
-      "newPosition": -34
-    },
-    {
-      "action": "SELL",
-      "timeStamp": "11-07-2023 at 09:31am ET",
-      "price": 12.6,
-      "previousPosition": -34,
-      "newPosition": -68
-    },
-    {
-      "action": "SELL",
-      "timeStamp": "11-07-2023 at 09:32am ET",
-      "price": 12.55,
-      "previousPosition": -68,
-      "newPosition": -102
-    },
-    {
-      "action": "BUY",
-      "timeStamp": "11-07-2023 at 09:32am ET",
-      "price": 12.54,
-      "previousPosition": -102,
-      "newPosition": -68
-    },
-    {
-      "action": "SELL",
-      "timeStamp": "11-07-2023 at 09:33am ET",
-      "price": 12.55,
-      "previousPosition": -68,
-      "newPosition": -102
-    },
-    {
-      "action": "BUY",
-      "timeStamp": "11-07-2023 at 09:33am ET",
-      "price": 12.59,
-      "previousPosition": -102,
-      "newPosition": -68
-    },
-    {
-      "action": "BUY",
-      "timeStamp": "11-07-2023 at 09:34am ET",
-      "price": 12.64,
-      "previousPosition": -68,
-      "newPosition": -34
-    },
-    {
-      "action": "SELL",
-      "timeStamp": "11-07-2023 at 09:35am ET",
-      "price": 12.6,
-      "previousPosition": -34,
-      "newPosition": -68
-    },
-    {
-      "action": "BUY",
-      "timeStamp": "11-07-2023 at 09:35am ET",
-      "price": 12.64,
-      "previousPosition": -68,
-      "newPosition": -34
-    },
-    {
-      "action": "BUY",
-      "timeStamp": "11-07-2023 at 09:35am ET",
-      "price": 12.69,
-      "previousPosition": -34,
-      "newPosition": 0
-    },
-    {
-      "action": "BUY",
-      "timeStamp": "11-07-2023 at 09:36am ET",
-      "price": 12.74,
+      "timeStamp": "11-07-2023 at 02:41:59pm ET",
+      "price": 12.85,
       "previousPosition": 0,
       "newPosition": 34
     },
     {
       "action": "SELL",
-      "timeStamp": "11-07-2023 at 09:37am ET",
-      "price": 12.75,
+      "timeStamp": "11-07-2023 at 02:47:30pm ET",
+      "price": 12.85,
       "previousPosition": 34,
       "newPosition": 0
     },
     {
       "action": "BUY",
-      "timeStamp": "11-07-2023 at 09:38am ET",
-      "price": 12.74,
+      "timeStamp": "11-07-2023 at 03:00:52pm ET",
+      "price": 12.89,
       "previousPosition": 0,
       "newPosition": 34
     },
     {
       "action": "SELL",
-      "timeStamp": "11-07-2023 at 09:38am ET",
-      "price": 12.7,
+      "timeStamp": "11-07-2023 at 03:07:09pm ET",
+      "price": 12.85,
       "previousPosition": 34,
       "newPosition": 0
     },
     {
       "action": "BUY",
-      "timeStamp": "11-07-2023 at 09:38am ET",
-      "price": 12.69,
+      "timeStamp": "11-07-2023 at 03:10:53pm ET",
+      "price": 12.89,
       "previousPosition": 0,
       "newPosition": 34
     },
     {
       "action": "SELL",
-      "timeStamp": "11-07-2023 at 09:39am ET",
-      "price": 12.65,
+      "timeStamp": "11-07-2023 at 03:11:29pm ET",
+      "price": 12.85,
       "previousPosition": 34,
       "newPosition": 0
     },
     {
-      "action": "SELL",
-      "timeStamp": "11-07-2023 at 09:46am ET",
-      "price": 12.6,
+      "action": "BUY",
+      "timeStamp": "11-07-2023 at 03:28:59pm ET",
+      "price": 12.89,
       "previousPosition": 0,
-      "newPosition": -34
+      "newPosition": 34
     },
     {
-      "action": "BUY",
-      "timeStamp": "11-07-2023 at 11:37am ET",
-      "price": 12.9,
-      "previousPosition": -34,
-      "newPosition": 136
+      "action": "SELL",
+      "timeStamp": "11-07-2023 at 03:49:16pm ET",
+      "price": 12.85,
+      "previousPosition": 34,
+      "newPosition": 0
     }
   ]
 }
