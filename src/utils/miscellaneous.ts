@@ -2,19 +2,20 @@ import moment from 'moment-timezone';
 import {promises as fsPromises, writeFileSync} from 'node:fs';
 import {setTimeout} from 'node:timers/promises';
 
+const HOURS_FORMAT = 'hh:mm:ssa';
+
 export function log(msg: string): void {
   console.log(`\r\n${getCurrentTimeStamp()} : ${msg}\r\n`);
 }
 
 export function getCurrentTimeStamp(): string {
-  return `${getCurrentTimeInNewYork().format('MM-DD-YYYY')} at ${getCurrentTimeInNewYork().format('hh:mma')} ET`;
+  return `${getCurrentTimeInNewYork().format('MM-DD-YYYY')} at ${getCurrentTimeInNewYork().format('hh:mm:ssa')} ET`;
 }
 
 function getCurrentTimeInNewYork(): moment.Moment {
-  const hoursFormat = 'hh:mma:ss';
   const marketTimezone = 'America/New_York';
 
-  return moment(moment().tz(marketTimezone).format(hoursFormat), hoursFormat);
+  return moment(moment().tz(marketTimezone).format(HOURS_FORMAT), HOURS_FORMAT);
 }
 
 export function stopSystem(errorMsg: string): void {
@@ -26,9 +27,8 @@ export async function isMarketOpen(stock=''): Promise<boolean> {
     return true;
   }
 
-  const hoursFormat = 'hh:mma';
-  const marketOpens = moment('9:31am', hoursFormat);
-  const marketCloses = moment('3:50pm', hoursFormat);
+  const marketOpens = moment('9:35am', HOURS_FORMAT);
+  const marketCloses = moment('3:50pm', HOURS_FORMAT);
   const currentTimeInNewYork = getCurrentTimeInNewYork();
 
   if (currentTimeInNewYork.isBefore(marketOpens)) {
@@ -85,4 +85,25 @@ export function jsonPrettyPrint(obj: unknown): string {
 export async function getFileNamesWithinFolder(folderPath: string): Promise<string[]> {
   const fileNames = await fsPromises.readdir(folderPath);
   return fileNames.filter(fileName => fileName !== 'simulated').map(fileName => fileName.split('.')[0]);
+}
+
+export interface Throttle {awaiter: Promise<void> | null};
+
+export function getNewThrottle(): Throttle {
+  return {awaiter: null};
+}
+
+export async function doThrottling(throttle: Throttle, throttleTimeMs: number): Promise<void> {
+  while(throttle.awaiter) {
+    const myAwaiter = throttle.awaiter;
+    await myAwaiter;
+
+    if (myAwaiter === throttle.awaiter) {
+      throttle.awaiter = null;
+    }
+  }
+  
+  throttle.awaiter = setTimeout(throttleTimeMs);
+
+  return;
 }

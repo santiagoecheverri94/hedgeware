@@ -5,7 +5,7 @@ import {initiateApiSessionWithTickling} from './tickle';
 import {getSimulatedPrice} from '../../../utils/price-simulator';
 import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrderStatusResponse, OrdersResponse, PositionResponse, SnapshotResponse} from './types';
 import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
-import {log, stopSystem} from '../../../utils/miscellaneous';
+import {Throttle, doThrottling, getNewThrottle, log, stopSystem} from '../../../utils/miscellaneous';
 import {setTimeout} from 'node:timers/promises';
 import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
 
@@ -83,13 +83,12 @@ export class IBKRClient extends BrokerageClient {
     return this.getSnapshot(conid);
   }
 
-  placeOrderAwaiter: Promise<void> = Promise.resolve();
+  placeOrderThrottle: Throttle = getNewThrottle();
 
   async placeOrder(orderDetails: OrderDetails): Promise<string> {
     if (!process.env.SIMULATE_SNAPSHOT) {
-      await this.placeOrderAwaiter;
-      const ONE_SECOND = 1000;
-      this.placeOrderAwaiter = setTimeout(ONE_SECOND);
+      const ONE_SECOND = 10_000;
+      await doThrottling(this.placeOrderThrottle, ONE_SECOND);
     }
 
     const response = await (await this.getApi()).post<OrdersResponse>(`/iserver/account/${this.account}/orders`, {
@@ -110,6 +109,11 @@ export class IBKRClient extends BrokerageClient {
     if (response.data?.[0]?.id) {
       log(`Order-Confirmation Id '${response.data?.[0].id}' will be used for confirmation.`);
       return this.confirmOrder(response.data?.[0].id, orderDetails);
+    }
+
+    if (response.status && 500 <= response.status && response.status < 600) {
+      log('Failed due to our mistake. Debugger will be triggered.');
+      debugger;
     }
 
     log('Failed to place order. Will try again.');
