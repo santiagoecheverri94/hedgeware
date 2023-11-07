@@ -21,7 +21,7 @@ export function stopSystem(errorMsg: string): void {
   throw new Error(`${getCurrentTimeStamp()}: ${errorMsg}`);
 }
 
-export async function isMarketOpen(): Promise<boolean> {
+export async function isMarketOpen(stock=''): Promise<boolean> {
   if (process.env.SIMULATE_SNAPSHOT) {
     return true;
   }
@@ -33,6 +33,7 @@ export async function isMarketOpen(): Promise<boolean> {
 
   if (currentTimeInNewYork.isBefore(marketOpens)) {
     const timeUntilMarketOpens = marketOpens.diff(currentTimeInNewYork);
+    log(`Market is not open today yet. Will trade ${stock} in about ${moment.duration(timeUntilMarketOpens).humanize()}.`);
     await setTimeout(timeUntilMarketOpens);
     return true;
   }
@@ -41,11 +42,13 @@ export async function isMarketOpen(): Promise<boolean> {
     return true;
   }
 
-  if (currentTimeInNewYork.isAfter(marketCloses) && !isFriday(currentTimeInNewYork)) {
-    const timeUntilMarketOpens = marketOpens.add(getNumDaysUntilMarketOpens(currentTimeInNewYork), 'days').diff(currentTimeInNewYork);
-    await setTimeout(timeUntilMarketOpens);
-    return true;
-  }
+  // if (currentTimeInNewYork.isAfter(marketCloses) && !isFriday(currentTimeInNewYork)) {
+  //   const timeUntilMarketOpens = marketOpens.add(getNumDaysUntilMarketOpens(currentTimeInNewYork), 'days').diff(currentTimeInNewYork);
+  //   await setTimeout(timeUntilMarketOpens);
+  //   return true;
+  // }
+
+  log(`Market is closed for today. May trade ${stock} next trading day.`);
 
   return false;
 }

@@ -59,7 +59,7 @@ export async function startStopLossArb(): Promise<void> {
   const states = await getStockStates(stocks);
 
   await Promise.all(stocks.map(stock => (async () => {
-    while (await isMarketOpen()) {
+    while (await isMarketOpen(stock)) {
       const {bid, ask} = await reconcileStockPosition(stock, states[stock]);
 
       if (process.env.SIMULATE_SNAPSHOT) {
