@@ -1,5 +1,5 @@
 import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
-import {jsonPrettyPrint, readJSONFile, syncWriteJSONFile} from '../../../utils/miscellaneous';
+import {jsonPrettyPrint, readJSONFile, syncWriteJSONFile} from '../../../utils/file';
 import {IntervalTypes, SmoothingInterval, StockState, getStockStateFilePath} from './algo';
 
 export async function createNewStockState(stock: string): Promise<void> {

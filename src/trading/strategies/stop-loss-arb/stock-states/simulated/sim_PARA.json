@@ -11,7 +11,7 @@
   "initialPrice": 13.74,
   "putStrikePrice": 12,
   "position": 0,
-  "lastSignificantPrice": 13.74,
+  "lastPrice": 13.74,
   "transitoryValue": 33,
   "unrealizedValue": 33,
   "intervals": [

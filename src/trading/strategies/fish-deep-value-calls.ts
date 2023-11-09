@@ -1,8 +1,9 @@
-import {isMarketOpen, log} from '../../utils/miscellaneous';
 import {FloatCalculations, doFloatCalculation} from '../../utils/float-calculator';
 import {BrokerageClient, OrderDetails, OrderSides, OrderTypes, TimesInForce} from '../brokerage-clients/brokerage-client';
 import {setTimeout} from 'node:timers/promises';
 import {IBKRClient} from '../brokerage-clients/IBKR/client';
+import { isMarketOpen } from '../../utils/time';
+import { log } from '../../utils/log';
 
 interface CallDetails {
   brokerageId: string;

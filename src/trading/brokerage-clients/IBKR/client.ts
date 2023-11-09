@@ -5,9 +5,9 @@ import {initiateApiSessionWithTickling} from './tickle';
 import {getSimulatedPrice} from '../../../utils/price-simulator';
 import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrderStatusResponse, OrdersResponse, PositionResponse, SnapshotResponse} from './types';
 import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
-import {Throttle, doThrottling, getNewThrottle, log, stopSystem} from '../../../utils/miscellaneous';
 import {setTimeout} from 'node:timers/promises';
 import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
+import { log } from '../../../utils/log';
 
 export class IBKRClient extends BrokerageClient {
   protected orderTypes = {
@@ -34,17 +34,9 @@ export class IBKRClient extends BrokerageClient {
   private sessionId!: string;
   private account!: string;
 
-  constructor() {
-    super();
-
-    if (!process.env.SIMULATE_SNAPSHOT) {
-      this.initiateBrokerageApiConnection();
-    }
-  }
-
   protected async getApi(): Promise<ApisauceInstance> {
     if (!this.sessionId) {
-      stopSystem('Session Id not set. Unable to retrieve IBKR Api.');
+      await this.initiateBrokerageApiConnection();
     }
 
     return getUncheckedIBKRApi();
@@ -83,14 +75,8 @@ export class IBKRClient extends BrokerageClient {
     return this.getSnapshot(conid);
   }
 
-  placeOrderThrottle: Throttle = getNewThrottle();
 
   async placeOrder(orderDetails: OrderDetails): Promise<string> {
-    if (process.env.SIMULATE_SNAPSHOT) {
-      const ONE_SECOND = 10_000;
-      await doThrottling(this.placeOrderThrottle, ONE_SECOND);
-    }
-
     const response = await (await this.getApi()).post<OrdersResponse>(`/iserver/account/${this.account}/orders`, {
       orders: [
         {
