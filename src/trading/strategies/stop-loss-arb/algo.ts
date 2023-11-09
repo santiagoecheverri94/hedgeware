@@ -1,5 +1,5 @@
 import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
-import {getCurrentTimeStamp, getFileNamesWithinFolder, isMarketOpen, jsonPrettyPrint, log, readJSONFile, asyncWriteJSONFile, syncWriteJSONFile} from '../../../utils/miscellaneous';
+import {getCurrentTimeStamp, getFileNamesWithinFolder, isMarketOpen, jsonPrettyPrint, log, readJSONFile, syncWriteJSONFile} from '../../../utils/miscellaneous';
 import {restartSimulatedPrice} from '../../../utils/price-simulator';
 import {IBKRClient} from '../../brokerage-clients/IBKR/client';
 import {OrderSides, Snapshot} from '../../brokerage-clients/brokerage-client';
@@ -107,7 +107,7 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
   const crossingHappened = checkCrossings(stock, stockState, snapshot);
 
   if (!process.env.SIMULATE_SNAPSHOT && crossingHappened) {
-    asyncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
+    syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
   }
 
   // 2)
@@ -156,7 +156,7 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
     checkCrossings(stock, stockState, snapshot);
 
     if (!process.env.SIMULATE_SNAPSHOT) {
-      asyncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
+      syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
     }
   }
 
@@ -167,7 +167,7 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
     stockState.unrealizedValue = getUnrealizedValue(stockState, snapshot);
 
     if (!process.env.SIMULATE_SNAPSHOT) {
-      asyncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
+      syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
     }
   }
 

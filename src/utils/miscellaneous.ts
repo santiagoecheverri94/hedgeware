@@ -27,8 +27,8 @@ export async function isMarketOpen(stock=''): Promise<boolean> {
     return true;
   }
 
-  const marketOpens = moment('9:35am', HOURS_FORMAT);
-  const marketCloses = moment('3:50pm', HOURS_FORMAT);
+  const marketOpens = moment('9:30:10am', HOURS_FORMAT);
+  const marketCloses = moment('3:55pm', HOURS_FORMAT);
   const currentTimeInNewYork = getCurrentTimeInNewYork();
 
   if (currentTimeInNewYork.isBefore(marketOpens)) {
