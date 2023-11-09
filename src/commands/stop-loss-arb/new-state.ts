@@ -18,7 +18,7 @@ export default class StopLossArbNewState extends Command {
     for (const stock of args.stocks.split(',')) {
       await createNewStockState(stock);
     }
-    
+
     this.exit();
   }
 }

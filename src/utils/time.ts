@@ -1,11 +1,11 @@
 import moment from 'moment-timezone';
 import {setTimeout} from 'node:timers/promises';
 
-import { log } from './log';
+import {log} from './log';
 
 const HOURS_FORMAT = 'hh:mm:ssa';
 
-export async function isMarketOpen(stock=''): Promise<boolean> {
+export async function isMarketOpen(stock = ''): Promise<boolean> {
   if (process.env.SIMULATE_SNAPSHOT) {
     return true;
   }

@@ -4,8 +4,9 @@ import {restartSimulatedPrice} from '../../../utils/price-simulator';
 import {IBKRClient} from '../../brokerage-clients/IBKR/client';
 import {OrderSides, Snapshot} from '../../brokerage-clients/brokerage-client';
 import {setTimeout} from 'node:timers/promises';
-import { getCurrentTimeStamp, isMarketOpen } from '../../../utils/time';
-import { log } from '../../../utils/log';
+import {getCurrentTimeStamp, isMarketOpen} from '../../../utils/time';
+import {log} from '../../../utils/log';
+import {onUserInterrupt} from '../../../utils/system';
 
 export enum IntervalTypes {
   LONG = 'LONG',
@@ -60,8 +61,13 @@ export async function startStopLossArb(): Promise<void> {
 
   const states = await getStockStates(stocks);
 
+  let userHasInterrupted = false;
+  onUserInterrupt(() => {
+    userHasInterrupted = true;
+  });
+
   await Promise.all(stocks.map(stock => (async () => {
-    while (await isMarketOpen(stock)) {
+    while (await isMarketOpen(stock) && !userHasInterrupted) {
       const {bid, ask} = await reconcileStockPosition(stock, states[stock]);
 
       if (process.env.SIMULATE_SNAPSHOT) {

@@ -7,7 +7,7 @@ import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrderStatusResp
 import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
 import {setTimeout} from 'node:timers/promises';
 import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
-import { log } from '../../../utils/log';
+import {log} from '../../../utils/log';
 
 export class IBKRClient extends BrokerageClient {
   protected orderTypes = {
@@ -75,7 +75,6 @@ export class IBKRClient extends BrokerageClient {
     return this.getSnapshot(conid);
   }
 
-
   async placeOrder(orderDetails: OrderDetails): Promise<string> {
     const response = await (await this.getApi()).post<OrdersResponse>(`/iserver/account/${this.account}/orders`, {
       orders: [
@@ -97,8 +96,13 @@ export class IBKRClient extends BrokerageClient {
       return this.confirmOrder(response.data?.[0].id, orderDetails);
     }
 
-    if (response.status && 500 <= response.status && response.status < 600) {
-      log('Failed due to our mistake. Debugger will be triggered.');
+    if (response.status && response.status >= 400 && response.status < 500) {
+      log('Failed due to our input. Debugger will be triggered.');
+      debugger;
+    }
+    
+    if (response.status && response.status >= 500 && response.status < 600) {
+      log('Failed due to server error. Debugger will be triggered.');
       debugger;
     }
 

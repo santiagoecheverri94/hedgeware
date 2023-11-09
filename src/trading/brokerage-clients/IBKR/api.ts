@@ -1,6 +1,6 @@
 import {ApisauceInstance, create as createApiSauceInstance} from 'apisauce';
 import {Agent as HttpsAgent} from 'node:https';
-import { doThrottling, getNewThrottle } from '../../../utils/throttle';
+import {doThrottling, getNewThrottle} from '../../../utils/throttle';
 
 const syncApi = createApiSauceInstance({
   baseURL: 'https://localhost:5000/v1/api',
