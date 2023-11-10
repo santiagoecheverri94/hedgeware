@@ -25,12 +25,6 @@ export async function getWebSocket(sessionId: string): Promise<WebSocket> {
       rejectUnauthorized: false,
     });
 
-    ws.addEventListener('open', () => {
-      ws.send(JSON.stringify({
-        session: sessionId,
-      }));
-    }, {once: true});
-
     ws.addEventListener('message', function resolveWhenWebsocketIsAuthenticated({data: bufferedData}) {
       const data = JSON.parse(bufferedData.toString());
 
@@ -39,5 +33,11 @@ export async function getWebSocket(sessionId: string): Promise<WebSocket> {
         resolve(ws);
       }
     });
+
+    ws.addEventListener('open', () => {
+      ws.send(JSON.stringify({
+        session: sessionId,
+      }));
+    }, {once: true});
   });
 }

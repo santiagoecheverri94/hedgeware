@@ -1,5 +1,5 @@
 import {ApisauceInstance} from 'apisauce';
-import {setSecurityPosition} from './commands/set-security-position';
+import {setSecurityPosition} from './instructions/set-security-position';
 
 export abstract class BrokerageClient {
   protected abstract orderTypes: {[type in OrderTypes]: string};

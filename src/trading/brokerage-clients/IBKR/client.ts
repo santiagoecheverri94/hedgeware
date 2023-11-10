@@ -8,6 +8,8 @@ import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapsh
 import {setTimeout} from 'node:timers/promises';
 import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
 import {log} from '../../../utils/log';
+import WebSocket from 'ws';
+import {getWebSocket} from './websocket';
 
 export class IBKRClient extends BrokerageClient {
   protected orderTypes = {
@@ -40,6 +42,14 @@ export class IBKRClient extends BrokerageClient {
     }
 
     return getUncheckedIBKRApi();
+  }
+
+  async getSocket(): Promise<WebSocket> {
+    if (!this.sessionId) {
+      await this.initiateBrokerageApiConnection();
+    }
+
+    return await getWebSocket(this.sessionId);
   }
 
   protected async initiateBrokerageApiConnection(): Promise<void> {
@@ -100,7 +110,7 @@ export class IBKRClient extends BrokerageClient {
       log('Failed due to our input. Debugger will be triggered.');
       debugger;
     }
-    
+
     if (response.status && response.status >= 500 && response.status < 600) {
       log('Failed due to server error. Debugger will be triggered.');
       debugger;
