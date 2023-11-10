@@ -1,5 +1,6 @@
 import {ApisauceInstance} from 'apisauce';
 import {setSecurityPosition} from './instructions/set-security-position';
+import { WebSocket } from 'ws';
 
 export abstract class BrokerageClient {
   protected abstract orderTypes: {[type in OrderTypes]: string};
@@ -10,6 +11,7 @@ export abstract class BrokerageClient {
   protected abstract snapshotFields: {[field in SnapShotFields]: string};
 
   protected abstract getApi(): Promise<ApisauceInstance>
+  protected abstract getSocket(): Promise<WebSocket>
   protected abstract initiateBrokerageApiConnection(): void;
 
   abstract getSnapshot(brokerageIdOfSecurity: string): Promise<Snapshot>;

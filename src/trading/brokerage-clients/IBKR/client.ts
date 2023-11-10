@@ -44,7 +44,7 @@ export class IBKRClient extends BrokerageClient {
     return getUncheckedIBKRApi();
   }
 
-  async getSocket(): Promise<WebSocket> {
+  protected async getSocket(): Promise<WebSocket> {
     if (!this.sessionId) {
       await this.initiateBrokerageApiConnection();
     }

@@ -1,11 +1,6 @@
 import {IBKRClient} from '../brokerage-clients/IBKR/client';
-import {getHistoricalQuotes} from '../brokerage-clients/IBKR/historical-data';
+// import from Polygon
 
-export async function saveHistoricalData(ibkrConid: string, startDate: string, endDate: string): Promise<void> {
-  const historicalData = await getHistoricalQuotes({
-    brokerageClient: new IBKRClient(),
-    brokerageIdOfSecurity: ibkrConid,
-    period: '',
-    barSize: '',
-  });
+export async function saveHistoricalData(stock: string, startDate: string, endDate: string): Promise<void> {
+  // Use Polygon.io to get historical data
 }
