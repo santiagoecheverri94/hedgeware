@@ -3,25 +3,32 @@ import {setTimeout} from 'node:timers/promises';
 
 import {log} from './log';
 
-const HOURS_FORMAT = 'hh:mm:ssa';
+export const MARKET_OPENS = '9:30:10am';
+export const MARKET_CLOSES = '3:55pm';
+
+const DATE_FORMAT = 'MM-DD-YYYY';
+const TIME_FORMAT = 'hh:mm:ssa';
+const MARKET_TIMEZONE = 'America/New_York';
+
+const NANO_SECONDS_FACTOR = 1_000_000_000;
 
 export async function isMarketOpen(stock = ''): Promise<boolean> {
   if (process.env.SIMULATE_SNAPSHOT) {
     return true;
   }
 
-  const marketOpens = moment('9:30:10am', HOURS_FORMAT);
-  const marketCloses = moment('3:55pm', HOURS_FORMAT);
-  const currentTimeInNewYork = getCurrentTimeInNewYork();
+  const marketOpens = getMomentForTime(MARKET_OPENS);
+  const marketCloses = getMomentForTime(MARKET_CLOSES);
+  const currentMomentInNewYork = getCurrentMomentInNewYork();
 
-  if (currentTimeInNewYork.isBefore(marketOpens)) {
-    const timeUntilMarketOpens = marketOpens.diff(currentTimeInNewYork);
+  if (currentMomentInNewYork.isBefore(marketOpens)) {
+    const timeUntilMarketOpens = marketOpens.diff(currentMomentInNewYork);
     log(`Market is not open today yet. Will trade ${stock} in about ${moment.duration(timeUntilMarketOpens).humanize()}.`);
     await setTimeout(timeUntilMarketOpens);
     return true;
   }
 
-  if (currentTimeInNewYork.isBetween(marketOpens, marketCloses)) {
+  if (currentMomentInNewYork.isBetween(marketOpens, marketCloses)) {
     return true;
   }
 
@@ -36,24 +43,43 @@ export async function isMarketOpen(stock = ''): Promise<boolean> {
   return false;
 }
 
-function getNumDaysUntilMarketOpens(currentTimeInNewYork: moment.Moment): number {
-  if (isFriday(currentTimeInNewYork)) {
-    return 3;
-  }
-
-  return 1;
+function getMomentForTime(time: string): moment.Moment {
+  return moment(time, TIME_FORMAT);
 }
 
-function isFriday(currentTimeInNewYork: moment.Moment): boolean {
-  return currentTimeInNewYork.day() === 5;
-}
-
-export function getCurrentTimeInNewYork(): moment.Moment {
-  const marketTimezone = 'America/New_York';
-
-  return moment(moment().tz(marketTimezone).format(HOURS_FORMAT), HOURS_FORMAT);
+function getCurrentMomentInNewYork(): moment.Moment {
+  return moment(moment().tz(MARKET_TIMEZONE).format(TIME_FORMAT), TIME_FORMAT);
 }
 
 export function getCurrentTimeStamp(): string {
-  return `${getCurrentTimeInNewYork().format('MM-DD-YYYY')} at ${getCurrentTimeInNewYork().format('hh:mm:ssa')} ET`;
+  return `${getCurrentMomentInNewYork().format(DATE_FORMAT)} at ${getCurrentMomentInNewYork().format(TIME_FORMAT)} ET`;
+}
+
+export function getNanoSecondsEpochTimestampForDateAndTimeInNewYork(date: string, time: string): number {
+  const secondsTimestamp = getMomentForDateAndTimeInNewYork(date, time).unix();
+  return convertSecondsToNanoSeconds(secondsTimestamp);
+}
+
+function getMomentForDateAndTimeInNewYork(date: string, time: string): moment.Moment {
+  return moment.tz(`${date} ${time}`, `${DATE_FORMAT} ${TIME_FORMAT}`, MARKET_TIMEZONE);
+}
+
+function convertSecondsToNanoSeconds(seconds: number): number {
+  return seconds * NANO_SECONDS_FACTOR;
+}
+
+export function getTimestampForDateAndTimeInNewYorkFromNanoSecondsEpochTimestamp(nanoSecondsEpochTimestamp: number): string {
+  return `${getMomentInNewYorkFromNanoSecondsEpochTimestamp(nanoSecondsEpochTimestamp).format(`${DATE_FORMAT} ${TIME_FORMAT}`)} ET`;
+}
+
+function getMomentInNewYorkFromNanoSecondsEpochTimestamp(nanoSecondsEpochTimestamp: number): moment.Moment {
+  return moment.unix(convertNanoSecondsToSeconds(nanoSecondsEpochTimestamp)).tz(MARKET_TIMEZONE);
+}
+
+function convertNanoSecondsToSeconds(nanoSeconds: number): number {
+  return nanoSeconds / NANO_SECONDS_FACTOR;
+}
+
+export function getSecondsFromNanoSecondsTimestamp(nanoSecondsEpochTimestamp: number): number {
+  return getMomentInNewYorkFromNanoSecondsEpochTimestamp(nanoSecondsEpochTimestamp).seconds();
 }

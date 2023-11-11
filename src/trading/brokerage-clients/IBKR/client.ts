@@ -30,7 +30,7 @@ export class IBKRClient extends BrokerageClient {
   protected snapshotFields = {
     [SnapShotFields.bid]: '84',
     [SnapShotFields.ask]: '86',
-    [SnapShotFields.last]: '31',
+    // [SnapShotFields.last]: '31',
   };
 
   private sessionId!: string;
@@ -64,9 +64,9 @@ export class IBKRClient extends BrokerageClient {
       const simulatedPrice = getSimulatedPrice();
 
       return {
-        bid: doFloatCalculation(FloatCalculations.subtract, simulatedPrice, 0.01),
         ask: simulatedPrice,
-        last: simulatedPrice,
+        bid: doFloatCalculation(FloatCalculations.subtract, simulatedPrice, 0.01),
+        // last: simulatedPrice,
       };
     }
 

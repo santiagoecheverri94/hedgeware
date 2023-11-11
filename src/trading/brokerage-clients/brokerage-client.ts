@@ -45,7 +45,7 @@ export abstract class BrokerageClient {
 export enum SnapShotFields {
   bid = 'bid',
   ask = 'ask',
-  last = 'last',
+  // last = 'last',
 }
 
 export type Snapshot = {
