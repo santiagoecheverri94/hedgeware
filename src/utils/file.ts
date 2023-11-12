@@ -1,7 +1,7 @@
-import {promises as fsPromises, writeFileSync} from 'node:fs';
+import {promises as fsPromises, readFileSync, writeFileSync} from 'node:fs';
 
-export async function readJSONFile<T>(filePath: string): Promise<T> {
-  const file = await fsPromises.readFile(filePath, 'utf8');
+export function readJSONFile<T>(filePath: string): T {
+  const file = readFileSync(filePath, 'utf8');
   return JSON.parse(file);
 }
 

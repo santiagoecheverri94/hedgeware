@@ -93,7 +93,7 @@ function getStockStatesFolderPath(): string {
 async function getStockStates(stocks: string[]): Promise<{ [stock: string]: StockState; }> {
   const states: {[stock: string]: StockState} = {};
   for (const stock of stocks) {
-    states[stock] = await readJSONFile<StockState>(getStockStateFilePath(stock));
+    states[stock] = readJSONFile<StockState>(getStockStateFilePath(stock));
   }
 
   return states;

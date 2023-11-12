@@ -34,8 +34,13 @@ async function getPolygonQuotesForDate(stock: string, date: string): Promise<Pol
   return response.results;
 }
 
-function getSnapshotsByTheSecond(polygonQuotes: PolygonQuote[]): {timestamp: string, snapshot: Snapshot}[] {
-  const snapshotsByTheSecond: {timestamp: string, snapshot: Snapshot}[] = [];
+export interface SnapshotByTheSecond {
+  timestamp: string;
+  snapshot: Snapshot;
+}
+
+function getSnapshotsByTheSecond(polygonQuotes: PolygonQuote[]): SnapshotByTheSecond[] {
+  const snapshotsByTheSecond: SnapshotByTheSecond[] = [];
 
   let lastSeconds: number | undefined;
   for (const quote of polygonQuotes) {
@@ -59,6 +64,18 @@ function getSnapshotsByTheSecond(polygonQuotes: PolygonQuote[]): {timestamp: str
   return snapshotsByTheSecond;
 }
 
-function getFilePathForStockOnDate(stock: string, date: string): string {
+export function getFilePathForStockOnDate(stock?: string, date?: string): string {
+  if (!stock || !date) {
+    throw new Error('Stock and date must be provided');
+  }
+
   return `${process.cwd()}\\src\\data\\dailies\\${stock}\\${date}.json`;
+}
+
+export function getFilePathForStockOnDateRange(stock?: string, startDate?: string, endDate?: string): string {
+  if (!stock || !startDate || !endDate) {
+    throw new Error('Stock and dates must be provided');
+  }
+
+  return `${process.cwd()}\\src\\data\\date-ranges\\${stock}\\${startDate}_${endDate}.json`;
 }

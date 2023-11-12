@@ -58,11 +58,7 @@ export class IBKRClient extends BrokerageClient {
     this.account = accountsResponse.data!.accounts[0];
   }
 
-  async getSnapshot(conid: string): Promise<Snapshot> {
-    if (!isLiveTrading()) {
-      return getSimulatedSnapshot();
-    }
-
+  async getSnapshotImplementation(conid: string): Promise<Snapshot> {
     const fields = Object.values(this.snapshotFields);
 
     const response = (await (await this.getApi()).get<SnapshotResponse[]>('/iserver/marketdata/snapshot', {

@@ -15,7 +15,7 @@ export async function createNewStockState(stock: string): Promise<void> {
     putStrikePrice,
     intervalProfit,
     spaceBetweenIntervals,
-  } = await readJSONFile<StockState>(getStockStateFilePath(stock));
+  } = readJSONFile<StockState>(getStockStateFilePath(stock));
 
   const longIntervals: SmoothingInterval[] = getLongIntervals({
     initialPrice,
