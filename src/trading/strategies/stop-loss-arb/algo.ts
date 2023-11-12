@@ -105,7 +105,7 @@ export function getStockStateFilePath(stock: string): string {
 
 async function reconcileStockPosition(stock: string, stockState: StockState): Promise<{bid: number, ask: number}> {
   // 1)
-  const snapshot = await brokerageClient.getSnapshot(stockState.brokerageId);
+  const snapshot = await brokerageClient.getSnapshot(stock, stockState.brokerageId);
   const crossingHappened = checkCrossings(stock, stockState, snapshot);
 
   if (isLiveTrading() && crossingHappened) {

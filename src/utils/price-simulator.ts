@@ -64,7 +64,7 @@ export function isSimulatedSnapshot(): boolean {
 }
 
 export function isHistoricalSnapshot(): boolean {
-  return Boolean(process.env.HISTORICAL_SNAPSHOT_STOCK && process.env.HISTORICAL_SNAPSHOT_START_DATE);
+  return Boolean(process.env.HISTORICAL_SNAPSHOT_START_DATE);
 }
 
 function isHistoricalSnapshotDay(): boolean {
@@ -75,34 +75,36 @@ function isHistoricalSnapshotDateRange(): boolean {
   return Boolean(isHistoricalSnapshot() && process.env.HISTORICAL_SNAPSHOT_END_DATE);
 }
 
-let historicalSnapshots: {
-  data: SnapshotByTheSecond[],
-  index: number,
-};
+const historicalSnapshots: {
+  [stock: string]: {
+    data: SnapshotByTheSecond[],
+    index: number,
+  }
+} = {};
 
-export async function getHistoricalSnapshot(): Promise<Snapshot> {
-  if (!historicalSnapshots) {
-    historicalSnapshots = await getHistoricalSnapshots();
+export async function getHistoricalSnapshot(stock: string): Promise<Snapshot> {
+  if (!historicalSnapshots[stock]) {
+    historicalSnapshots[stock] = await getHistoricalSnapshots(stock);
   }
 
-  const snapshot = historicalSnapshots.data[historicalSnapshots.index].snapshot;
-  historicalSnapshots.index = historicalSnapshots.index + 1;
+  const snapshot = historicalSnapshots[stock].data[historicalSnapshots[stock].index].snapshot;
+  historicalSnapshots[stock].index = historicalSnapshots[stock].index + 1;
 
   return snapshot;
 }
 
-async function getHistoricalSnapshots(): Promise<{
+async function getHistoricalSnapshots(stock: string): Promise<{
   data: SnapshotByTheSecond[],
   index: number,
 }> {
   let snapshotsByTheSecond: SnapshotByTheSecond[] = [];
 
   if (isHistoricalSnapshotDay()) {
-    snapshotsByTheSecond = readJSONFile<SnapshotByTheSecond[]>(getFilePathForStockOnDate(process.env.HISTORICAL_SNAPSHOT_STOCK, process.env.HISTORICAL_SNAPSHOT_START_DATE));
+    snapshotsByTheSecond = readJSONFile<SnapshotByTheSecond[]>(getFilePathForStockOnDate(stock, process.env.HISTORICAL_SNAPSHOT_START_DATE));
   }
 
   if (isHistoricalSnapshotDateRange()) {
-    snapshotsByTheSecond = readJSONFile<SnapshotByTheSecond[]>(getFilePathForStockOnDateRange(process.env.HISTORICAL_SNAPSHOT_STOCK, process.env.HISTORICAL_SNAPSHOT_START_DATE, process.env.HISTORICAL_SNAPSHOT_END_DATE));
+    snapshotsByTheSecond = readJSONFile<SnapshotByTheSecond[]>(getFilePathForStockOnDateRange(stock, process.env.HISTORICAL_SNAPSHOT_START_DATE, process.env.HISTORICAL_SNAPSHOT_END_DATE));
   }
 
   return {

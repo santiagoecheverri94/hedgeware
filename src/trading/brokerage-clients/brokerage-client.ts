@@ -15,18 +15,18 @@ export abstract class BrokerageClient {
   protected abstract getSocket(): Promise<WebSocket>
   protected abstract initiateBrokerageApiConnection(): void;
 
-  async getSnapshot(brokerageIdOfSecurity: string): Promise<Snapshot> {
+  async getSnapshot(stock: string, brokerageIdOfSecurity: string): Promise<Snapshot> {
     if (isSimulatedSnapshot()) {
       return getSimulatedSnapshot();
     }
 
     if (isHistoricalSnapshot()) {
-      return getHistoricalSnapshot();
+      return getHistoricalSnapshot(stock);
     }
 
-    return this.getSnapshotImplementation(brokerageIdOfSecurity);
+    return this.getSnapshotImplementation(stock, brokerageIdOfSecurity);
   }
-  abstract getSnapshotImplementation(brokerageIdOfSecurity: string): Promise<Snapshot>;
+  abstract getSnapshotImplementation(stock: string, brokerageIdOfSecurity: string): Promise<Snapshot>;
   abstract placeOrder(orderDetails: OrderDetails): Promise<string>;
   abstract modifyOrder(orderId: string, orderDetails: OrderDetails): Promise<string>;
   abstract cancelOrder(orderId: string): Promise<void>;

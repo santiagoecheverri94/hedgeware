@@ -58,7 +58,7 @@ export class IBKRClient extends BrokerageClient {
     this.account = accountsResponse.data!.accounts[0];
   }
 
-  async getSnapshotImplementation(conid: string): Promise<Snapshot> {
+  async getSnapshotImplementation(stock: string, conid: string): Promise<Snapshot> {
     const fields = Object.values(this.snapshotFields);
 
     const response = (await (await this.getApi()).get<SnapshotResponse[]>('/iserver/marketdata/snapshot', {
@@ -71,7 +71,7 @@ export class IBKRClient extends BrokerageClient {
       return getSnapshotFromResponse(snapshotResponse, this.snapshotFields);
     }
 
-    return this.getSnapshot(conid);
+    return this.getSnapshotImplementation(stock, conid);
   }
 
   async placeOrder(orderDetails: OrderDetails): Promise<string> {

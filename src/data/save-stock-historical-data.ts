@@ -64,17 +64,17 @@ function getSnapshotsByTheSecond(polygonQuotes: PolygonQuote[]): SnapshotByTheSe
   return snapshotsByTheSecond;
 }
 
-export function getFilePathForStockOnDate(stock?: string, date?: string): string {
-  if (!stock || !date) {
-    throw new Error('Stock and date must be provided');
+export function getFilePathForStockOnDate(stock: string, date?: string): string {
+  if (!date) {
+    throw new Error('date must be provided');
   }
 
   return `${process.cwd()}\\src\\data\\dailies\\${stock}\\${date}.json`;
 }
 
-export function getFilePathForStockOnDateRange(stock?: string, startDate?: string, endDate?: string): string {
-  if (!stock || !startDate || !endDate) {
-    throw new Error('Stock and dates must be provided');
+export function getFilePathForStockOnDateRange(stock: string, startDate?: string, endDate?: string): string {
+  if (!startDate || !endDate) {
+    throw new Error('dates must be provided');
   }
 
   return `${process.cwd()}\\src\\data\\date-ranges\\${stock}\\${startDate}_${endDate}.json`;

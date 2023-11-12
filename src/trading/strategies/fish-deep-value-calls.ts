@@ -129,7 +129,7 @@ function getNumberOfMoreCallsToSell(security: TargetSecurity): number {
 
 async function sellCalls() {
   for (const security of getSecuritiesWithMoreCallsToSell()) {
-    const snapshot = await brokerageClient.getSnapshot(security.stock.brokerageId);
+    const snapshot = await brokerageClient.getSnapshot(security.stock.ticker, security.stock.brokerageId);
 
     await placeCallOrderIfNeeded(security, snapshot.ask);
   }
@@ -257,6 +257,6 @@ async function covercalls(security: TargetSecurity) {
     brokerageIdOfSecurity: security.stock.brokerageId,
     currentPosition: security.stock.state.numCurrentlyOwned,
     newPosition: numSharesNeeded,
-    snapshot: await brokerageClient.getSnapshot(security.stock.brokerageId),
+    snapshot: await brokerageClient.getSnapshot(security.stock.ticker, security.stock.brokerageId),
   });
 }
