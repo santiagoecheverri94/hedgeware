@@ -40,5 +40,13 @@ export function getManualPrice(): number {
 }
 
 export function isLiveTrading(): boolean {
-  return !process.env.SIMULATE_SNAPSHOT;
+  if (isSimulatedSnapshot()) {
+    return false;
+  }
+
+  return true;
+}
+
+export function isSimulatedSnapshot(): boolean {
+  return Boolean(process.env.SIMULATE_SNAPSHOT);
 }

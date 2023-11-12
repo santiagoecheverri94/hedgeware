@@ -205,7 +205,7 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number {
     const interval = intervals[i];
 
     if (doFloatCalculation(FloatCalculations.greaterThanOrEqual, ask, interval[OrderSides.BUY].price) && interval[OrderSides.BUY].active && interval[OrderSides.BUY].crossed) {
-      if (interval.type === IntervalTypes.LONG && newPosition === interval.positionLimit || newPosition < interval.positionLimit) {
+      if ((interval.type === IntervalTypes.LONG && newPosition === interval.positionLimit) || newPosition < interval.positionLimit) {
         indexesToExecute.unshift(i);
         newPosition += stockState.sharesPerInterval;
       }
@@ -270,7 +270,7 @@ function getNumToSell(stockState: StockState, {bid}: Snapshot): number {
   const indexesToExecute: number[] = [];
   for (const [i, interval] of intervals.entries()) {
     if (doFloatCalculation(FloatCalculations.lessThanOrEqual, bid, interval[OrderSides.SELL].price)  && interval[OrderSides.SELL].active && interval[OrderSides.SELL].crossed) {
-      if (interval.type === IntervalTypes.SHORT && newPosition === interval.positionLimit || newPosition > interval.positionLimit) {
+      if ((interval.type === IntervalTypes.SHORT && newPosition === interval.positionLimit) || newPosition > interval.positionLimit) {
         indexesToExecute.push(i);
         newPosition -= stockState.sharesPerInterval;
       }
