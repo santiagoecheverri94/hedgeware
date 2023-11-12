@@ -1,6 +1,6 @@
 import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
 import {getFileNamesWithinFolder, jsonPrettyPrint, readJSONFile, syncWriteJSONFile} from '../../../utils/file';
-import {isLiveTrading, restartSimulatedSnapshot} from '../../../utils/price-simulator';
+import {isHistoricalSnapshot, isHistoricalSnapshotsExhausted, isLiveTrading, isRandomSnapshot, restartSimulatedSnapshot} from '../../../utils/price-simulator';
 import {IBKRClient} from '../../brokerage-clients/IBKR/client';
 import {OrderSides, Snapshot} from '../../brokerage-clients/brokerage-client';
 import {getCurrentTimeStamp, isMarketOpen} from '../../../utils/time';
@@ -62,15 +62,24 @@ export async function startStopLossArb(): Promise<void> {
   const states = await getStockStates(stocks);
 
   let userHasInterrupted = false;
-  onUserInterrupt(() => {
-    userHasInterrupted = true;
-  });
+  if (!isHistoricalSnapshot()) {
+    onUserInterrupt(() => {
+      userHasInterrupted = true;
+    });
+  }
 
   await Promise.all(stocks.map(stock => (async () => {
     while (await isMarketOpen(stock) && !userHasInterrupted) {
       const {bid, ask} = await reconcileStockPosition(stock, states[stock]);
 
-      if (!isLiveTrading()) {
+      if (isHistoricalSnapshot()) {
+        if (isHistoricalSnapshotsExhausted(stock)) {
+          debugger;
+          break;
+        }
+      }
+
+      if (isRandomSnapshot()) {
         states[stock] = await debugSimulatedPrices(bid, ask, stock, states[stock]);
       }
     }

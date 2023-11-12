@@ -3,10 +3,31 @@ import {Snapshot} from '../trading/brokerage-clients/brokerage-client';
 import {readJSONFile} from './file';
 import {FloatCalculations, doFloatCalculation} from './float-calculator';
 
-const INITIAL_PRICE = 13.72;
-let randomPrice: number;
+export function isLiveTrading(): boolean {
+  return !isRandomSnapshot() && !isHistoricalSnapshot();
+}
 
-export function getSimulatedSnapshot(): Snapshot {
+export function isRandomSnapshot(): boolean {
+  return Boolean(process.env.RANDOM_SNAPSHOT);
+}
+
+export function isHistoricalSnapshot(): boolean {
+  return Boolean(process.env.HISTORICAL_SNAPSHOT_START_DATE);
+}
+
+export async function getSimulatedSnapshot(stock: string): Promise<Snapshot> {
+  if (isRandomSnapshot()) {
+    return getRandomSnapshot();
+  }
+
+  if (isHistoricalSnapshot()) {
+    return getHistoricalSnapshot(stock);
+  }
+
+  throw new Error('No snapshot type specified');
+}
+
+function getRandomSnapshot(): Snapshot {
   const randomPrice = getRandomPrice();
 
   return {
@@ -14,6 +35,9 @@ export function getSimulatedSnapshot(): Snapshot {
     bid: doFloatCalculation(FloatCalculations.subtract, randomPrice, 0.01),
   };
 }
+
+const INITIAL_PRICE = 13.72;
+let randomPrice: number;
 
 function getRandomPrice(): number {
   if (!randomPrice) {
@@ -37,42 +61,6 @@ export function restartSimulatedSnapshot(): void {
 
 function restartRandomPrice(): void {
   randomPrice = INITIAL_PRICE;
-}
-
-const manualPrice = 0;
-
-export function getManualPrice(): number {
-  console.log('Enter price: ');
-  debugger;
-  return manualPrice;
-}
-
-export function isLiveTrading(): boolean {
-  if (isSimulatedSnapshot()) {
-    return false;
-  }
-
-  if (isHistoricalSnapshot()) {
-    return false;
-  }
-
-  return true;
-}
-
-export function isSimulatedSnapshot(): boolean {
-  return Boolean(process.env.SIMULATE_SNAPSHOT);
-}
-
-export function isHistoricalSnapshot(): boolean {
-  return Boolean(process.env.HISTORICAL_SNAPSHOT_START_DATE);
-}
-
-function isHistoricalSnapshotDay(): boolean {
-  return isHistoricalSnapshot() && !process.env.HISTORICAL_SNAPSHOT_END_DATE;
-}
-
-function isHistoricalSnapshotDateRange(): boolean {
-  return Boolean(isHistoricalSnapshot() && process.env.HISTORICAL_SNAPSHOT_END_DATE);
 }
 
 const historicalSnapshots: {
@@ -111,4 +99,16 @@ async function getHistoricalSnapshots(stock: string): Promise<{
     data: snapshotsByTheSecond,
     index: 0,
   };
+}
+
+function isHistoricalSnapshotDay(): boolean {
+  return isHistoricalSnapshot() && !process.env.HISTORICAL_SNAPSHOT_END_DATE;
+}
+
+function isHistoricalSnapshotDateRange(): boolean {
+  return Boolean(isHistoricalSnapshot() && process.env.HISTORICAL_SNAPSHOT_END_DATE);
+}
+
+export function isHistoricalSnapshotsExhausted(stock: string): boolean {
+  return historicalSnapshots[stock].index === historicalSnapshots[stock].data.length;
 }
