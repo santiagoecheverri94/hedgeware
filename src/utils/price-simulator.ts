@@ -1,6 +1,6 @@
-import { SnapshotByTheSecond, getFilePathForStockOnDate, getFilePathForStockOnDateRange } from '../data/save-stock-historical-data';
+import {SnapshotByTheSecond, getFilePathForStockOnDate, getFilePathForStockOnDateRange} from '../data/save-stock-historical-data';
 import {Snapshot} from '../trading/brokerage-clients/brokerage-client';
-import { readJSONFile } from './file';
+import {readJSONFile} from './file';
 import {FloatCalculations, doFloatCalculation} from './float-calculator';
 
 const INITIAL_PRICE = 13.72;

@@ -1,7 +1,7 @@
 import {ApisauceInstance} from 'apisauce';
 import {setSecurityPosition} from './instructions/set-security-position';
 import {WebSocket} from 'ws';
-import { getHistoricalSnapshot, getSimulatedSnapshot, isHistoricalSnapshot, isSimulatedSnapshot } from '../../utils/price-simulator';
+import {getHistoricalSnapshot, getSimulatedSnapshot, isHistoricalSnapshot, isSimulatedSnapshot} from '../../utils/price-simulator';
 
 export abstract class BrokerageClient {
   protected abstract orderTypes: {[type in OrderTypes]: string};
@@ -26,6 +26,7 @@ export abstract class BrokerageClient {
 
     return this.getSnapshotImplementation(stock, brokerageIdOfSecurity);
   }
+
   abstract getSnapshotImplementation(stock: string, brokerageIdOfSecurity: string): Promise<Snapshot>;
   abstract placeOrder(orderDetails: OrderDetails): Promise<string>;
   abstract modifyOrder(orderId: string, orderDetails: OrderDetails): Promise<string>;
