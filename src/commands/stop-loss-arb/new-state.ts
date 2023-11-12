@@ -1,4 +1,4 @@
-import {Args, Command, Flags} from '@oclif/core';
+import {Args, Command} from '@oclif/core';
 import {createNewStockState} from '../../trading/strategies/stop-loss-arb/new-state';
 
 export default class StopLossArbNewState extends Command {

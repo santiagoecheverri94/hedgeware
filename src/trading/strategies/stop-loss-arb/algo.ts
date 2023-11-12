@@ -3,7 +3,6 @@ import {getFileNamesWithinFolder, jsonPrettyPrint, readJSONFile, syncWriteJSONFi
 import {isLiveTrading, restartSimulatedPrice} from '../../../utils/price-simulator';
 import {IBKRClient} from '../../brokerage-clients/IBKR/client';
 import {OrderSides, Snapshot} from '../../brokerage-clients/brokerage-client';
-import {setTimeout} from 'node:timers/promises';
 import {getCurrentTimeStamp, isMarketOpen} from '../../../utils/time';
 import {log} from '../../../utils/log';
 import {onUserInterrupt} from '../../../utils/system';

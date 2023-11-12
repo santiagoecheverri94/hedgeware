@@ -1,4 +1,4 @@
-import {Args, Command, Flags} from '@oclif/core';
+import {Args, Command} from '@oclif/core';
 import {saveStockHistoricalDataForStockOnDate} from '../trading/data/save-stock-historical-data';
 
 export default class StockHistoricalData extends Command {
@@ -15,7 +15,7 @@ export default class StockHistoricalData extends Command {
   }
 
   public async run(): Promise<void> {
-    const {args, flags} = await this.parse(StockHistoricalData);
+    const {args} = await this.parse(StockHistoricalData);
 
     if (!args.endDate) {
       await saveStockHistoricalDataForStockOnDate(args.stock, args.startDate);

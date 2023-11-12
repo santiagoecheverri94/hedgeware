@@ -1,12 +1,12 @@
 import {restClient, IQuotes} from '@polygon.io/client-js';
-import { getNanoSecondsEpochTimestampForDateAndTimeInNewYork, getSecondsFromNanoSecondsTimestamp, getTimestampForDateAndTimeInNewYorkFromNanoSecondsEpochTimestamp, MARKET_CLOSES, MARKET_OPENS } from '../../utils/time';
-import { Snapshot } from '../brokerage-clients/brokerage-client';
-import { syncWriteJSONFile } from '../../utils/file';
+import {getNanoSecondsEpochTimestampForDateAndTimeInNewYork, getSecondsFromNanoSecondsTimestamp, getTimestampForDateAndTimeInNewYorkFromNanoSecondsEpochTimestamp, MARKET_CLOSES, MARKET_OPENS} from '../../utils/time';
+import {Snapshot} from '../brokerage-clients/brokerage-client';
+import {syncWriteJSONFile} from '../../utils/file';
 
 export async function saveStockHistoricalDataForStockOnDate(stock: string, date: string): Promise<void> {
- const polygonQuotes = await getPolygonQuotesForDate(stock, date);
- const snapshotsByTheSecond = getSnapshotsByTheSecond(polygonQuotes);
- syncWriteJSONFile(getFilePathForStockOnDate(stock, date), JSON.stringify(snapshotsByTheSecond)); 
+  const polygonQuotes = await getPolygonQuotesForDate(stock, date);
+  const snapshotsByTheSecond = getSnapshotsByTheSecond(polygonQuotes);
+  syncWriteJSONFile(getFilePathForStockOnDate(stock, date), JSON.stringify(snapshotsByTheSecond));
 }
 
 type PolygonQuote = Exclude<IQuotes['results'], undefined>[0];
@@ -15,12 +15,13 @@ async function getPolygonQuotesForDate(stock: string, date: string): Promise<Pol
   if (!process.env.POLYGON_API_KEY) {
     throw new Error('POLYGON_API_KEY is not set');
   }
-  const polygon = restClient(process.env.POLYGON_API_KEY, "https://api.polygon.io", {pagination: true});
+
+  const polygon = restClient(process.env.POLYGON_API_KEY, 'https://api.polygon.io', {pagination: true});
 
   const POLYGON_LIMIT = 50_000;
   const response = await polygon.stocks.quotes(stock, {
-    "timestamp.gte": `${getNanoSecondsEpochTimestampForDateAndTimeInNewYork(date, MARKET_OPENS)}`,
-    "timestamp.lt": `${getNanoSecondsEpochTimestampForDateAndTimeInNewYork(date, MARKET_CLOSES)}`,
+    'timestamp.gte': `${getNanoSecondsEpochTimestampForDateAndTimeInNewYork(date, MARKET_OPENS)}`,
+    'timestamp.lt': `${getNanoSecondsEpochTimestampForDateAndTimeInNewYork(date, MARKET_CLOSES)}`,
     order: 'asc',
     limit: POLYGON_LIMIT,
     sort: 'timestamp',
@@ -48,7 +49,7 @@ function getSnapshotsByTheSecond(polygonQuotes: PolygonQuote[]): {timestamp: str
         snapshot: {
           ask: quote.ask_price,
           bid: quote.bid_price,
-        }
+        },
       };
 
       snapshotsByTheSecond.push(snapshotByTheSecond);

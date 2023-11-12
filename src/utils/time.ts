@@ -2,7 +2,7 @@ import moment from 'moment-timezone';
 import {setTimeout} from 'node:timers/promises';
 
 import {log} from './log';
-import { isLiveTrading } from './price-simulator';
+import {isLiveTrading} from './price-simulator';
 
 export const MARKET_OPENS = '9:30:10am';
 export const MARKET_CLOSES = '3:55pm';

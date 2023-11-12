@@ -49,7 +49,7 @@ export class IBKRClient extends BrokerageClient {
       await this.initiateBrokerageApiConnection();
     }
 
-    return await getWebSocket(this.sessionId);
+    return getWebSocket(this.sessionId);
   }
 
   protected async initiateBrokerageApiConnection(): Promise<void> {

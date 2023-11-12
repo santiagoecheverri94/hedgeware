@@ -1,6 +1,6 @@
 import {ApisauceInstance} from 'apisauce';
 import {setSecurityPosition} from './instructions/set-security-position';
-import { WebSocket } from 'ws';
+import {WebSocket} from 'ws';
 
 export abstract class BrokerageClient {
   protected abstract orderTypes: {[type in OrderTypes]: string};
