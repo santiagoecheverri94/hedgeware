@@ -1,7 +1,7 @@
 import {restClient, IQuotes} from '@polygon.io/client-js';
-import {getNanoSecondsEpochTimestampForDateAndTimeInNewYork, getSecondsFromNanoSecondsTimestamp, getTimestampForDateAndTimeInNewYorkFromNanoSecondsEpochTimestamp, MARKET_CLOSES, MARKET_OPENS} from '../../utils/time';
-import {Snapshot} from '../brokerage-clients/brokerage-client';
-import {syncWriteJSONFile} from '../../utils/file';
+import {getNanoSecondsEpochTimestampForDateAndTimeInNewYork, getSecondsFromNanoSecondsTimestamp, getTimestampForDateAndTimeInNewYorkFromNanoSecondsEpochTimestamp, MARKET_CLOSES, MARKET_OPENS} from '../utils/time';
+import {Snapshot} from '../trading/brokerage-clients/brokerage-client';
+import {syncWriteJSONFile} from '../utils/file';
 
 export async function saveStockHistoricalDataForStockOnDate(stock: string, date: string): Promise<void> {
   const polygonQuotes = await getPolygonQuotesForDate(stock, date);
@@ -34,8 +34,13 @@ async function getPolygonQuotesForDate(stock: string, date: string): Promise<Pol
   return response.results;
 }
 
-function getSnapshotsByTheSecond(polygonQuotes: PolygonQuote[]): {timestamp: string, snapshot: Snapshot}[] {
-  const snapshotsByTheSecond: {timestamp: string, snapshot: Snapshot}[] = [];
+export interface SnapshotByTheSecond {
+  timestamp: string;
+  snapshot: Snapshot;
+}
+
+function getSnapshotsByTheSecond(polygonQuotes: PolygonQuote[]): SnapshotByTheSecond[] {
+  const snapshotsByTheSecond: SnapshotByTheSecond[] = [];
 
   let lastSeconds: number | undefined;
   for (const quote of polygonQuotes) {
@@ -59,6 +64,18 @@ function getSnapshotsByTheSecond(polygonQuotes: PolygonQuote[]): {timestamp: str
   return snapshotsByTheSecond;
 }
 
-function getFilePathForStockOnDate(stock: string, date: string): string {
-  return `${process.cwd()}\\src\\trading\\data\\dailies\\${stock}\\${date}.json`;
+export function getFilePathForStockOnDate(stock: string, date?: string): string {
+  if (!date) {
+    throw new Error('date must be provided');
+  }
+
+  return `${process.cwd()}\\src\\data\\dailies\\${stock}\\${date}.json`;
+}
+
+export function getFilePathForStockOnDateRange(stock: string, startDate?: string, endDate?: string): string {
+  if (!startDate || !endDate) {
+    throw new Error('dates must be provided');
+  }
+
+  return `${process.cwd()}\\src\\data\\date-ranges\\${stock}\\${startDate}_${endDate}.json`;
 }

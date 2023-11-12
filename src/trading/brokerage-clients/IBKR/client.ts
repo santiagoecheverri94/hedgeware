@@ -2,11 +2,10 @@ import {ApisauceInstance} from 'apisauce';
 import {BrokerageClient, OrderDetails, OrderSides, OrderStatus, OrderTypes, SnapShotFields, Snapshot, TimesInForce} from '../brokerage-client';
 import {getUncheckedIBKRApi} from './api';
 import {initiateApiSessionWithTickling} from './tickle';
-import {getSimulatedPrice, isLiveTrading} from '../../../utils/price-simulator';
+import {getSimulatedSnapshot, isLiveTrading} from '../../../utils/price-simulator';
 import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrderStatusResponse, OrdersResponse, PositionResponse, SnapshotResponse} from './types';
 import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
 import {setTimeout} from 'node:timers/promises';
-import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
 import {log} from '../../../utils/log';
 import WebSocket from 'ws';
 import {getWebSocket} from './websocket';
@@ -59,16 +58,7 @@ export class IBKRClient extends BrokerageClient {
     this.account = accountsResponse.data!.accounts[0];
   }
 
-  async getSnapshot(conid: string): Promise<Snapshot> {
-    if (!isLiveTrading()) {
-      const simulatedPrice = getSimulatedPrice();
-
-      return {
-        ask: simulatedPrice,
-        bid: doFloatCalculation(FloatCalculations.subtract, simulatedPrice, 0.01),
-      };
-    }
-
+  async getSnapshotImplementation(stock: string, conid: string): Promise<Snapshot> {
     const fields = Object.values(this.snapshotFields);
 
     const response = (await (await this.getApi()).get<SnapshotResponse[]>('/iserver/marketdata/snapshot', {
@@ -81,7 +71,7 @@ export class IBKRClient extends BrokerageClient {
       return getSnapshotFromResponse(snapshotResponse, this.snapshotFields);
     }
 
-    return this.getSnapshot(conid);
+    return this.getSnapshotImplementation(stock, conid);
   }
 
   async placeOrder(orderDetails: OrderDetails): Promise<string> {
