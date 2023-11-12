@@ -34,7 +34,7 @@ function restartRandomPrice(): void {
 const manualPrice = 0;
 
 export function getManualPrice(): number {
-  console.log('Enter last price: ');
+  console.log('Enter price: ');
   debugger;
   return manualPrice;
 }
