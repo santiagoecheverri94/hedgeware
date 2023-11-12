@@ -1,6 +1,6 @@
 import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
 import {getFileNamesWithinFolder, jsonPrettyPrint, readJSONFile, syncWriteJSONFile} from '../../../utils/file';
-import {restartSimulatedPrice} from '../../../utils/price-simulator';
+import {isLiveTrading, restartSimulatedPrice} from '../../../utils/price-simulator';
 import {IBKRClient} from '../../brokerage-clients/IBKR/client';
 import {OrderSides, Snapshot} from '../../brokerage-clients/brokerage-client';
 import {setTimeout} from 'node:timers/promises';
@@ -51,8 +51,8 @@ export interface StockState {
   }[];
   transitoryValue: number;
   unrealizedValue: number;
-  lastAsk: number;
-  lastBid: number;
+  lastAsk?: number;
+  lastBid?: number;
 }
 
 const brokerageClient = new IBKRClient();
@@ -71,7 +71,7 @@ export async function startStopLossArb(): Promise<void> {
     while (await isMarketOpen(stock) && !userHasInterrupted) {
       const {bid, ask} = await reconcileStockPosition(stock, states[stock]);
 
-      if (process.env.SIMULATE_SNAPSHOT) {
+      if (!isLiveTrading()) {
         states[stock] = await debugSimulatedPrices(bid, ask, stock, states[stock]);
       }
     }
@@ -84,7 +84,7 @@ async function getStocks(): Promise<string[]> {
 }
 
 function getStockStatesFolderPath(): string {
-  if (process.env.SIMULATE_SNAPSHOT) {
+  if (!isLiveTrading()) {
     return `${process.cwd()}\\src\\trading\\strategies\\stop-loss-arb\\stock-states\\simulated`;
   }
 
@@ -105,17 +105,11 @@ export function getStockStateFilePath(stock: string): string {
 }
 
 async function reconcileStockPosition(stock: string, stockState: StockState): Promise<{bid: number, ask: number}> {
-  // 0) wait a second
-  if (!process.env.SIMULATE_SNAPSHOT) {
-    const ONE_SECOND = 1000;
-    await setTimeout(ONE_SECOND);
-  }
-
   // 1)
   const snapshot = await brokerageClient.getSnapshot(stockState.brokerageId);
   const crossingHappened = checkCrossings(stock, stockState, snapshot);
 
-  if (!process.env.SIMULATE_SNAPSHOT && crossingHappened) {
+  if (isLiveTrading() && crossingHappened) {
     syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
   }
 
@@ -164,7 +158,7 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
 
     checkCrossings(stock, stockState, snapshot);
 
-    if (!process.env.SIMULATE_SNAPSHOT) {
+    if (isLiveTrading()) {
       syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
     }
   }
@@ -172,9 +166,10 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
   // 5)
   if (isSnapshotChange(snapshot, stockState)) {
     stockState.lastAsk = snapshot.ask;
+    stockState.lastBid = snapshot.bid;
     stockState.unrealizedValue = getUnrealizedValue(stockState, snapshot);
 
-    if (!process.env.SIMULATE_SNAPSHOT) {
+    if (isLiveTrading()) {
       syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
     }
   }
@@ -335,6 +330,10 @@ function correctBadSellIfRequired(stockState: StockState, indexesToExecute: numb
 }
 
 function isSnapshotChange(snapshot: Snapshot, stockState: StockState): boolean {
+  if (!stockState.lastAsk || !stockState.lastBid) {
+    return true;
+  }
+
   return !doFloatCalculation(FloatCalculations.equal, stockState.lastAsk, snapshot.ask) || !doFloatCalculation(FloatCalculations.equal, stockState.lastBid, snapshot.bid);
 }
 

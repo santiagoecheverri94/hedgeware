@@ -1,3 +1,4 @@
+import { isLiveTrading } from '../../../utils/price-simulator';
 import {BrokerageClient, OrderDetails, OrderSides, OrderStatus, OrderTypes, Snapshot, TimesInForce} from '../brokerage-client';
 import {setTimeout} from 'node:timers/promises';
 
@@ -31,7 +32,7 @@ export async function setSecurityPosition({
     price,
   };
 
-  if (process.env.SIMULATE_SNAPSHOT) {
+  if (!isLiveTrading()) {
     return;
   }
 

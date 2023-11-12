@@ -38,3 +38,7 @@ export function getManualPrice(): number {
   debugger;
   return manualPrice;
 }
+
+export function isLiveTrading(): boolean {
+  return !Boolean(process.env.SIMULATE_SNAPSHOT);
+}

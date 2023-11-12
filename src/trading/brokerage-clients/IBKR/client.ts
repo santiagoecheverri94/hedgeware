@@ -2,7 +2,7 @@ import {ApisauceInstance} from 'apisauce';
 import {BrokerageClient, OrderDetails, OrderSides, OrderStatus, OrderTypes, SnapShotFields, Snapshot, TimesInForce} from '../brokerage-client';
 import {getUncheckedIBKRApi} from './api';
 import {initiateApiSessionWithTickling} from './tickle';
-import {getSimulatedPrice} from '../../../utils/price-simulator';
+import {getSimulatedPrice, isLiveTrading} from '../../../utils/price-simulator';
 import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrderStatusResponse, OrdersResponse, PositionResponse, SnapshotResponse} from './types';
 import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
 import {setTimeout} from 'node:timers/promises';
@@ -60,13 +60,12 @@ export class IBKRClient extends BrokerageClient {
   }
 
   async getSnapshot(conid: string): Promise<Snapshot> {
-    if (process.env.SIMULATE_SNAPSHOT) {
+    if (!isLiveTrading()) {
       const simulatedPrice = getSimulatedPrice();
 
       return {
         ask: simulatedPrice,
         bid: doFloatCalculation(FloatCalculations.subtract, simulatedPrice, 0.01),
-        // last: simulatedPrice,
       };
     }
 

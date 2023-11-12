@@ -2,6 +2,7 @@ import moment from 'moment-timezone';
 import {setTimeout} from 'node:timers/promises';
 
 import {log} from './log';
+import { isLiveTrading } from './price-simulator';
 
 export const MARKET_OPENS = '9:30:10am';
 export const MARKET_CLOSES = '3:55pm';
@@ -13,7 +14,7 @@ const MARKET_TIMEZONE = 'America/New_York';
 const NANO_SECONDS_FACTOR = 1_000_000_000;
 
 export async function isMarketOpen(stock = ''): Promise<boolean> {
-  if (process.env.SIMULATE_SNAPSHOT) {
+  if (!isLiveTrading()) {
     return true;
   }
 
