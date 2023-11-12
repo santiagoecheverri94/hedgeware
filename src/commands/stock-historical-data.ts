@@ -1,5 +1,5 @@
 import {Args, Command} from '@oclif/core';
-import {saveStockHistoricalDataForStockOnDate} from '../trading/data/save-stock-historical-data';
+import {saveStockHistoricalDataForStockOnDate} from '../data/save-stock-historical-data';
 
 export default class StockHistoricalData extends Command {
   static description = 'saves historical data for a stock from start to end date'

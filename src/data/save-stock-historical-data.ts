@@ -1,7 +1,7 @@
 import {restClient, IQuotes} from '@polygon.io/client-js';
-import {getNanoSecondsEpochTimestampForDateAndTimeInNewYork, getSecondsFromNanoSecondsTimestamp, getTimestampForDateAndTimeInNewYorkFromNanoSecondsEpochTimestamp, MARKET_CLOSES, MARKET_OPENS} from '../../utils/time';
-import {Snapshot} from '../brokerage-clients/brokerage-client';
-import {syncWriteJSONFile} from '../../utils/file';
+import {getNanoSecondsEpochTimestampForDateAndTimeInNewYork, getSecondsFromNanoSecondsTimestamp, getTimestampForDateAndTimeInNewYorkFromNanoSecondsEpochTimestamp, MARKET_CLOSES, MARKET_OPENS} from '../utils/time';
+import {Snapshot} from '../trading/brokerage-clients/brokerage-client';
+import {syncWriteJSONFile} from '../utils/file';
 
 export async function saveStockHistoricalDataForStockOnDate(stock: string, date: string): Promise<void> {
   const polygonQuotes = await getPolygonQuotesForDate(stock, date);
@@ -60,5 +60,5 @@ function getSnapshotsByTheSecond(polygonQuotes: PolygonQuote[]): {timestamp: str
 }
 
 function getFilePathForStockOnDate(stock: string, date: string): string {
-  return `${process.cwd()}\\src\\trading\\data\\dailies\\${stock}\\${date}.json`;
+  return `${process.cwd()}\\src\\data\\dailies\\${stock}\\${date}.json`;
 }

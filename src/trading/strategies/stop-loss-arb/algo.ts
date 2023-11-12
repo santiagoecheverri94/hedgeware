@@ -1,6 +1,6 @@
 import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
 import {getFileNamesWithinFolder, jsonPrettyPrint, readJSONFile, syncWriteJSONFile} from '../../../utils/file';
-import {isLiveTrading, restartSimulatedPrice} from '../../../utils/price-simulator';
+import {isLiveTrading, restartSimulatedSnapshot} from '../../../utils/price-simulator';
 import {IBKRClient} from '../../brokerage-clients/IBKR/client';
 import {OrderSides, Snapshot} from '../../brokerage-clients/brokerage-client';
 import {getCurrentTimeStamp, isMarketOpen} from '../../../utils/time';
@@ -379,7 +379,7 @@ async function debugSimulatedPrices(bid: number, ask: number, stock: string, sto
 
 async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up' | 'down', stock: string, stockState: StockState): Promise<StockState> {
   if (stockState.tradingLogs.length === 0) {
-    restartSimulatedPrice();
+    restartSimulatedSnapshot();
     return (await getStockStates([stock]))[stock];
   }
 
@@ -418,7 +418,7 @@ async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up
     testSamples[stock] = [];
   }
 
-  restartSimulatedPrice();
+  restartSimulatedSnapshot();
   return (await getStockStates([stock]))[stock];
 }
 

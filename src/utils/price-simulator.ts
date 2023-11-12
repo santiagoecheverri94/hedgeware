@@ -1,10 +1,16 @@
+import {Snapshot} from '../trading/brokerage-clients/brokerage-client';
 import {FloatCalculations, doFloatCalculation} from './float-calculator';
 
 const INITIAL_PRICE = 13.72;
 let randomPrice: number;
 
-export function getSimulatedPrice(): number {
-  return getRandomPrice();
+export function getSimulatedSnapshot(): Snapshot {
+  const randomPrice = getRandomPrice();
+
+  return {
+    ask: randomPrice,
+    bid: doFloatCalculation(FloatCalculations.subtract, randomPrice, 0.01),
+  };
 }
 
 function getRandomPrice(): number {
@@ -23,7 +29,7 @@ function getRandomPrice(): number {
   return randomPrice;
 }
 
-export function restartSimulatedPrice(): void {
+export function restartSimulatedSnapshot(): void {
   restartRandomPrice();
 }
 
@@ -44,9 +50,25 @@ export function isLiveTrading(): boolean {
     return false;
   }
 
+  if (isHistoricalSnapshot()) {
+    return false;
+  }
+
   return true;
 }
 
 export function isSimulatedSnapshot(): boolean {
   return Boolean(process.env.SIMULATE_SNAPSHOT);
+}
+
+export function isHistoricalSnapshot(): boolean {
+  return Boolean(process.env.HISTORICAL_SNAPSHOT_STOCK && process.env.HISTORICAL_SNAPSHOT_START_DATE);
+}
+
+function isHistoricalSnapshotDay(): boolean {
+  return isHistoricalSnapshot() && !process.env.HISTORICAL_SNAPSHOT_END_DATE;
+}
+
+function isHistoricalSnapshotDateRange(): boolean {
+  return Boolean(isHistoricalSnapshot() && process.env.HISTORICAL_SNAPSHOT_END_DATE);
 }
