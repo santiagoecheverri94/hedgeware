@@ -1,4 +1,4 @@
-import {SnapshotByTheSecond, getFilePathForStockOnDate, getFilePathForStockOnDateRange} from '../data/save-stock-historical-data';
+import {SnapshotByTheSecond, getFilePathForStockOnDateType, DateType} from '../historical-data/save-stock-historical-data';
 import {Snapshot} from '../trading/brokerage-clients/brokerage-client';
 import {readJSONFile} from './file';
 import {FloatCalculations, doFloatCalculation} from './float-calculator';
@@ -88,11 +88,11 @@ async function getHistoricalSnapshots(stock: string): Promise<{
   let snapshotsByTheSecond: SnapshotByTheSecond[] = [];
 
   if (isHistoricalSnapshotDay()) {
-    snapshotsByTheSecond = await readJSONFile<SnapshotByTheSecond[]>(getFilePathForStockOnDate(stock, process.env.HISTORICAL_SNAPSHOT_START_DATE));
+    snapshotsByTheSecond = await readJSONFile<SnapshotByTheSecond[]>(getFilePathForStockOnDateType(stock, DateType.DAILY, process.env.HISTORICAL_SNAPSHOT_START_DATE));
   }
 
   if (isHistoricalSnapshotDateRange()) {
-    snapshotsByTheSecond = await readJSONFile<SnapshotByTheSecond[]>(getFilePathForStockOnDateRange(stock, process.env.HISTORICAL_SNAPSHOT_START_DATE, process.env.HISTORICAL_SNAPSHOT_END_DATE));
+    snapshotsByTheSecond = await readJSONFile<SnapshotByTheSecond[]>(getFilePathForStockOnDateType(stock, DateType.DATE_RANGE, process.env.HISTORICAL_SNAPSHOT_START_DATE, process.env.HISTORICAL_SNAPSHOT_END_DATE));
   }
 
   return {

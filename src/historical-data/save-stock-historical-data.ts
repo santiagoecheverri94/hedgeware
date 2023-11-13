@@ -2,11 +2,17 @@ import {restClient, IQuotes} from '@polygon.io/client-js';
 import {getNanoSecondsEpochTimestampForDateAndTimeInNewYork, getSecondsFromNanoSecondsTimestamp, getTimestampForDateAndTimeInNewYorkFromNanoSecondsEpochTimestamp, MARKET_CLOSES, MARKET_OPENS} from '../utils/time';
 import {Snapshot} from '../trading/brokerage-clients/brokerage-client';
 import {syncWriteJSONFile} from '../utils/file';
+import {existsSync, mkdirSync} from 'node:fs';
+
+export enum DateType {
+  DAILY = 'daily',
+  DATE_RANGE = 'date-range',
+}
 
 export async function saveStockHistoricalDataForStockOnDate(stock: string, date: string): Promise<void> {
   const polygonQuotes = await getPolygonQuotesForDate(stock, date);
   const snapshotsByTheSecond = getSnapshotsByTheSecond(polygonQuotes);
-  syncWriteJSONFile(getFilePathForStockOnDate(stock, date), JSON.stringify(snapshotsByTheSecond));
+  syncWriteJSONFile(getFilePathForStockOnDateType(stock, DateType.DAILY, date), JSON.stringify(snapshotsByTheSecond));
 }
 
 type PolygonQuote = Exclude<IQuotes['results'], undefined>[0];
@@ -64,18 +70,28 @@ function getSnapshotsByTheSecond(polygonQuotes: PolygonQuote[]): SnapshotByTheSe
   return snapshotsByTheSecond;
 }
 
-export function getFilePathForStockOnDate(stock: string, date?: string): string {
-  if (!date) {
-    throw new Error('date must be provided');
+export function getFilePathForStockOnDateType(stock: string, dateType: DateType, startDate?: string, endDate?: string): string {
+  if (dateType === DateType.DATE_RANGE) {
+    if (!endDate) {
+      throw new Error('endDate must be provided when dateType is DATE_RANGE');
+    }
+
+    return `${getFolderPathForStockOnDateType(stock, dateType)}\\${startDate}_${endDate}.json`;
   }
 
-  return `${process.cwd()}\\src\\data\\dailies\\${stock}\\${date}.json`;
+  if (!startDate) {
+    throw new Error('startDate must always be provided');
+  }
+
+  return `${getFolderPathForStockOnDateType(stock, dateType)}\\${startDate}.json`;
 }
 
-export function getFilePathForStockOnDateRange(stock: string, startDate?: string, endDate?: string): string {
-  if (!startDate || !endDate) {
-    throw new Error('dates must be provided');
+function getFolderPathForStockOnDateType(stock: string, dateType: DateType): string {
+  const path = `${process.cwd()}\\src\\historical-data\\${dateType}\\${stock}`;
+
+  if (!existsSync(path)) {
+    mkdirSync(path);
   }
 
-  return `${process.cwd()}\\src\\data\\date-ranges\\${stock}\\${startDate}_${endDate}.json`;
+  return path;
 }
