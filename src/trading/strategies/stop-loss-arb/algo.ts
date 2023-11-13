@@ -73,25 +73,30 @@ export async function startStopLossArb(): Promise<void> {
       const {bid, ask} = await reconcileStockPosition(stock, states[stock]);
 
       if (isHistoricalSnapshot()) {
-        if (isHistoricalSnapshotsExhausted(stock)) {
-          if (states[stock].unrealizedValue > 0) {
-            debugger;
-          }
+        if (doFloatCalculation(FloatCalculations.greaterThan, states[stock].unrealizedValue, 0)) {
+          debugHistoricalPrices(stock, states[stock]);
+        }
 
+        if (isHistoricalSnapshotsExhausted(stock)) {
+          sortDescTestHistoricalSamplesByStock(stock);
           break;
         }
       }
 
       if (isRandomSnapshot()) {
-        states[stock] = await debugSimulatedPrices(bid, ask, stock, states[stock]);
+        states[stock] = await debugRandomPrices(bid, ask, stock, states[stock]);
       }
     }
   })()));
+
+  if (isHistoricalSnapshot()) {
+    debugger;
+  }
 }
 
 async function getStocks(): Promise<string[]> {
   const fileNames = await getFileNamesWithinFolder(getStockStatesFolderPath());
-  return fileNames.filter(fileName => !['template', 'skip', 'results'].some(excludedFileName => fileName.includes(excludedFileName)));
+  return fileNames.filter(fileName => !['template', 'skip', 'results'].some(excludedFileName => fileName.includes(excludedFileName)) && !fileName.startsWith('__'));
 }
 
 function getStockStatesFolderPath(): string {
@@ -116,8 +121,13 @@ export function getStockStateFilePath(stock: string): string {
 }
 
 async function reconcileStockPosition(stock: string, stockState: StockState): Promise<{bid: number, ask: number}> {
-  // 1)
+  // 0)
   const snapshot = await brokerageClient.getSnapshot(stock, stockState.brokerageId);
+  if (isWideBidAskSpread(snapshot)) {
+    return snapshot;
+  }
+
+  // 1)
   const crossingHappened = checkCrossings(stock, stockState, snapshot);
 
   if (isLiveTrading() && crossingHappened) {
@@ -142,6 +152,10 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
   }
 
   if (newPosition !== undefined) {
+    // TODO: remove await, but need to keep track of unresolved orders before
+    // exiting
+    // brokerageClient.setSecurityPosition({
+
     await brokerageClient.setSecurityPosition({
       brokerageIdOfSecurity: stockState.brokerageId,
       currentPosition: stockState.position * stockState.numContracts,
@@ -206,6 +220,10 @@ function checkCrossings(stock: string, stockState: StockState, {bid, ask}: Snaps
   }
 
   return crossingHappened;
+}
+
+function isWideBidAskSpread({bid, ask}: Snapshot): boolean {
+  return doFloatCalculation(FloatCalculations.greaterThan, doFloatCalculation(FloatCalculations.subtract, ask, bid), 0.01) === 1;
 }
 
 function getNumToBuy(stockState: StockState, {ask}: Snapshot): number {
@@ -371,13 +389,45 @@ function getUnrealizedValue(stockState: StockState, {bid, ask}: Snapshot): numbe
   return doFloatCalculation(FloatCalculations.subtract, unrealizedValue, finalTradingCosts);
 }
 
-const testSamples: {[stock: string]: {
+const testHistoricalSamples: {
+  [stock: string]: {
+    unrealizedValue: number[];
+  }
+} = {};
+
+async function debugHistoricalPrices(stock: string, stockState: StockState): Promise<void> {
+  if (!testHistoricalSamples[stock]) {
+    testHistoricalSamples[stock] = {
+      unrealizedValue: [],
+    };
+  }
+
+  testHistoricalSamples[stock].unrealizedValue.push(stockState.unrealizedValue);
+}
+
+function sortDescTestHistoricalSamplesByStock(stock: string): void {
+  testHistoricalSamples[stock].unrealizedValue.sort((a, b) => {
+    // if (a > b) {
+    if (doFloatCalculation(FloatCalculations.greaterThan, a, b)) {
+      return -1;
+    }
+
+    // if (a < b) {
+    if (doFloatCalculation(FloatCalculations.lessThan, a, b)) {
+      return 1;
+    }
+
+    return 0;
+  });
+}
+
+const testRandomSamples: {[stock: string]: {
   distance: number;
   upOrDown: 'up' | 'down';
   unrealizedValue: number;
 }[]} = {};
 
-async function debugSimulatedPrices(bid: number, ask: number, stock: string, stockState: StockState): Promise<StockState> {
+async function debugRandomPrices(bid: number, ask: number, stock: string, stockState: StockState): Promise<StockState> {
   if (!stockState.callStrikePrice || !stockState.putStrikePrice) {
     return stockState;
   }
@@ -411,11 +461,11 @@ async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up
 
   const NUM_SAMPLES = 1000;
 
-  if (!testSamples[stock]) {
-    testSamples[stock] = [];
+  if (!testRandomSamples[stock]) {
+    testRandomSamples[stock] = [];
   }
 
-  const samples = testSamples[stock];
+  const samples = testRandomSamples[stock];
 
   samples.push({
     upOrDown: upperOrLowerBound,
@@ -431,7 +481,7 @@ async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up
     console.log(`maxDistance: ${Math.max(...samples.map(sample => sample.distance))}`);
     console.log(`averageDistance: ${averageDistance}`);
     console.log(`averageUnrealizedValue: ${averageUnrealizedValue}`);
-    testSamples[stock] = [];
+    testRandomSamples[stock] = [];
   }
 
   restartSimulatedSnapshot();

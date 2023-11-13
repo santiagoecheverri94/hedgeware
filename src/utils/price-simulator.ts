@@ -12,7 +12,7 @@ export function isRandomSnapshot(): boolean {
 }
 
 export function isHistoricalSnapshot(): boolean {
-  return Boolean(process.env.HISTORICAL_SNAPSHOT_START_DATE);
+  return Boolean(process.env.HISTORICAL_SNAPSHOT);
 }
 
 export async function getSimulatedSnapshot(stock: string): Promise<Snapshot> {
@@ -87,12 +87,16 @@ async function getHistoricalSnapshots(stock: string): Promise<{
 }> {
   let snapshotsByTheSecond: SnapshotByTheSecond[] = [];
 
-  if (isHistoricalSnapshotDay()) {
-    snapshotsByTheSecond = await readJSONFile<SnapshotByTheSecond[]>(getFilePathForStockOnDateType(stock, DateType.DAILY, process.env.HISTORICAL_SNAPSHOT_START_DATE));
+  const ticker = stock.split('__')[0];
+  const startDate = stock.split('__')[1].split('_')[0];
+  const endDate = stock.split('__')[1].split('_')[1];
+
+  if (isHistoricalSnapshotDay(startDate, endDate)) {
+    snapshotsByTheSecond = await readJSONFile<SnapshotByTheSecond[]>(getFilePathForStockOnDateType(ticker, DateType.DAILY, startDate));
   }
 
-  if (isHistoricalSnapshotDateRange()) {
-    snapshotsByTheSecond = await readJSONFile<SnapshotByTheSecond[]>(getFilePathForStockOnDateType(stock, DateType.DATE_RANGE, process.env.HISTORICAL_SNAPSHOT_START_DATE, process.env.HISTORICAL_SNAPSHOT_END_DATE));
+  if (isHistoricalSnapshotDateRange(startDate, endDate)) {
+    snapshotsByTheSecond = await readJSONFile<SnapshotByTheSecond[]>(getFilePathForStockOnDateType(ticker, DateType.DATE_RANGE, startDate, endDate));
   }
 
   return {
@@ -101,12 +105,12 @@ async function getHistoricalSnapshots(stock: string): Promise<{
   };
 }
 
-function isHistoricalSnapshotDay(): boolean {
-  return isHistoricalSnapshot() && !process.env.HISTORICAL_SNAPSHOT_END_DATE;
+function isHistoricalSnapshotDay(startDate: string, endDate: string): boolean {
+  return Boolean(startDate && !endDate);
 }
 
-function isHistoricalSnapshotDateRange(): boolean {
-  return Boolean(isHistoricalSnapshot() && process.env.HISTORICAL_SNAPSHOT_END_DATE);
+function isHistoricalSnapshotDateRange(startDate: string, endDate: string): boolean {
+  return Boolean(startDate && endDate);
 }
 
 export function isHistoricalSnapshotsExhausted(stock: string): boolean {

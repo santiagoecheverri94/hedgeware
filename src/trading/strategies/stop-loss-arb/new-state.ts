@@ -28,7 +28,7 @@ export async function createNewStockState(stock: string): Promise<void> {
   });
 
   const shortIntervals: SmoothingInterval[] = getShortIntervals({
-    initialPrice: doFloatCalculation(FloatCalculations.subtract, initialPrice, doFloatCalculation(FloatCalculations.subtract, spaceBetweenIntervals, intervalProfit)),
+    initialPrice,
     targetPosition,
     intervalProfit,
     spaceBetweenIntervals,
@@ -72,13 +72,14 @@ function getLongIntervals({
   spaceBetweenIntervals: number
   sharesPerInterval: number
 }): SmoothingInterval[] {
+  const basePrice = doFloatCalculation(FloatCalculations.add, initialPrice, getSpaceBetweenInitialPriceAndFirstInterval(spaceBetweenIntervals, intervalProfit));
   const intervals: SmoothingInterval[] = [];
   const numIntervals = targetPosition / sharesPerInterval;
 
   let absoluteIndex = 0;
   for (let i = 0; i <= numIntervals; i++) {
     const spaceFromBaseInterval = doFloatCalculation(FloatCalculations.multiply, absoluteIndex, spaceBetweenIntervals);
-    const buyPrice = doFloatCalculation(FloatCalculations.add, initialPrice, spaceFromBaseInterval);
+    const buyPrice = doFloatCalculation(FloatCalculations.add, basePrice, spaceFromBaseInterval);
 
     intervals.unshift({
       type: IntervalTypes.LONG,
@@ -101,6 +102,14 @@ function getLongIntervals({
   return intervals;
 }
 
+function getSpaceBetweenInitialPriceAndFirstInterval(spaceBetweenIntervals: number, intervalProfit: number): number {
+  return doFloatCalculation(FloatCalculations.divide, getSpaceBetweenOpposingBuySell(spaceBetweenIntervals, intervalProfit), 2);
+}
+
+function getSpaceBetweenOpposingBuySell(spaceBetweenIntervals: number, intervalProfit: number): number {
+  return doFloatCalculation(FloatCalculations.subtract, spaceBetweenIntervals, intervalProfit);
+}
+
 function getShortIntervals({
   initialPrice,
   targetPosition,
@@ -114,13 +123,14 @@ function getShortIntervals({
   spaceBetweenIntervals: number
   sharesPerInterval: number
 }): SmoothingInterval[] {
+  const basePrice = doFloatCalculation(FloatCalculations.subtract, initialPrice, getSpaceBetweenInitialPriceAndFirstInterval(spaceBetweenIntervals, intervalProfit));
   const intervals: SmoothingInterval[] = [];
   const numIntervals = targetPosition / sharesPerInterval;
 
   let absoluteIndex = 0;
   for (let i = 0; i <= numIntervals; i++) {
     const spaceFromBaseInterval = doFloatCalculation(FloatCalculations.multiply, absoluteIndex, spaceBetweenIntervals);
-    const sellPrice = doFloatCalculation(FloatCalculations.subtract, initialPrice, spaceFromBaseInterval);
+    const sellPrice = doFloatCalculation(FloatCalculations.subtract, basePrice, spaceFromBaseInterval);
 
     intervals.push({
       type: IntervalTypes.SHORT,
