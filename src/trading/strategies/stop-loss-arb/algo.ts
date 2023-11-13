@@ -70,21 +70,22 @@ export async function startStopLossArb(): Promise<void> {
 
   await Promise.all(stocks.map(stock => (async () => {
     while (await isMarketOpen(stock) && !userHasInterrupted) {
-      const {bid, ask} = await reconcileStockPosition(stock, states[stock]);
+      const snapshot = await reconcileStockPosition(stock, states[stock]);
 
       if (isHistoricalSnapshot()) {
-        if (doFloatCalculation(FloatCalculations.greaterThan, states[stock].unrealizedValue, 0)) {
-          debugHistoricalPrices(stock, states[stock]);
+        if (snapshot) {
+          debugHistoricalPrices(stock, states[stock], snapshot);
         }
 
         if (isHistoricalSnapshotsExhausted(stock)) {
-          sortDescTestHistoricalSamplesByStock(stock);
+          sortDescPositiveExitValuesByStock(stock);
+          sortAscNegativeExitValuesByStock(stock);
           break;
         }
       }
 
-      if (isRandomSnapshot()) {
-        states[stock] = await debugRandomPrices(bid, ask, stock, states[stock]);
+      if (isRandomSnapshot() && snapshot) {
+        states[stock] = await debugRandomPrices(snapshot, stock, states[stock]);
       }
     }
   })()));
@@ -120,11 +121,11 @@ export function getStockStateFilePath(stock: string): string {
   return `${getStockStatesFolderPath()}\\${stock}.json`;
 }
 
-async function reconcileStockPosition(stock: string, stockState: StockState): Promise<{bid: number, ask: number}> {
+async function reconcileStockPosition(stock: string, stockState: StockState): Promise<Snapshot | null> {
   // 0)
   const snapshot = await brokerageClient.getSnapshot(stock, stockState.brokerageId);
   if (isWideBidAskSpread(snapshot)) {
-    return snapshot;
+    return null;
   }
 
   // 1)
@@ -189,7 +190,8 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
   }
 
   // 5)
-  if (isSnapshotChange(snapshot, stockState)) {
+  const isSnapshotChanged = isSnapshotChange(snapshot, stockState);
+  if (isSnapshotChanged) {
     stockState.lastAsk = snapshot.ask;
     stockState.lastBid = snapshot.bid;
     stockState.unrealizedValue = getUnrealizedValue(stockState, snapshot);
@@ -200,7 +202,7 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
   }
 
   // 6)
-  return snapshot;
+  return newPosition !== undefined || isSnapshotChanged ? snapshot : null;
 }
 
 function checkCrossings(stock: string, stockState: StockState, {bid, ask}: Snapshot): boolean {
@@ -389,32 +391,67 @@ function getUnrealizedValue(stockState: StockState, {bid, ask}: Snapshot): numbe
   return doFloatCalculation(FloatCalculations.subtract, unrealizedValue, finalTradingCosts);
 }
 
+interface ExitValue {
+  snapshot: Snapshot;
+  value: number;
+}
+
 const testHistoricalSamples: {
   [stock: string]: {
-    unrealizedValue: number[];
+    positiveExitValues: ExitValue[];
+    negativeExitValues: ExitValue[];
   }
 } = {};
 
-async function debugHistoricalPrices(stock: string, stockState: StockState): Promise<void> {
+async function debugHistoricalPrices(stock: string, stockState: StockState, snapshot: Snapshot): Promise<void> {
   if (!testHistoricalSamples[stock]) {
     testHistoricalSamples[stock] = {
-      unrealizedValue: [],
+      positiveExitValues: [],
+      negativeExitValues: [],
     };
   }
 
-  testHistoricalSamples[stock].unrealizedValue.push(stockState.unrealizedValue);
+  if (doFloatCalculation(FloatCalculations.greaterThan, stockState.unrealizedValue, 0)) {
+    testHistoricalSamples[stock].positiveExitValues.push({
+      snapshot,
+      value: stockState.unrealizedValue,
+    });
+  }
+
+  if (doFloatCalculation(FloatCalculations.lessThan, stockState.unrealizedValue, 0)) {
+    testHistoricalSamples[stock].negativeExitValues.push({
+      snapshot,
+      value: stockState.unrealizedValue,
+    });
+  }
 }
 
-function sortDescTestHistoricalSamplesByStock(stock: string): void {
-  testHistoricalSamples[stock].unrealizedValue.sort((a, b) => {
+function sortDescPositiveExitValuesByStock(stock: string): void {
+  testHistoricalSamples[stock].positiveExitValues.sort((a, b) => {
     // if (a > b) {
-    if (doFloatCalculation(FloatCalculations.greaterThan, a, b)) {
+    if (doFloatCalculation(FloatCalculations.greaterThan, a.value, b.value)) {
       return -1;
     }
 
     // if (a < b) {
-    if (doFloatCalculation(FloatCalculations.lessThan, a, b)) {
+    if (doFloatCalculation(FloatCalculations.lessThan, a.value, b.value)) {
       return 1;
+    }
+
+    return 0;
+  });
+}
+
+function sortAscNegativeExitValuesByStock(stock: string): void {
+  testHistoricalSamples[stock].negativeExitValues.sort((a, b) => {
+    // if (a > b) {
+    if (doFloatCalculation(FloatCalculations.greaterThan, a.value, b.value)) {
+      return 1;
+    }
+
+    // if (a < b) {
+    if (doFloatCalculation(FloatCalculations.lessThan, a.value, b.value)) {
+      return -1;
     }
 
     return 0;
@@ -427,7 +464,7 @@ const testRandomSamples: {[stock: string]: {
   unrealizedValue: number;
 }[]} = {};
 
-async function debugRandomPrices(bid: number, ask: number, stock: string, stockState: StockState): Promise<StockState> {
+async function debugRandomPrices({bid, ask}: Snapshot, stock: string, stockState: StockState): Promise<StockState> {
   if (!stockState.callStrikePrice || !stockState.putStrikePrice) {
     return stockState;
   }

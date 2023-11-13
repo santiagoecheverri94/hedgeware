@@ -59,6 +59,8 @@ export enum SnapShotFields {
 
 export type Snapshot = {
   [field in SnapShotFields]: number
+} & {
+  timestamp: string,
 }
 
 export enum OrderTypes {

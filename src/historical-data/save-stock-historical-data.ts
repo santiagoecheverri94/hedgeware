@@ -1,7 +1,7 @@
 import {restClient, IQuotes} from '@polygon.io/client-js';
 import {getNanoSecondsEpochTimestampForDateAndTimeInNewYork, getSecondsFromNanoSecondsTimestamp, getTimestampForDateAndTimeInNewYorkFromNanoSecondsEpochTimestamp, MARKET_CLOSES, MARKET_OPENS} from '../utils/time';
 import {Snapshot} from '../trading/brokerage-clients/brokerage-client';
-import {syncWriteJSONFile} from '../utils/file';
+import {jsonPrettyPrint, syncWriteJSONFile} from '../utils/file';
 import {existsSync, mkdirSync} from 'node:fs';
 
 export enum DateType {
@@ -12,7 +12,7 @@ export enum DateType {
 export async function saveStockHistoricalDataForStockOnDate(stock: string, date: string): Promise<void> {
   const polygonQuotes = await getPolygonQuotesForDate(stock, date);
   const snapshotsByTheSecond = getSnapshotsByTheSecond(polygonQuotes);
-  syncWriteJSONFile(getFilePathForStockOnDateType(stock, DateType.DAILY, date), JSON.stringify(snapshotsByTheSecond));
+  syncWriteJSONFile(getFilePathForStockOnDateType(stock, DateType.DAILY, date), jsonPrettyPrint(snapshotsByTheSecond));
 }
 
 type PolygonQuote = Exclude<IQuotes['results'], undefined>[0];
@@ -40,13 +40,8 @@ async function getPolygonQuotesForDate(stock: string, date: string): Promise<Pol
   return response.results;
 }
 
-export interface SnapshotByTheSecond {
-  timestamp: string;
-  snapshot: Snapshot;
-}
-
-function getSnapshotsByTheSecond(polygonQuotes: PolygonQuote[]): SnapshotByTheSecond[] {
-  const snapshotsByTheSecond: SnapshotByTheSecond[] = [];
+function getSnapshotsByTheSecond(polygonQuotes: PolygonQuote[]): Snapshot[] {
+  const snapshotsByTheSecond: Snapshot[] = [];
 
   let lastSeconds: number | undefined;
   for (const quote of polygonQuotes) {
@@ -55,12 +50,10 @@ function getSnapshotsByTheSecond(polygonQuotes: PolygonQuote[]): SnapshotByTheSe
     if (seconds !== lastSeconds) {
       lastSeconds = seconds;
 
-      const snapshotByTheSecond = {
+      const snapshotByTheSecond: Snapshot = {
+        ask: quote.ask_price,
+        bid: quote.bid_price,
         timestamp: getTimestampForDateAndTimeInNewYorkFromNanoSecondsEpochTimestamp(quote.sip_timestamp),
-        snapshot: {
-          ask: quote.ask_price,
-          bid: quote.bid_price,
-        },
       };
 
       snapshotsByTheSecond.push(snapshotByTheSecond);

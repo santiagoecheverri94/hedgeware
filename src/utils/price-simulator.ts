@@ -1,4 +1,4 @@
-import {SnapshotByTheSecond, getFilePathForStockOnDateType, DateType} from '../historical-data/save-stock-historical-data';
+import {getFilePathForStockOnDateType, DateType} from '../historical-data/save-stock-historical-data';
 import {Snapshot} from '../trading/brokerage-clients/brokerage-client';
 import {readJSONFile} from './file';
 import {FloatCalculations, doFloatCalculation} from './float-calculator';
@@ -33,6 +33,7 @@ function getRandomSnapshot(): Snapshot {
   return {
     ask: randomPrice,
     bid: doFloatCalculation(FloatCalculations.subtract, randomPrice, 0.01),
+    timestamp: 'Random Snapshot',
   };
 }
 
@@ -65,7 +66,7 @@ function restartRandomPrice(): void {
 
 const historicalSnapshots: {
   [stock: string]: {
-    data: SnapshotByTheSecond[],
+    data: Snapshot[],
     index: number,
   }
 } = {};
@@ -75,28 +76,28 @@ async function getHistoricalSnapshot(stock: string): Promise<Snapshot> {
     historicalSnapshots[stock] = await getHistoricalSnapshots(stock);
   }
 
-  const snapshot = historicalSnapshots[stock].data[historicalSnapshots[stock].index].snapshot;
+  const snapshot = historicalSnapshots[stock].data[historicalSnapshots[stock].index];
   historicalSnapshots[stock].index += 1;
 
   return snapshot;
 }
 
 async function getHistoricalSnapshots(stock: string): Promise<{
-  data: SnapshotByTheSecond[],
+  data: Snapshot[],
   index: number,
 }> {
-  let snapshotsByTheSecond: SnapshotByTheSecond[] = [];
+  let snapshotsByTheSecond: Snapshot[] = [];
 
   const ticker = stock.split('__')[0];
   const startDate = stock.split('__')[1].split('_')[0];
   const endDate = stock.split('__')[1].split('_')[1];
 
   if (isHistoricalSnapshotDay(startDate, endDate)) {
-    snapshotsByTheSecond = await readJSONFile<SnapshotByTheSecond[]>(getFilePathForStockOnDateType(ticker, DateType.DAILY, startDate));
+    snapshotsByTheSecond = await readJSONFile<Snapshot[]>(getFilePathForStockOnDateType(ticker, DateType.DAILY, startDate));
   }
 
   if (isHistoricalSnapshotDateRange(startDate, endDate)) {
-    snapshotsByTheSecond = await readJSONFile<SnapshotByTheSecond[]>(getFilePathForStockOnDateType(ticker, DateType.DATE_RANGE, startDate, endDate));
+    snapshotsByTheSecond = await readJSONFile<Snapshot[]>(getFilePathForStockOnDateType(ticker, DateType.DATE_RANGE, startDate, endDate));
   }
 
   return {
