@@ -1,7 +1,7 @@
 import {ApisauceInstance} from 'apisauce';
 import {setSecurityPosition} from './instructions/set-security-position';
 import {WebSocket} from 'ws';
-import {getHistoricalSnapshot, getSimulatedSnapshot, isLiveTrading} from '../../utils/price-simulator';
+import {getSimulatedSnapshot, isLiveTrading} from '../../utils/price-simulator';
 
 export abstract class BrokerageClient {
   protected abstract orderTypes: {[type in OrderTypes]: string};

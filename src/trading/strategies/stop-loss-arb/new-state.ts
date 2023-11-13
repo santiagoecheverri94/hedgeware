@@ -15,6 +15,8 @@ export async function createNewStockState(stock: string): Promise<void> {
     putStrikePrice,
     intervalProfit,
     spaceBetweenIntervals,
+    lastAsk,
+    lastBid,
   } = await readJSONFile<StockState>(getStockStateFilePath(stock));
 
   const longIntervals: SmoothingInterval[] = getLongIntervals({
@@ -46,10 +48,10 @@ export async function createNewStockState(stock: string): Promise<void> {
     initialPrice,
     putStrikePrice,
     position: 0,
-    lastAsk: undefined,
-    lastBid: undefined,
-    transitoryValue: doFloatCalculation(FloatCalculations.multiply, premiumSold, 100),
-    unrealizedValue: doFloatCalculation(FloatCalculations.multiply, premiumSold, 100),
+    lastAsk,
+    lastBid,
+    transitoryValue: doFloatCalculation(FloatCalculations.multiply, premiumSold || 0, 100),
+    unrealizedValue: doFloatCalculation(FloatCalculations.multiply, premiumSold || 0, 100),
     intervals: [...longIntervals, ...shortIntervals],
     tradingLogs: [],
   };

@@ -32,10 +32,10 @@ export interface StockState {
   brokerageTradingCostPerShare: number;
   sharesPerInterval: number,
   intervalProfit: number;
-  premiumSold: number;
-  callStrikePrice: number;
+  premiumSold: number | null;
+  callStrikePrice: number | null;
   initialPrice: number;
-  putStrikePrice: number;
+  putStrikePrice: number | null;
   spaceBetweenIntervals: number;
   numContracts: number;
   position: number;
@@ -74,7 +74,10 @@ export async function startStopLossArb(): Promise<void> {
 
       if (isHistoricalSnapshot()) {
         if (isHistoricalSnapshotsExhausted(stock)) {
-          debugger;
+          if (states[stock].unrealizedValue > 0) {
+            debugger;
+          }
+
           break;
         }
       }
@@ -350,7 +353,7 @@ function getUnrealizedValue(stockState: StockState, {bid, ask}: Snapshot): numbe
     return stockState.transitoryValue;
   }
 
-  const optionsUnrealizedClosingPrice = stockState.position > 0 ? Math.min(bid, stockState.callStrikePrice) : Math.max(ask, stockState.putStrikePrice);
+  const optionsUnrealizedClosingPrice = stockState.position > 0 ? Math.min(bid, stockState.callStrikePrice || Number.POSITIVE_INFINITY) : Math.max(ask, stockState.putStrikePrice || Number.NEGATIVE_INFINITY);
   const extraUnrealizedClosingPrice = stockState.position > 0 ? bid : ask;
 
   let unrealizedTransactionValue: number;
@@ -375,6 +378,10 @@ const testSamples: {[stock: string]: {
 }[]} = {};
 
 async function debugSimulatedPrices(bid: number, ask: number, stock: string, stockState: StockState): Promise<StockState> {
+  if (!stockState.callStrikePrice || !stockState.putStrikePrice) {
+    return stockState;
+  }
+
   if (doFloatCalculation(FloatCalculations.equal, bid, stockState.callStrikePrice)) {
     return debugUpperOrLowerBound({bid, ask} as Snapshot, 'up', stock, stockState);
   }

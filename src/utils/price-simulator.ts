@@ -70,13 +70,13 @@ const historicalSnapshots: {
   }
 } = {};
 
-export async function getHistoricalSnapshot(stock: string): Promise<Snapshot> {
+async function getHistoricalSnapshot(stock: string): Promise<Snapshot> {
   if (!historicalSnapshots[stock]) {
     historicalSnapshots[stock] = await getHistoricalSnapshots(stock);
   }
 
   const snapshot = historicalSnapshots[stock].data[historicalSnapshots[stock].index].snapshot;
-  historicalSnapshots[stock].index = historicalSnapshots[stock].index + 1;
+  historicalSnapshots[stock].index += 1;
 
   return snapshot;
 }

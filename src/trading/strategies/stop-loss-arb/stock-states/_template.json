@@ -1,13 +1,13 @@
 {
-  "brokerageId": "",
-  "numContracts": 1,
-  "premiumSold": 0,
-  "callStrikePrice": 0,
-  "initialPrice": 0,
-  "putStrikePrice": 0,
+  "brokerageId": "393897513",
   "brokerageTradingCostPerShare": 0.005,
   "targetPosition": 102,
   "sharesPerInterval": 34,
   "spaceBetweenIntervals": 0.05,
-  "intervalProfit": 0.01
+  "intervalProfit": 0.01,
+  "numContracts": 1,
+  "premiumSold": null,
+  "callStrikePrice": null,
+  "initialPrice": 12.84,
+  "putStrikePrice": null
 }
