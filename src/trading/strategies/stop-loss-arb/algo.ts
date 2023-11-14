@@ -78,8 +78,6 @@ export async function startStopLossArb(): Promise<void> {
         }
 
         if (isHistoricalSnapshotsExhausted(stock)) {
-          sortDescPositiveExitValuesByStock(stock);
-          sortAscNegativeExitValuesByStock(stock);
           break;
         }
       }
@@ -97,7 +95,7 @@ export async function startStopLossArb(): Promise<void> {
 
 async function getStocks(): Promise<string[]> {
   const fileNames = await getFileNamesWithinFolder(getStockStatesFolderPath());
-  return fileNames.filter(fileName => !['template', 'skip', 'results'].some(excludedFileName => fileName.includes(excludedFileName)) && !fileName.startsWith('__'));
+  return fileNames.filter(fileName => !['results'].some(excludedFileName => fileName.includes(excludedFileName)) && !fileName.startsWith('_'));
 }
 
 function getStockStatesFolderPath(): string {
@@ -244,6 +242,9 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number {
     }
   }
 
+  // Static Accordion Algo
+  // addSkippedBuysIfRequired(stockState, indexesToExecute);
+
   for (const index of indexesToExecute) {
     const interval = intervals[index];
 
@@ -261,10 +262,27 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number {
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.transitoryValue = doFloatCalculation(FloatCalculations.subtract, stockState.transitoryValue, tradingCosts);
 
-    // correctBadBuyIfRequired(stockState, indexesToExecute);
+    // Moving Accordion Algo
+    correctBadBuyIfRequired(stockState, indexesToExecute);
   }
 
   return indexesToExecute.length;
+}
+
+function addSkippedBuysIfRequired(stockState: StockState, indexesToExecute: number[]): void {
+  if (indexesToExecute.length === 0) {
+    return;
+  }
+
+  const {intervals} = stockState;
+  const bottomOriginalIndexToExecute = indexesToExecute[indexesToExecute.length - 1];
+  for (let i = intervals.length - 1; i > bottomOriginalIndexToExecute; i--) {
+    const interval = intervals[i];
+
+    if (interval[OrderSides.BUY].active) { // && i !== indexesToExecute[indexesToExecute.length - 1] + stockState.uncrossedBuyingSkips) {
+      indexesToExecute.push(i); // TODO: splice this properly instead of pushing
+    }
+  }
 }
 
 function correctBadBuyIfRequired(stockState: StockState, indexesToExecute: number[]): void {
@@ -309,6 +327,9 @@ function getNumToSell(stockState: StockState, {bid}: Snapshot): number {
     }
   }
 
+  // Static Accordion Algo
+  // addSkippedSellsIfRequired(stockState, indexesToExecute);
+
   for (const index of indexesToExecute) {
     const interval = intervals[index];
 
@@ -326,10 +347,27 @@ function getNumToSell(stockState: StockState, {bid}: Snapshot): number {
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.transitoryValue = doFloatCalculation(FloatCalculations.subtract, stockState.transitoryValue, tradingCosts);
 
-    // correctBadSellIfRequired(stockState, indexesToExecute);
+    // Moving Accordion Algo
+    correctBadSellIfRequired(stockState, indexesToExecute);
   }
 
   return indexesToExecute.length;
+}
+
+function addSkippedSellsIfRequired(stockState: StockState, indexesToExecute: number[]): void {
+  if (indexesToExecute.length === 0) {
+    return;
+  }
+
+  const {intervals} = stockState;
+  const topOriginalIndexToExecute = indexesToExecute[0];
+  for (let i = 0; i < topOriginalIndexToExecute; i++) {
+    const interval = intervals[i];
+
+    if (interval[OrderSides.SELL].active) { // && i !== indexesToExecute[0] - stockState.uncrossedSellingSkips) {
+      indexesToExecute.unshift(i); // TODO: splice this properly instead of unshifting
+    }
+  }
 }
 
 function correctBadSellIfRequired(stockState: StockState, indexesToExecute: number[]): void {
@@ -392,49 +430,74 @@ function getUnrealizedValue(stockState: StockState, {bid, ask}: Snapshot): numbe
 }
 
 interface ExitValue {
-  snapshot: Snapshot;
+  snapshot: Snapshot | null;
   value: number;
 }
 
 const testHistoricalSamples: {
   [stock: string]: {
-    positiveExitValues: ExitValue[];
-    negativeExitValues: ExitValue[];
+    positiveExits: {
+      max: ExitValue;
+      all: ExitValue[];
+    };
+    negativeExits: {
+      max: ExitValue;
+      all: ExitValue[];
+    };
   }
 } = {};
 
 async function debugHistoricalPrices(stock: string, stockState: StockState, snapshot: Snapshot): Promise<void> {
   if (!testHistoricalSamples[stock]) {
     testHistoricalSamples[stock] = {
-      positiveExitValues: [],
-      negativeExitValues: [],
+      positiveExits: {
+        max: {
+          snapshot: null,
+          value: Number.NEGATIVE_INFINITY,
+        },
+        all: [],
+      },
+      negativeExits: {
+        max: {
+          snapshot: null,
+          value: Number.POSITIVE_INFINITY,
+        },
+        all: [],
+      },
     };
   }
 
+  const exitValue = {
+    snapshot,
+    value: stockState.unrealizedValue,
+  };
+
   if (doFloatCalculation(FloatCalculations.greaterThan, stockState.unrealizedValue, 0)) {
-    testHistoricalSamples[stock].positiveExitValues.push({
-      snapshot,
-      value: stockState.unrealizedValue,
-    });
+    testHistoricalSamples[stock].positiveExits.all.push(exitValue);
+
+    if (doFloatCalculation(FloatCalculations.greaterThan, exitValue.value, testHistoricalSamples[stock].positiveExits.max.value)) {
+      testHistoricalSamples[stock].positiveExits.max = exitValue;
+    }
   }
 
   if (doFloatCalculation(FloatCalculations.lessThan, stockState.unrealizedValue, 0)) {
-    testHistoricalSamples[stock].negativeExitValues.push({
-      snapshot,
-      value: stockState.unrealizedValue,
-    });
+    testHistoricalSamples[stock].negativeExits.all.push(exitValue);
+
+    if (doFloatCalculation(FloatCalculations.lessThan, stockState.unrealizedValue, testHistoricalSamples[stock].negativeExits.max.value)) {
+      testHistoricalSamples[stock].negativeExits.max = exitValue;
+    }
   }
 }
 
-function sortDescPositiveExitValuesByStock(stock: string): void {
-  testHistoricalSamples[stock].positiveExitValues.sort((a, b) => {
+function sortNumArrayDesc(arr: number[]): void {
+  arr.sort((a, b) => {
     // if (a > b) {
-    if (doFloatCalculation(FloatCalculations.greaterThan, a.value, b.value)) {
+    if (doFloatCalculation(FloatCalculations.greaterThan, a, b)) {
       return -1;
     }
 
     // if (a < b) {
-    if (doFloatCalculation(FloatCalculations.lessThan, a.value, b.value)) {
+    if (doFloatCalculation(FloatCalculations.lessThan, a, b)) {
       return 1;
     }
 
@@ -442,15 +505,15 @@ function sortDescPositiveExitValuesByStock(stock: string): void {
   });
 }
 
-function sortAscNegativeExitValuesByStock(stock: string): void {
-  testHistoricalSamples[stock].negativeExitValues.sort((a, b) => {
+function sortNumArrayAsc(arr: number[]): void {
+  arr.sort((a, b) => {
     // if (a > b) {
-    if (doFloatCalculation(FloatCalculations.greaterThan, a.value, b.value)) {
+    if (doFloatCalculation(FloatCalculations.greaterThan, a, b)) {
       return 1;
     }
 
     // if (a < b) {
-    if (doFloatCalculation(FloatCalculations.lessThan, a.value, b.value)) {
+    if (doFloatCalculation(FloatCalculations.lessThan, a, b)) {
       return -1;
     }
 
