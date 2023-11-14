@@ -8,7 +8,7 @@
   "numContracts": 1,
   "premiumSold": null,
   "callStrikePrice": null,
-  "initialPrice": 9.41,
+  "initialPrice": 9.46,
   "putStrikePrice": null,
   "position": 0,
   "transitoryValue": 0,
@@ -17,6 +17,20 @@
     {
       "type": "LONG",
       "positionLimit": 102,
+      "SELL": {
+        "price": 9.64,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 9.63,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 68,
       "SELL": {
         "price": 9.59,
         "active": false,
@@ -30,7 +44,7 @@
     },
     {
       "type": "LONG",
-      "positionLimit": 68,
+      "positionLimit": 34,
       "SELL": {
         "price": 9.54,
         "active": false,
@@ -44,7 +58,7 @@
     },
     {
       "type": "LONG",
-      "positionLimit": 34,
+      "positionLimit": 0,
       "SELL": {
         "price": 9.49,
         "active": false,
@@ -57,22 +71,22 @@
       }
     },
     {
-      "type": "LONG",
+      "type": "SHORT",
       "positionLimit": 0,
       "SELL": {
         "price": 9.44,
-        "active": false,
-        "crossed": false
+        "active": true,
+        "crossed": true
       },
       "BUY": {
         "price": 9.43,
-        "active": true,
-        "crossed": true
+        "active": false,
+        "crossed": false
       }
     },
     {
       "type": "SHORT",
-      "positionLimit": 0,
+      "positionLimit": -34,
       "SELL": {
         "price": 9.39,
         "active": true,
@@ -86,7 +100,7 @@
     },
     {
       "type": "SHORT",
-      "positionLimit": -34,
+      "positionLimit": -68,
       "SELL": {
         "price": 9.34,
         "active": true,
@@ -100,7 +114,7 @@
     },
     {
       "type": "SHORT",
-      "positionLimit": -68,
+      "positionLimit": -102,
       "SELL": {
         "price": 9.29,
         "active": true,
@@ -108,20 +122,6 @@
       },
       "BUY": {
         "price": 9.28,
-        "active": false,
-        "crossed": false
-      }
-    },
-    {
-      "type": "SHORT",
-      "positionLimit": -102,
-      "SELL": {
-        "price": 9.24,
-        "active": true,
-        "crossed": true
-      },
-      "BUY": {
-        "price": 9.23,
         "active": false,
         "crossed": false
       }

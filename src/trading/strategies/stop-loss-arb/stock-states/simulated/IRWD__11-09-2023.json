@@ -8,7 +8,7 @@
   "numContracts": 1,
   "premiumSold": null,
   "callStrikePrice": null,
-  "initialPrice": 9.36,
+  "initialPrice": 9.32,
   "putStrikePrice": null,
   "position": 0,
   "transitoryValue": 0,
@@ -18,12 +18,12 @@
       "type": "LONG",
       "positionLimit": 102,
       "SELL": {
-        "price": 9.54,
+        "price": 9.5,
         "active": false,
         "crossed": false
       },
       "BUY": {
-        "price": 9.53,
+        "price": 9.49,
         "active": true,
         "crossed": true
       }
@@ -32,12 +32,12 @@
       "type": "LONG",
       "positionLimit": 68,
       "SELL": {
-        "price": 9.49,
+        "price": 9.45,
         "active": false,
         "crossed": false
       },
       "BUY": {
-        "price": 9.48,
+        "price": 9.44,
         "active": true,
         "crossed": true
       }
@@ -46,12 +46,12 @@
       "type": "LONG",
       "positionLimit": 34,
       "SELL": {
-        "price": 9.44,
+        "price": 9.4,
         "active": false,
         "crossed": false
       },
       "BUY": {
-        "price": 9.43,
+        "price": 9.39,
         "active": true,
         "crossed": true
       }
@@ -60,12 +60,12 @@
       "type": "LONG",
       "positionLimit": 0,
       "SELL": {
-        "price": 9.39,
+        "price": 9.35,
         "active": false,
         "crossed": false
       },
       "BUY": {
-        "price": 9.38,
+        "price": 9.34,
         "active": true,
         "crossed": true
       }
@@ -74,12 +74,12 @@
       "type": "SHORT",
       "positionLimit": 0,
       "SELL": {
-        "price": 9.34,
+        "price": 9.3,
         "active": true,
         "crossed": true
       },
       "BUY": {
-        "price": 9.33,
+        "price": 9.29,
         "active": false,
         "crossed": false
       }
@@ -88,12 +88,12 @@
       "type": "SHORT",
       "positionLimit": -34,
       "SELL": {
-        "price": 9.29,
+        "price": 9.25,
         "active": true,
         "crossed": true
       },
       "BUY": {
-        "price": 9.28,
+        "price": 9.24,
         "active": false,
         "crossed": false
       }
@@ -102,12 +102,12 @@
       "type": "SHORT",
       "positionLimit": -68,
       "SELL": {
-        "price": 9.24,
+        "price": 9.2,
         "active": true,
         "crossed": true
       },
       "BUY": {
-        "price": 9.23,
+        "price": 9.19,
         "active": false,
         "crossed": false
       }
@@ -116,12 +116,12 @@
       "type": "SHORT",
       "positionLimit": -102,
       "SELL": {
-        "price": 9.19,
+        "price": 9.15,
         "active": true,
         "crossed": true
       },
       "BUY": {
-        "price": 9.18,
+        "price": 9.14,
         "active": false,
         "crossed": false
       }

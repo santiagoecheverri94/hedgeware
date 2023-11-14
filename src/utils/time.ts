@@ -4,7 +4,7 @@ import {setTimeout} from 'node:timers/promises';
 import {log} from './log';
 import {isLiveTrading} from './price-simulator';
 
-export const MARKET_OPENS = '9:40:00am';
+export const MARKET_OPENS = '9:35:00am';
 export const MARKET_CLOSES = '3:50:00pm';
 
 const DATE_FORMAT = 'MM-DD-YYYY';
