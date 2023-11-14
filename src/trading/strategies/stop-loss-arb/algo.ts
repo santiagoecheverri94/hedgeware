@@ -62,7 +62,7 @@ export async function startStopLossArb(): Promise<void> {
   const states = await getStockStates(stocks);
 
   let userHasInterrupted = false;
-  if (!isHistoricalSnapshot()) {
+  if (isLiveTrading()) {
     onUserInterrupt(() => {
       userHasInterrupted = true;
     });
@@ -261,7 +261,7 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number {
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.transitoryValue = doFloatCalculation(FloatCalculations.subtract, stockState.transitoryValue, tradingCosts);
 
-    correctBadBuyIfRequired(stockState, indexesToExecute);
+    // correctBadBuyIfRequired(stockState, indexesToExecute);
   }
 
   return indexesToExecute.length;
@@ -326,7 +326,7 @@ function getNumToSell(stockState: StockState, {bid}: Snapshot): number {
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.transitoryValue = doFloatCalculation(FloatCalculations.subtract, stockState.transitoryValue, tradingCosts);
 
-    correctBadSellIfRequired(stockState, indexesToExecute);
+    // correctBadSellIfRequired(stockState, indexesToExecute);
   }
 
   return indexesToExecute.length;
@@ -465,15 +465,13 @@ const testRandomSamples: {[stock: string]: {
 }[]} = {};
 
 async function debugRandomPrices({bid, ask}: Snapshot, stock: string, stockState: StockState): Promise<StockState> {
-  if (!stockState.callStrikePrice || !stockState.putStrikePrice) {
-    return stockState;
-  }
-
-  if (doFloatCalculation(FloatCalculations.equal, bid, stockState.callStrikePrice)) {
+  const aboveTopSell = doFloatCalculation(FloatCalculations.add, stockState.intervals[0][OrderSides.SELL].price, stockState.spaceBetweenIntervals);
+  if (doFloatCalculation(FloatCalculations.equal, bid, stockState.callStrikePrice || aboveTopSell)) {
     return debugUpperOrLowerBound({bid, ask} as Snapshot, 'up', stock, stockState);
   }
 
-  if (doFloatCalculation(FloatCalculations.equal, ask, stockState.putStrikePrice)) {
+  const belowBottomBuy = doFloatCalculation(FloatCalculations.subtract, stockState.intervals[stockState.intervals.length - 1][OrderSides.BUY].price, stockState.spaceBetweenIntervals);
+  if (doFloatCalculation(FloatCalculations.equal, ask, stockState.putStrikePrice || belowBottomBuy)) {
     return debugUpperOrLowerBound({bid, ask} as Snapshot, 'down', stock, stockState);
   }
 

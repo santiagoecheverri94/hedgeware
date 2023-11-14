@@ -37,7 +37,7 @@ function getRandomSnapshot(): Snapshot {
   };
 }
 
-const INITIAL_PRICE = 13.72;
+const INITIAL_PRICE = 9.63;
 let randomPrice: number;
 
 function getRandomPrice(): number {
