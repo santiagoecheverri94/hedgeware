@@ -1,5 +1,6 @@
 import {getFilePathForStockOnDateType, DateType} from '../historical-data/save-stock-historical-data';
 import {Snapshot} from '../trading/brokerage-clients/brokerage-client';
+// import { parseStock } from '../trading/strategies/stop-loss-arb/new-state';
 import {readJSONFile} from './file';
 import {FloatCalculations, doFloatCalculation} from './float-calculator';
 
@@ -88,9 +89,7 @@ async function getHistoricalSnapshots(stock: string): Promise<{
 }> {
   let snapshotsByTheSecond: Snapshot[] = [];
 
-  const ticker = stock.split('__')[0];
-  const startDate = stock.split('__')[1].split('_')[0];
-  const endDate = stock.split('__')[1].split('_')[1];
+  const {ticker, startDate, endDate} = parseStock(stock);
 
   if (isHistoricalSnapshotDay(startDate, endDate)) {
     snapshotsByTheSecond = await readJSONFile<Snapshot[]>(getFilePathForStockOnDateType(ticker, DateType.DAILY, startDate));
@@ -103,6 +102,22 @@ async function getHistoricalSnapshots(stock: string): Promise<{
   return {
     data: snapshotsByTheSecond,
     index: 0,
+  };
+}
+
+function parseStock(stock: string): {
+  ticker: string,
+  startDate: string,
+  endDate: string,
+} {
+  const ticker = stock.split('__')[0];
+  const startDate = stock.split('__')[1].split('_')[0];
+  const endDate = stock.split('__')[1].split('_')[1];
+
+  return {
+    ticker,
+    startDate,
+    endDate,
   };
 }
 

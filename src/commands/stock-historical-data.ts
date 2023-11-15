@@ -1,5 +1,5 @@
 import {Args, Command} from '@oclif/core';
-import {saveStockHistoricalDataForStockOnDate} from '../historical-data/save-stock-historical-data';
+import {saveStockHistoricalDailyDataForStockFromStartToEndDate, saveStockHistoricalDataForStockOnDate} from '../historical-data/save-stock-historical-data';
 
 export default class StockHistoricalData extends Command {
   static description = 'saves historical data for a stock from start to end date'
@@ -17,9 +17,11 @@ export default class StockHistoricalData extends Command {
   public async run(): Promise<void> {
     const {args} = await this.parse(StockHistoricalData);
 
-    if (!args.endDate) {
-      await saveStockHistoricalDataForStockOnDate(args.stock, args.startDate);
+    if (args.endDate) {
+      await saveStockHistoricalDailyDataForStockFromStartToEndDate(args.stock, args.startDate, args.endDate);
     }
+
+    await saveStockHistoricalDataForStockOnDate(args.stock, args.startDate);
 
     this.exit();
   }

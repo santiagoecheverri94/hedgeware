@@ -1,5 +1,5 @@
 import {Args, Command} from '@oclif/core';
-import {createNewStockState} from '../../trading/strategies/stop-loss-arb/new-state';
+import {createNewStockStateFromExisting} from '../../trading/strategies/stop-loss-arb/new-state';
 
 export default class StopLossArbNewState extends Command {
   static description = '';
@@ -9,14 +9,15 @@ export default class StopLossArbNewState extends Command {
   ]
 
   static args = {
-    stocks: Args.string({description: 'stocks to trade', required: true}),
+    stocksWithPrice: Args.string({description: 'stocks to trade', required: true}),
   }
 
   public async run(): Promise<void> {
     const {args} = await this.parse(StopLossArbNewState);
 
-    for (const stock of args.stocks.split(',')) {
-      await createNewStockState(stock);
+    for (const stockWithPrice of args.stocksWithPrice.split(',')) {
+      const [stock, price] = stockWithPrice.split(':');
+      await createNewStockStateFromExisting(stock, parseFloat(price));
     }
 
     this.exit();

@@ -50,6 +50,7 @@ export interface StockState {
   }[];
   transitoryValue: number;
   unrealizedValue: number;
+  targetExitValuePercentageIncrease: number;
   lastAsk?: number;
   lastBid?: number;
 }
@@ -69,33 +70,104 @@ export async function startStopLossArb(): Promise<void> {
   }
 
   await Promise.all(stocks.map(stock => (async () => {
-    while (await isMarketOpen(stock) && !userHasInterrupted) {
-      const snapshot = await reconcileStockPosition(stock, states[stock]);
+    await isMarketOpen(stock);
 
-      if (isHistoricalSnapshot()) {
-        if (snapshot) {
-          debugHistoricalPrices(stock, states[stock], snapshot);
-        }
+    while (!userHasInterrupted) {
+      const stockState = states[stock];
+      const snapshot = await reconcileStockPosition(stock, stockState);
 
-        if (isHistoricalSnapshotsExhausted(stock)) {
-          break;
-        }
+      // TODO: This needs better handling in case snapshots stay wide for a long time
+      if (snapshot && (isDoneForTheDay(stockState) || !(await isMarketOpen(stock)))) {
+        await setStockStatePosition(stock, stockState, 0, snapshot);
+        testHistoricalSamples[stock].exitValue = {
+          snapshot,
+          value: stockState.unrealizedValue,
+        };
+        // debugger;
+        break;
       }
 
-      if (isRandomSnapshot() && snapshot) {
-        states[stock] = await debugRandomPrices(snapshot, stock, states[stock]);
+      if (await debugSimulation(stock, states, snapshot)) {
+        testHistoricalSamples[stock].exitValue = {
+          snapshot,
+          value: stockState.unrealizedValue,
+        };
+        break;
       }
     }
   })()));
 
   if (isHistoricalSnapshot()) {
+    sortPosHistoricalSamplesDesc();
+    sortNegHistoricalSamplesAsc();
+    printHistoricalSamples(true);
+    // printHistoricalSamples(false);
     debugger;
   }
 }
 
+function isDoneForTheDay(stockState: StockState): boolean {
+
+  const FIRST_TARGET = 0.5;
+  const INCREMENT = 0.1;
+  const percentageChange = calculatePercentageChangeInValue(stockState);
+
+  if (doFloatCalculation(FloatCalculations.equal, stockState.targetExitValuePercentageIncrease, 0)) {
+    if (doFloatCalculation(FloatCalculations.greaterThanOrEqual, percentageChange, FIRST_TARGET)) {
+      stockState.targetExitValuePercentageIncrease = FIRST_TARGET;
+      // return false;
+      return true;
+    }
+  } else {
+    if (doFloatCalculation(FloatCalculations.greaterThanOrEqual, percentageChange, doFloatCalculation(FloatCalculations.add, stockState.targetExitValuePercentageIncrease, INCREMENT))) {
+      stockState.targetExitValuePercentageIncrease = doFloatCalculation(FloatCalculations.add, stockState.targetExitValuePercentageIncrease, INCREMENT)
+      return false;
+    }
+  }
+
+  if (doFloatCalculation(FloatCalculations.equal, stockState.targetExitValuePercentageIncrease, 0)) {
+    if (doFloatCalculation(FloatCalculations.lessThanOrEqual, percentageChange, -1)) {
+      return true;
+    }
+  } else {
+    if (doFloatCalculation(FloatCalculations.lessThanOrEqual, percentageChange, doFloatCalculation(FloatCalculations.subtract, stockState.targetExitValuePercentageIncrease, INCREMENT))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function calculatePercentageChangeInValue(stockState: StockState): number {
+  const investment = doFloatCalculation(FloatCalculations.multiply, stockState.initialPrice, stockState.targetPosition);
+  const percent = doFloatCalculation(FloatCalculations.divide, stockState.unrealizedValue, investment);
+  const percentChange = doFloatCalculation(FloatCalculations.multiply, percent, 100);
+  return percentChange;
+}
+
+async function debugSimulation(stock: string, states: { [stock: string]: StockState; }, snapshot: Snapshot | null): Promise<boolean> {
+  let shouldBreak = false;
+
+  if (isHistoricalSnapshot()) {
+    if (snapshot) {
+      debugHistoricalPrices(stock, states[stock], snapshot);
+    }
+
+    if (isHistoricalSnapshotsExhausted(stock)) {
+      shouldBreak = true;
+    }
+  }
+
+  if (isRandomSnapshot() && snapshot) {
+    states[stock] = await debugRandomPrices(snapshot, stock, states[stock]);
+  }
+
+  return shouldBreak;
+}
+
 async function getStocks(): Promise<string[]> {
   const fileNames = await getFileNamesWithinFolder(getStockStatesFolderPath());
-  return fileNames.filter(fileName => !['results'].some(excludedFileName => fileName.includes(excludedFileName)) && !fileName.startsWith('_'));
+  return fileNames.filter(fileName => !['results', 'templates'].some(excludedFileName => fileName.includes(excludedFileName)) && !fileName.startsWith('_'));
 }
 
 function getStockStatesFolderPath(): string {
@@ -222,7 +294,7 @@ function checkCrossings(stock: string, stockState: StockState, {bid, ask}: Snaps
   return crossingHappened;
 }
 
-function isWideBidAskSpread({bid, ask}: Snapshot): boolean {
+export function isWideBidAskSpread({bid, ask}: Snapshot): boolean {
   return doFloatCalculation(FloatCalculations.greaterThan, doFloatCalculation(FloatCalculations.subtract, ask, bid), 0.01) === 1;
 }
 
@@ -406,6 +478,38 @@ function isSnapshotChange(snapshot: Snapshot, stockState: StockState): boolean {
   return !doFloatCalculation(FloatCalculations.equal, stockState.lastAsk, snapshot.ask) || !doFloatCalculation(FloatCalculations.equal, stockState.lastBid, snapshot.bid);
 }
 
+async function setStockStatePosition(stock: string, stockState: StockState, newPosition: number, snapshot: Snapshot): Promise<void> {
+  await brokerageClient.setSecurityPosition({
+    brokerageIdOfSecurity: stockState.brokerageId,
+    currentPosition: stockState.position * stockState.numContracts,
+    newPosition: newPosition * stockState.numContracts,
+    snapshot,
+  });
+
+  const tradingLog: typeof stockState.tradingLogs[number] = {
+    action: stockState.position < 0 ? OrderSides.BUY : OrderSides.SELL,
+    timeStamp: getCurrentTimeStamp(),
+    price: stockState.position < 0 ? snapshot.ask : snapshot.bid,
+    previousPosition: stockState.position,
+    newPosition,
+  };
+
+  stockState.tradingLogs.push(tradingLog);
+
+  log(`Exited position for ${stock} (${stockState.numContracts} constracts): ${jsonPrettyPrint({
+    price: tradingLog.price,
+    previousPosition: tradingLog.previousPosition,
+    newPosition: tradingLog.newPosition,
+    exitValue: stockState.unrealizedValue,
+  })}`);
+
+  stockState.position = newPosition;
+
+  if (isLiveTrading()) {
+    syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
+  }
+}
+
 function getUnrealizedValue(stockState: StockState, {bid, ask}: Snapshot): number {
   if (stockState.position === 0) {
     return stockState.transitoryValue;
@@ -436,6 +540,7 @@ interface ExitValue {
 
 const testHistoricalSamples: {
   [stock: string]: {
+    exitValue?: ExitValue;
     positiveExits: {
       max: ExitValue;
       all: ExitValue[];
@@ -453,14 +558,14 @@ async function debugHistoricalPrices(stock: string, stockState: StockState, snap
       positiveExits: {
         max: {
           snapshot: null,
-          value: Number.NEGATIVE_INFINITY,
+          value: 0,
         },
         all: [],
       },
       negativeExits: {
         max: {
           snapshot: null,
-          value: Number.POSITIVE_INFINITY,
+          value: 0,
         },
         all: [],
       },
@@ -489,36 +594,74 @@ async function debugHistoricalPrices(stock: string, stockState: StockState, snap
   }
 }
 
-function sortNumArrayDesc(arr: number[]): void {
-  arr.sort((a, b) => {
-    // if (a > b) {
-    if (doFloatCalculation(FloatCalculations.greaterThan, a, b)) {
-      return -1;
-    }
-
-    // if (a < b) {
-    if (doFloatCalculation(FloatCalculations.lessThan, a, b)) {
-      return 1;
-    }
-
-    return 0;
-  });
+function sortPosHistoricalSamplesDesc(): void {
+  for (const stock of Object.keys(testHistoricalSamples)) {
+    testHistoricalSamples[stock].positiveExits.all.sort((a, b) => {
+      // if (a > b) {
+      if (doFloatCalculation(FloatCalculations.greaterThan, a.value, b.value)) {
+        return -1;
+      }
+  
+      // if (a < b) {
+      if (doFloatCalculation(FloatCalculations.lessThan, a.value, b.value)) {
+        return 1;
+      }
+  
+      return 0;
+    });
+  }
 }
 
-function sortNumArrayAsc(arr: number[]): void {
-  arr.sort((a, b) => {
-    // if (a > b) {
-    if (doFloatCalculation(FloatCalculations.greaterThan, a, b)) {
-      return 1;
+function sortNegHistoricalSamplesAsc(): void {
+  for (const stock of Object.keys(testHistoricalSamples)) {
+    testHistoricalSamples[stock].negativeExits.all.sort((a, b) => {
+      // if (a > b) {
+      if (doFloatCalculation(FloatCalculations.greaterThan, a.value, b.value)) {
+        return 1;
+      }
+  
+      // if (a < b) {
+      if (doFloatCalculation(FloatCalculations.lessThan, a.value, b.value)) {
+        return -1;
+      }
+  
+      return 0;
+    });
+  }
+}
+
+function printHistoricalSamples(printExit: boolean): void {
+  let toPrint = '';
+
+  for (const stock of Object.keys(testHistoricalSamples).sort()) {
+    const positiveExits = testHistoricalSamples[stock].positiveExits;
+    const negativeExits = testHistoricalSamples[stock].negativeExits;
+    const exitValue = testHistoricalSamples[stock].exitValue;
+
+    const date = stock.split('__')[1];
+    if (printExit) {
+      toPrint += `${date}\t${exitValue?.value}\t${exitValue?.snapshot?.timestamp}\t${positiveExits.max.value}\t${positiveExits.max.snapshot?.timestamp}\t${negativeExits.max.value}\t${negativeExits.max.snapshot?.timestamp}\n`;
+    } else {
+      toPrint += `${date}\t${positiveExits.max.value}\t${positiveExits.max.snapshot?.timestamp}\t${negativeExits.max.value}\t${negativeExits.max.snapshot?.timestamp}\n`;
+    }
+    
+  }
+
+  // calculate average exit value
+  const averageExitValue: number = doFloatCalculation(FloatCalculations.divide, Object.keys(testHistoricalSamples).reduce((sum, stock) => {
+    const exitValue = testHistoricalSamples[stock].exitValue;
+    if (exitValue) {
+      return doFloatCalculation(FloatCalculations.add, sum, exitValue.value);
     }
 
-    // if (a < b) {
-    if (doFloatCalculation(FloatCalculations.lessThan, a, b)) {
-      return -1;
-    }
+    return sum;
+  }, 0), Object.keys(testHistoricalSamples).length);
 
-    return 0;
-  });
+  if (printExit) {
+    toPrint += `average exit value: ${averageExitValue}\n`;
+  }
+  
+  console.log(toPrint);
 }
 
 const testRandomSamples: {[stock: string]: {

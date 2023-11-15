@@ -1,12 +1,25 @@
 import {restClient, IQuotes} from '@polygon.io/client-js';
-import {getNanoSecondsEpochTimestampForDateAndTimeInNewYork, getSecondsFromNanoSecondsTimestamp, getTimestampForDateAndTimeInNewYorkFromNanoSecondsEpochTimestamp, MARKET_CLOSES, MARKET_OPENS} from '../utils/time';
+import {getNanoSecondsEpochTimestampForDateAndTimeInNewYork, getSecondsFromNanoSecondsTimestamp, getTimestampForDateAndTimeInNewYorkFromNanoSecondsEpochTimestamp, getWeekdaysInRange, MARKET_CLOSES, MARKET_OPENS} from '../utils/time';
 import {Snapshot} from '../trading/brokerage-clients/brokerage-client';
 import {jsonPrettyPrint, syncWriteJSONFile} from '../utils/file';
 import {existsSync, mkdirSync} from 'node:fs';
+import {setTimeout} from 'node:timers/promises';
+
 
 export enum DateType {
   DAILY = 'daily',
   DATE_RANGE = 'date-range',
+}
+
+export async function saveStockHistoricalDailyDataForStockFromStartToEndDate(stock: string, startDate: string, endDate: string): Promise<void> {
+  const requests: Promise<void>[] = [];
+  const dateRange = getWeekdaysInRange(startDate, endDate);
+  for (const date of dateRange) {
+    await setTimeout(100);
+    requests.push(saveStockHistoricalDataForStockOnDate(stock, date));
+  }
+
+  await Promise.all(requests);
 }
 
 export async function saveStockHistoricalDataForStockOnDate(stock: string, date: string): Promise<void> {
@@ -34,7 +47,8 @@ async function getPolygonQuotesForDate(stock: string, date: string): Promise<Pol
   });
 
   if (!response.results?.length) {
-    throw new Error('No quotes found for stock');
+    // TODO: deal better with non-trading days (e.g. labor day)
+    return [];
   }
 
   return response.results;

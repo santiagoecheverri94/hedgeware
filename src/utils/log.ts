@@ -1,5 +1,8 @@
+import { isLiveTrading } from './price-simulator';
 import {getCurrentTimeStamp} from './time';
 
 export function log(msg: string): void {
-  console.log(`\r\n${getCurrentTimeStamp()} : ${msg}\r\n`);
+  if (isLiveTrading()) {
+    console.log(`\r\n${getCurrentTimeStamp()} : ${msg}\r\n`);
+  }
 }

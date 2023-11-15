@@ -65,10 +65,10 @@ export async function setSecurityPosition({
   // }
 
   const orderId = await brokerageClient.placeOrder(orderDetails);
-  const FIVE_SECS = 5000;
-  while (!(await isOrderFilled(brokerageClient, orderId))) {
-    await setTimeout(FIVE_SECS);
-  }
+  const ONE_SEC = 1000;
+  do {
+    await setTimeout(ONE_SEC);
+  } while (!(await isOrderFilled(brokerageClient, orderId)));
 }
 
 // TODO: use code commented in this block if we ever want to stop assuming that we can fulfill all our orders at the bid/ask

@@ -84,3 +84,18 @@ function convertNanoSecondsToSeconds(nanoSeconds: number): number {
 export function getSecondsFromNanoSecondsTimestamp(nanoSecondsEpochTimestamp: number): number {
   return getMomentInNewYorkFromNanoSecondsEpochTimestamp(nanoSecondsEpochTimestamp).seconds();
 }
+
+export function getWeekdaysInRange(startDate: string, endDate: string): string[] {
+  const result = [];
+  const current = moment(startDate, 'MM-DD-YYYY');
+  const end = moment(endDate, 'MM-DD-YYYY');
+
+  while (current.isSameOrBefore(end, 'day')) {
+    if (current.day() !== 0 && current.day() !== 6) {
+      result.push(current.format('MM-DD-YYYY'));
+    }
+    current.add(1, 'day');
+  }
+
+  return result;
+}
