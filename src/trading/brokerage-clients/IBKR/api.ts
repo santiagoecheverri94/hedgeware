@@ -1,6 +1,6 @@
 import {ApisauceInstance, create as createApiSauceInstance} from 'apisauce';
 import {Agent as HttpsAgent} from 'node:https';
-import {setTimeout} from 'node:timers/promises';
+import {doThrottling, getNewThrottle} from '../../../utils/throttle';
 
 const syncApi = createApiSauceInstance({
   baseURL: 'https://localhost:5000/v1/api',
@@ -10,14 +10,12 @@ const syncApi = createApiSauceInstance({
   }),
 });
 
-export async function getUncheckedIBKRApi(): Promise<ApisauceInstance> {
-  await ensureItsBeenPointTwoSecondsSinceApiWasLastRetrieved();
-  return syncApi;
-}
+const MAX_REQUESTS_PER_SECOND = 5;
+const ONE_SECOND = 1000;
+const TIME_TO_WAIT_BETWEEN_REQUESTS = ONE_SECOND / MAX_REQUESTS_PER_SECOND;
+const apiThrottle = getNewThrottle();
 
-const POINT_TWO_SECONDS = 200;
-let waiting: Promise<void> = Promise.resolve();
-async function ensureItsBeenPointTwoSecondsSinceApiWasLastRetrieved(): Promise<void> {
-  await waiting;
-  waiting = setTimeout(POINT_TWO_SECONDS);
+export async function getUncheckedIBKRApi(): Promise<ApisauceInstance> {
+  await doThrottling(apiThrottle, TIME_TO_WAIT_BETWEEN_REQUESTS);
+  return syncApi;
 }

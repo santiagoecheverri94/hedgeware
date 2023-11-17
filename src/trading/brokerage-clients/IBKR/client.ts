@@ -2,12 +2,12 @@ import {ApisauceInstance} from 'apisauce';
 import {BrokerageClient, OrderDetails, OrderSides, OrderStatus, OrderTypes, SnapShotFields, Snapshot, TimesInForce} from '../brokerage-client';
 import {getUncheckedIBKRApi} from './api';
 import {initiateApiSessionWithTickling} from './tickle';
-import {getManualPrice, getSimulatedPrice} from '../../../utils/price-simulator';
 import {AccountsResponse, CancelOrderResponse, IBKROrderDetails, OrderStatusResponse, OrdersResponse, PositionResponse, SnapshotResponse} from './types';
 import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
-import {log} from '../../../utils/miscellaneous';
 import {setTimeout} from 'node:timers/promises';
-import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
+import {log} from '../../../utils/log';
+import WebSocket from 'ws';
+import {getWebSocket} from './websocket';
 
 export class IBKRClient extends BrokerageClient {
   protected orderTypes = {
@@ -28,7 +28,7 @@ export class IBKRClient extends BrokerageClient {
   protected snapshotFields = {
     [SnapShotFields.bid]: '84',
     [SnapShotFields.ask]: '86',
-    [SnapShotFields.last]: '31',
+    // [SnapShotFields.last]: '31',
   };
 
   private sessionId!: string;
@@ -42,6 +42,14 @@ export class IBKRClient extends BrokerageClient {
     return getUncheckedIBKRApi();
   }
 
+  protected async getSocket(): Promise<WebSocket> {
+    if (!this.sessionId) {
+      await this.initiateBrokerageApiConnection();
+    }
+
+    return getWebSocket(this.sessionId);
+  }
+
   protected async initiateBrokerageApiConnection(): Promise<void> {
     this.sessionId = await initiateApiSessionWithTickling();
 
@@ -49,17 +57,7 @@ export class IBKRClient extends BrokerageClient {
     this.account = accountsResponse.data!.accounts[0];
   }
 
-  async getSnapshot(conid: string): Promise<Snapshot> {
-    if (process.env.SIMULATE_SNAPSHOT) {
-      const simulatedPrice = getSimulatedPrice();
-
-      return {
-        bid: doFloatCalculation(FloatCalculations.subtract, simulatedPrice, 0.01),
-        ask: simulatedPrice,
-        last: simulatedPrice,
-      };
-    }
-
+  async getSnapshotImplementation(stock: string, conid: string): Promise<Snapshot> {
     const fields = Object.values(this.snapshotFields);
 
     const response = (await (await this.getApi()).get<SnapshotResponse[]>('/iserver/marketdata/snapshot', {
@@ -72,7 +70,7 @@ export class IBKRClient extends BrokerageClient {
       return getSnapshotFromResponse(snapshotResponse, this.snapshotFields);
     }
 
-    return this.getSnapshot(conid);
+    return this.getSnapshotImplementation(stock, conid);
   }
 
   async placeOrder(orderDetails: OrderDetails): Promise<string> {
@@ -85,14 +83,29 @@ export class IBKRClient extends BrokerageClient {
       ],
     });
 
-    if (response.data?.[0].order_id) {
+    if (response.data?.[0]?.order_id) {
       log(`Placed Order with id "${response.data?.[0].order_id}"`);
       console.log(orderDetails);
       return response.data[0].order_id;
     }
 
-    log(`Order-Confirmation Id '${response.data?.[0].id!}' will be used for confirmation.`);
-    return this.confirmOrder(response.data?.[0].id!, orderDetails);
+    if (response.data?.[0]?.id) {
+      log(`Order-Confirmation Id '${response.data?.[0].id}' will be used for confirmation.`);
+      return this.confirmOrder(response.data?.[0].id, orderDetails);
+    }
+
+    if (response.status && response.status >= 400 && response.status < 500) {
+      log('Failed due to our input. Debugger will be triggered.');
+      debugger;
+    }
+
+    if (response.status && response.status >= 500 && response.status < 600) {
+      log('Failed due to server error. Debugger will be triggered.');
+      debugger;
+    }
+
+    log('Failed to place order. Will try again.');
+    return this.placeOrder(orderDetails);
   }
 
   private getIBKROrderDetails(orderDetails: OrderDetails): IBKROrderDetails {
@@ -118,8 +131,15 @@ export class IBKRClient extends BrokerageClient {
       return response.data[0].order_id;
     }
 
-    log(`Order-Confirmation Id '${orderConfirmationId}' requires re-confirmation.`);
-    return this.confirmOrder(response.data?.[0]?.id!, orderDetails);
+    if (response.data?.[0]?.id) {
+      log(`Order-Confirmation Id '${response.data?.[0].id}' requires re-confirmation.`);
+      return this.confirmOrder(response.data?.[0].id, orderDetails);
+    }
+
+    log('Failed to confirm order. Will try again in a second.');
+    const ONE_SECOND = 1000;
+    await setTimeout(ONE_SECOND);
+    return this.confirmOrder(orderConfirmationId, orderDetails);
   }
 
   async modifyOrder(orderId: string, orderDetails: OrderDetails): Promise<string> {
@@ -133,15 +153,24 @@ export class IBKRClient extends BrokerageClient {
       return response.data[0].order_id;
     }
 
-    log(`Modifiying order '${orderId}' requires confirmation.`);
-    return this.confirmOrder(response.data?.[0]?.id!, orderDetails);
+    if (response.data?.[0]?.id) {
+      log(`Modifiying order '${orderId}' requires confirmation.`);
+      return this.confirmOrder(response.data?.[0].id, orderDetails);
+    }
+
+    log('Failed to modify order. Will try again in a second.');
+    const ONE_SECOND = 1000;
+    await setTimeout(ONE_SECOND);
+    return this.modifyOrder(orderId, orderDetails);
   }
 
   async cancelOrder(orderId: string): Promise<void> {
     const response = await (await this.getApi()).delete<CancelOrderResponse>(`/iserver/account/${this.account}/order/${orderId}`);
 
     if (!response.data?.order_id) {
-      log(`Failed to cancel order '${orderId}'. Will try again`);
+      log(`Failed to cancel order '${orderId}'. Will try again in a second.`);
+      const ONE_SECOND = 1000;
+      await setTimeout(ONE_SECOND);
       return this.cancelOrder(orderId);
     }
   }
@@ -160,6 +189,13 @@ export class IBKRClient extends BrokerageClient {
 
     const response = await (await this.getApi()).get<PositionResponse>(`/portfolio/${this.account}/position/${conid}`);
 
-    return response.data?.[0]?.position! || 0;
+    if (response.data?.[0]?.position) {
+      return response.data?.[0]?.position;
+    }
+
+    log(`Failed to get position size for conid '${conid}'. Will try again in a second.`);
+    const ONE_SECOND = 1000;
+    await setTimeout(ONE_SECOND);
+    return this.getPositionSize(conid);
   }
 }

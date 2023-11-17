@@ -1,0 +1,17 @@
+{
+  "brokerageId": "",
+  "brokerageTradingCostPerShare": 0.005,
+  "targetPosition": 100,
+  "sharesPerInterval": 100,
+  "spaceBetweenIntervals": 0.05,
+  "intervalProfit": 0.01,
+  "numContracts": 1,
+  "premiumSold": null,
+  "callStrikePrice": null,
+  "initialPrice": 13,
+  "putStrikePrice": null,
+  "position": 0,
+  "transitoryValue": 0,
+  "unrealizedValue": 0,
+  "targetExitValuePercentageIncrease": 0
+}

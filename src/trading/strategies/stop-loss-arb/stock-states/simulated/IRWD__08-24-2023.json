@@ -1,0 +1,76 @@
+{
+  "brokerageId": "72384253",
+  "brokerageTradingCostPerShare": 0,
+  "targetPosition": 100,
+  "sharesPerInterval": 100,
+  "spaceBetweenIntervals": 0.1,
+  "intervalProfit": 0.04,
+  "numContracts": 1,
+  "premiumSold": null,
+  "callStrikePrice": null,
+  "initialPrice": 9.08,
+  "putStrikePrice": null,
+  "position": 0,
+  "transitoryValue": 0,
+  "unrealizedValue": 0,
+  "targetExitValuePercentageIncrease": 0,
+  "intervals": [
+    {
+      "type": "LONG",
+      "positionLimit": 100,
+      "SELL": {
+        "price": 9.25,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 9.21,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 0,
+      "SELL": {
+        "price": 9.15,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 9.11,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": 0,
+      "SELL": {
+        "price": 9.05,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 9.01,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -100,
+      "SELL": {
+        "price": 8.95,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 8.91,
+        "active": false,
+        "crossed": false
+      }
+    }
+  ],
+  "tradingLogs": []
+}
