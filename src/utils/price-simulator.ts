@@ -1,8 +1,8 @@
-import {getFilePathForStockOnDateType, DateType} from '../historical-data/save-stock-historical-data';
+import { getFilePathForStockDataOnDate } from '../historical-data/save-stock-historical-data';
 import {Snapshot} from '../trading/brokerage-clients/brokerage-client';
-// import { parseStock } from '../trading/strategies/stop-loss-arb/new-state';
 import {readJSONFile} from './file';
 import {FloatCalculations, doFloatCalculation} from './float-calculator';
+import { getWeekdaysInRange } from './time';
 
 export function isLiveTrading(): boolean {
   return !isRandomSnapshot() && !isHistoricalSnapshot();
@@ -13,7 +13,7 @@ export function isRandomSnapshot(): boolean {
 }
 
 export function isHistoricalSnapshot(): boolean {
-  return Boolean(process.env.HISTORICAL_SNAPSHOT);
+  return Boolean(process.env.HISTORICAL_SNAPSHOT_START && process.env.HISTORICAL_SNAPSHOT_END);
 }
 
 export async function getSimulatedSnapshot(stock: string): Promise<Snapshot> {
@@ -38,7 +38,7 @@ function getRandomSnapshot(): Snapshot {
   };
 }
 
-const INITIAL_PRICE = 9.63;
+const INITIAL_PRICE = 17.76;
 let randomPrice: number;
 
 function getRandomPrice(): number {
@@ -51,7 +51,7 @@ function getRandomPrice(): number {
   const tickDown = doFloatCalculation(FloatCalculations.subtract, randomPrice, 0.01);
   const tickUp = doFloatCalculation(FloatCalculations.add, randomPrice, 0.01);
   const probabilityOfTickDown = Math.random();
-  randomPrice = doFloatCalculation(FloatCalculations.lessThanOrEqual, probabilityOfTickDown, 0.467) ?
+  randomPrice = doFloatCalculation(FloatCalculations.lessThanOrEqual, probabilityOfTickDown, 0.5) ?
     tickDown : tickUp;
 
   return randomPrice;
@@ -89,14 +89,11 @@ async function getHistoricalSnapshots(stock: string): Promise<{
 }> {
   let snapshotsByTheSecond: Snapshot[] = [];
 
-  const {ticker, startDate, endDate} = parseStock(stock);
-
-  if (isHistoricalSnapshotDay(startDate, endDate)) {
-    snapshotsByTheSecond = await readJSONFile<Snapshot[]>(getFilePathForStockOnDateType(ticker, DateType.DAILY, startDate));
-  }
-
-  if (isHistoricalSnapshotDateRange(startDate, endDate)) {
-    snapshotsByTheSecond = await readJSONFile<Snapshot[]>(getFilePathForStockOnDateType(ticker, DateType.DATE_RANGE, startDate, endDate));
+  const {startDate, endDate} = getHistoricalSnapshotStartAndEndDates();
+  const dateRange = getWeekdaysInRange(startDate, endDate);
+  for (const date of dateRange) {
+    const snapshotsForDate = await readJSONFile<Snapshot[]>(getFilePathForStockDataOnDate(stock, date));
+    snapshotsByTheSecond = snapshotsByTheSecond.concat(snapshotsForDate);
   }
 
   return {
@@ -105,28 +102,15 @@ async function getHistoricalSnapshots(stock: string): Promise<{
   };
 }
 
-function parseStock(stock: string): {
-  ticker: string,
-  startDate: string,
-  endDate: string,
-} {
-  const ticker = stock.split('__')[0];
-  const startDate = stock.split('__')[1].split('_')[0];
-  const endDate = stock.split('__')[1].split('_')[1];
+function getHistoricalSnapshotStartAndEndDates(): {startDate: string, endDate: string} {
+  if (process.env.HISTORICAL_SNAPSHOT_START && process.env.HISTORICAL_SNAPSHOT_END) {
+    return {
+      startDate: process.env.HISTORICAL_SNAPSHOT_START,
+      endDate: process.env.HISTORICAL_SNAPSHOT_END,
+    };
+  }
 
-  return {
-    ticker,
-    startDate,
-    endDate,
-  };
-}
-
-function isHistoricalSnapshotDay(startDate: string, endDate: string): boolean {
-  return Boolean(startDate && !endDate);
-}
-
-function isHistoricalSnapshotDateRange(startDate: string, endDate: string): boolean {
-  return Boolean(startDate && endDate);
+  throw new Error('Historical snapshot start and end dates are not set');
 }
 
 export function isHistoricalSnapshotsExhausted(stock: string): boolean {

@@ -1,26 +1,17 @@
 import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
 import {jsonPrettyPrint, readJSONFile, syncWriteJSONFile} from '../../../utils/file';
-import {IntervalTypes, SmoothingInterval, StockState, getStockStateFilePath, isWideBidAskSpread} from './algo';
-import { DateType, getFilePathForStockOnDateType as getFilePathForTickerOnDateType } from '../../../historical-data/save-stock-historical-data';
-import { Snapshot } from '../../brokerage-clients/brokerage-client';
-import { getWeekdaysInRange } from '../../../utils/time';
+import {getStockStateFilePath} from './algo';
+import { IntervalTypes, SmoothingInterval, StockState } from './types';
 
-export async function createNewStockStateFromExisting(stock: string, initialAskPrice: number): Promise<void> {
+export async function createNewStockStateFromExisting(stock: string, initialAskPrice: number, isDynamicIntervals: boolean): Promise<void> {
   const filePath = getStockStateFilePath(`${stock}`);
   const partialStockState = await readJSONFile<StockState>(filePath);
-  const newState = getFullStockState(partialStockState, initialAskPrice);
+  const newState = getFullStockState(partialStockState, initialAskPrice, isDynamicIntervals);
 
   syncWriteJSONFile(getStockStateFilePath(`${stock}`), jsonPrettyPrint(newState));
 }
 
-async function getTemplateStockState(ticker: string): Promise<StockState> {
-  const filePath = getStockStateFilePath(`templates\\${ticker}`);
-  const templateStockState = await readJSONFile<StockState>(filePath);
-
-  return templateStockState;
-}
-
-function getFullStockState(partialStockState: StockState, initialAskPrice: number): StockState {
+function getFullStockState(partialStockState: StockState, initialAskPrice: number, isDynamicIntervals: boolean): StockState {
   const {
     brokerageId,
     brokerageTradingCostPerShare,
@@ -44,13 +35,13 @@ function getFullStockState(partialStockState: StockState, initialAskPrice: numbe
     sharesPerInterval,
   });
 
-  const shortIntervals: SmoothingInterval[] = getShortIntervals({
-    initialAskPrice,
-    targetPosition,
-    intervalProfit,
-    spaceBetweenIntervals,
-    sharesPerInterval,
-  });
+  // const shortIntervals: SmoothingInterval[] = getShortIntervals({
+  //   initialAskPrice,
+  //   targetPosition,
+  //   intervalProfit,
+  //   spaceBetweenIntervals,
+  //   sharesPerInterval,
+  // });
 
   const newState: StockState = {
     brokerageId,
@@ -69,8 +60,8 @@ function getFullStockState(partialStockState: StockState, initialAskPrice: numbe
     lastBid,
     transitoryValue: doFloatCalculation(FloatCalculations.multiply, premiumSold || 0, 100),
     unrealizedValue: doFloatCalculation(FloatCalculations.multiply, premiumSold || 0, 100),
-    targetExitValuePercentageIncrease: 0,
-    intervals: [...longIntervals, ...shortIntervals],
+    isDynamicIntervals,
+    intervals: [...longIntervals], // , ...shortIntervals],
     tradingLogs: [],
   };
 
@@ -169,37 +160,4 @@ function getShortIntervals({
   }
 
   return intervals;
-}
-
-export async function createNewHistoricalStockStatesForDateRange(ticker: string, startDate: string, endDate: string): Promise<void> {
-  const dates = getWeekdaysInRange(startDate, endDate);
-
-  for (const date of dates) {
-    await createNewHistoricalStockStateForDate(ticker, date);
-  }
-}
-
-export async function createNewHistoricalStockStateForDate(ticker: string, date: string): Promise<void> {
-  const templateStockState = await getTemplateStockState(ticker);
-  const initialAskPrice = await getInitialAskPriceForTickerAtDate(ticker, date);
-  
-  if (initialAskPrice === null) {
-    return;
-  }
-  
-  const newState = getFullStockState(templateStockState, initialAskPrice);
-  syncWriteJSONFile(getStockStateFilePath(`${ticker}__${date}`), jsonPrettyPrint(newState));
-}
-
-async function getInitialAskPriceForTickerAtDate(ticker: string, date: string): Promise<number | null> {
-  const filePath = getFilePathForTickerOnDateType(ticker, DateType.DAILY, date);
-  const snapshots = await readJSONFile<Snapshot[]>(filePath);
-
-  for (const snapshot of snapshots) {
-    if (!isWideBidAskSpread(snapshot)) {
-      return snapshot.ask;
-    }
-  }
-
-  return null;
 }

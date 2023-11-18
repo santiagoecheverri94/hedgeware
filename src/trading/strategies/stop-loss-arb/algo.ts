@@ -1,59 +1,13 @@
 import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
 import {getFileNamesWithinFolder, jsonPrettyPrint, readJSONFile, syncWriteJSONFile} from '../../../utils/file';
-import {isHistoricalSnapshot, isHistoricalSnapshotsExhausted, isLiveTrading, isRandomSnapshot, restartSimulatedSnapshot} from '../../../utils/price-simulator';
+import {isLiveTrading, restartSimulatedSnapshot} from '../../../utils/price-simulator';
 import {IBKRClient} from '../../brokerage-clients/IBKR/client';
 import {OrderSides, Snapshot} from '../../brokerage-clients/brokerage-client';
 import {getCurrentTimeStamp, isMarketOpen} from '../../../utils/time';
 import {log} from '../../../utils/log';
 import {onUserInterrupt} from '../../../utils/system';
-
-export enum IntervalTypes {
-  LONG = 'LONG',
-  SHORT = 'SHORT',
-}
-
-export interface SmoothingInterval {
-  type: IntervalTypes;
-  positionLimit: number;
-  [OrderSides.SELL]: {
-    active: boolean;
-    crossed: boolean;
-    price: number;
-  };
-  [OrderSides.BUY]: {
-    active: boolean;
-    crossed: boolean;
-    price: number;
-  };
-}
-
-export interface StockState {
-  brokerageId: string;
-  brokerageTradingCostPerShare: number;
-  sharesPerInterval: number,
-  intervalProfit: number;
-  premiumSold: number | null;
-  callStrikePrice: number | null;
-  initialPrice: number;
-  putStrikePrice: number | null;
-  spaceBetweenIntervals: number;
-  numContracts: number;
-  position: number;
-  targetPosition: number;
-  intervals: SmoothingInterval[];
-  tradingLogs: {
-    timeStamp: string;
-    action: OrderSides,
-    price: number;
-    previousPosition: number;
-    newPosition: number;
-  }[];
-  transitoryValue: number;
-  unrealizedValue: number;
-  targetExitValuePercentageIncrease: number;
-  lastAsk?: number;
-  lastBid?: number;
-}
+import { IntervalTypes, StockState } from './types';
+import { debugSimulation } from './debug';
 
 const brokerageClient = new IBKRClient();
 
@@ -71,98 +25,23 @@ export async function startStopLossArb(): Promise<void> {
 
   await Promise.all(stocks.map(stock => (async () => {
     await isMarketOpen(stock);
-
-    while (!userHasInterrupted) {
+    let lastDifferentSnapshot: Snapshot | null = null;
+    while ((await isMarketOpen(stock) && !userHasInterrupted)) {
       const stockState = states[stock];
       const snapshot = await reconcileStockPosition(stock, stockState);
 
-      // TODO: This needs better handling in case snapshots stay wide for a long time
-      if (snapshot && (isDoneForTheDay(stockState) || !(await isMarketOpen(stock)))) {
-        await setStockStatePosition(stock, stockState, 0, snapshot);
-        testHistoricalSamples[stock].exitValue = {
-          snapshot,
-          value: stockState.unrealizedValue,
-        };
-        // debugger;
-        break;
+      if (snapshot) {
+        lastDifferentSnapshot = snapshot;
       }
 
-      if (await debugSimulation(stock, states, snapshot)) {
-        testHistoricalSamples[stock].exitValue = {
-          snapshot,
-          value: stockState.unrealizedValue,
-        };
+      if ((await debugSimulation(stock, states, snapshot)).shouldBreak) {
+        console.log(lastDifferentSnapshot);
+        console.log(`position: ${stockState.position}, unrealizedValue: ${stockState.unrealizedValue}`);
+        debugger;
         break;
       }
     }
   })()));
-
-  if (isHistoricalSnapshot()) {
-    sortPosHistoricalSamplesDesc();
-    sortNegHistoricalSamplesAsc();
-    printHistoricalSamples(true);
-    // printHistoricalSamples(false);
-    debugger;
-  }
-}
-
-function isDoneForTheDay(stockState: StockState): boolean {
-
-  const FIRST_TARGET = 0.5;
-  const INCREMENT = 0.1;
-  const percentageChange = calculatePercentageChangeInValue(stockState);
-
-  if (doFloatCalculation(FloatCalculations.equal, stockState.targetExitValuePercentageIncrease, 0)) {
-    if (doFloatCalculation(FloatCalculations.greaterThanOrEqual, percentageChange, FIRST_TARGET)) {
-      stockState.targetExitValuePercentageIncrease = FIRST_TARGET;
-      // return false;
-      return true;
-    }
-  } else {
-    if (doFloatCalculation(FloatCalculations.greaterThanOrEqual, percentageChange, doFloatCalculation(FloatCalculations.add, stockState.targetExitValuePercentageIncrease, INCREMENT))) {
-      stockState.targetExitValuePercentageIncrease = doFloatCalculation(FloatCalculations.add, stockState.targetExitValuePercentageIncrease, INCREMENT)
-      return false;
-    }
-  }
-
-  if (doFloatCalculation(FloatCalculations.equal, stockState.targetExitValuePercentageIncrease, 0)) {
-    if (doFloatCalculation(FloatCalculations.lessThanOrEqual, percentageChange, -1)) {
-      return true;
-    }
-  } else {
-    if (doFloatCalculation(FloatCalculations.lessThanOrEqual, percentageChange, doFloatCalculation(FloatCalculations.subtract, stockState.targetExitValuePercentageIncrease, INCREMENT))) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-function calculatePercentageChangeInValue(stockState: StockState): number {
-  const investment = doFloatCalculation(FloatCalculations.multiply, stockState.initialPrice, stockState.targetPosition);
-  const percent = doFloatCalculation(FloatCalculations.divide, stockState.unrealizedValue, investment);
-  const percentChange = doFloatCalculation(FloatCalculations.multiply, percent, 100);
-  return percentChange;
-}
-
-async function debugSimulation(stock: string, states: { [stock: string]: StockState; }, snapshot: Snapshot | null): Promise<boolean> {
-  let shouldBreak = false;
-
-  if (isHistoricalSnapshot()) {
-    if (snapshot) {
-      debugHistoricalPrices(stock, states[stock], snapshot);
-    }
-
-    if (isHistoricalSnapshotsExhausted(stock)) {
-      shouldBreak = true;
-    }
-  }
-
-  if (isRandomSnapshot() && snapshot) {
-    states[stock] = await debugRandomPrices(snapshot, stock, states[stock]);
-  }
-
-  return shouldBreak;
 }
 
 async function getStocks(): Promise<string[]> {
@@ -178,7 +57,7 @@ function getStockStatesFolderPath(): string {
   return `${process.cwd()}\\src\\trading\\strategies\\stop-loss-arb\\stock-states`;
 }
 
-async function getStockStates(stocks: string[]): Promise<{ [stock: string]: StockState; }> {
+export async function getStockStates(stocks: string[]): Promise<{ [stock: string]: StockState; }> {
   const states: {[stock: string]: StockState} = {};
   for (const stock of stocks) {
     states[stock] = await readJSONFile<StockState>(getStockStateFilePath(stock));
@@ -294,7 +173,7 @@ function checkCrossings(stock: string, stockState: StockState, {bid, ask}: Snaps
   return crossingHappened;
 }
 
-export function isWideBidAskSpread({bid, ask}: Snapshot): boolean {
+function isWideBidAskSpread({bid, ask}: Snapshot): boolean {
   return doFloatCalculation(FloatCalculations.greaterThan, doFloatCalculation(FloatCalculations.subtract, ask, bid), 0.01) === 1;
 }
 
@@ -314,8 +193,9 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number {
     }
   }
 
-  // Static Accordion Algo
-  // addSkippedBuysIfRequired(stockState, indexesToExecute);
+  if (!stockState.isDynamicIntervals) {
+    addSkippedBuysIfRequired(stockState, indexesToExecute);
+  }
 
   for (const index of indexesToExecute) {
     const interval = intervals[index];
@@ -334,8 +214,9 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number {
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.transitoryValue = doFloatCalculation(FloatCalculations.subtract, stockState.transitoryValue, tradingCosts);
 
-    // Moving Accordion Algo
-    correctBadBuyIfRequired(stockState, indexesToExecute);
+    if (stockState.isDynamicIntervals) {
+      correctBadBuyIfRequired(stockState, indexesToExecute);
+    }
   }
 
   return indexesToExecute.length;
@@ -399,8 +280,9 @@ function getNumToSell(stockState: StockState, {bid}: Snapshot): number {
     }
   }
 
-  // Static Accordion Algo
-  // addSkippedSellsIfRequired(stockState, indexesToExecute);
+  if (!stockState.isDynamicIntervals) {
+    addSkippedSellsIfRequired(stockState, indexesToExecute);
+  }
 
   for (const index of indexesToExecute) {
     const interval = intervals[index];
@@ -419,8 +301,9 @@ function getNumToSell(stockState: StockState, {bid}: Snapshot): number {
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.transitoryValue = doFloatCalculation(FloatCalculations.subtract, stockState.transitoryValue, tradingCosts);
 
-    // Moving Accordion Algo
-    correctBadSellIfRequired(stockState, indexesToExecute);
+    if (stockState.isDynamicIntervals) {
+      correctBadSellIfRequired(stockState, indexesToExecute);
+    }
   }
 
   return indexesToExecute.length;
@@ -478,39 +361,7 @@ function isSnapshotChange(snapshot: Snapshot, stockState: StockState): boolean {
   return !doFloatCalculation(FloatCalculations.equal, stockState.lastAsk, snapshot.ask) || !doFloatCalculation(FloatCalculations.equal, stockState.lastBid, snapshot.bid);
 }
 
-async function setStockStatePosition(stock: string, stockState: StockState, newPosition: number, snapshot: Snapshot): Promise<void> {
-  await brokerageClient.setSecurityPosition({
-    brokerageIdOfSecurity: stockState.brokerageId,
-    currentPosition: stockState.position * stockState.numContracts,
-    newPosition: newPosition * stockState.numContracts,
-    snapshot,
-  });
-
-  const tradingLog: typeof stockState.tradingLogs[number] = {
-    action: stockState.position < 0 ? OrderSides.BUY : OrderSides.SELL,
-    timeStamp: getCurrentTimeStamp(),
-    price: stockState.position < 0 ? snapshot.ask : snapshot.bid,
-    previousPosition: stockState.position,
-    newPosition,
-  };
-
-  stockState.tradingLogs.push(tradingLog);
-
-  log(`Exited position for ${stock} (${stockState.numContracts} constracts): ${jsonPrettyPrint({
-    price: tradingLog.price,
-    previousPosition: tradingLog.previousPosition,
-    newPosition: tradingLog.newPosition,
-    exitValue: stockState.unrealizedValue,
-  })}`);
-
-  stockState.position = newPosition;
-
-  if (isLiveTrading()) {
-    syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
-  }
-}
-
-function getUnrealizedValue(stockState: StockState, {bid, ask}: Snapshot): number {
+export function getUnrealizedValue(stockState: StockState, {bid, ask}: Snapshot): number {
   if (stockState.position === 0) {
     return stockState.transitoryValue;
   }
@@ -531,204 +382,4 @@ function getUnrealizedValue(stockState: StockState, {bid, ask}: Snapshot): numbe
   const finalTradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, Math.abs(stockState.position));
 
   return doFloatCalculation(FloatCalculations.subtract, unrealizedValue, finalTradingCosts);
-}
-
-interface ExitValue {
-  snapshot: Snapshot | null;
-  value: number;
-}
-
-const testHistoricalSamples: {
-  [stock: string]: {
-    exitValue?: ExitValue;
-    positiveExits: {
-      max: ExitValue;
-      all: ExitValue[];
-    };
-    negativeExits: {
-      max: ExitValue;
-      all: ExitValue[];
-    };
-  }
-} = {};
-
-async function debugHistoricalPrices(stock: string, stockState: StockState, snapshot: Snapshot): Promise<void> {
-  if (!testHistoricalSamples[stock]) {
-    testHistoricalSamples[stock] = {
-      positiveExits: {
-        max: {
-          snapshot: null,
-          value: 0,
-        },
-        all: [],
-      },
-      negativeExits: {
-        max: {
-          snapshot: null,
-          value: 0,
-        },
-        all: [],
-      },
-    };
-  }
-
-  const exitValue = {
-    snapshot,
-    value: stockState.unrealizedValue,
-  };
-
-  if (doFloatCalculation(FloatCalculations.greaterThan, stockState.unrealizedValue, 0)) {
-    testHistoricalSamples[stock].positiveExits.all.push(exitValue);
-
-    if (doFloatCalculation(FloatCalculations.greaterThan, exitValue.value, testHistoricalSamples[stock].positiveExits.max.value)) {
-      testHistoricalSamples[stock].positiveExits.max = exitValue;
-    }
-  }
-
-  if (doFloatCalculation(FloatCalculations.lessThan, stockState.unrealizedValue, 0)) {
-    testHistoricalSamples[stock].negativeExits.all.push(exitValue);
-
-    if (doFloatCalculation(FloatCalculations.lessThan, stockState.unrealizedValue, testHistoricalSamples[stock].negativeExits.max.value)) {
-      testHistoricalSamples[stock].negativeExits.max = exitValue;
-    }
-  }
-}
-
-function sortPosHistoricalSamplesDesc(): void {
-  for (const stock of Object.keys(testHistoricalSamples)) {
-    testHistoricalSamples[stock].positiveExits.all.sort((a, b) => {
-      // if (a > b) {
-      if (doFloatCalculation(FloatCalculations.greaterThan, a.value, b.value)) {
-        return -1;
-      }
-  
-      // if (a < b) {
-      if (doFloatCalculation(FloatCalculations.lessThan, a.value, b.value)) {
-        return 1;
-      }
-  
-      return 0;
-    });
-  }
-}
-
-function sortNegHistoricalSamplesAsc(): void {
-  for (const stock of Object.keys(testHistoricalSamples)) {
-    testHistoricalSamples[stock].negativeExits.all.sort((a, b) => {
-      // if (a > b) {
-      if (doFloatCalculation(FloatCalculations.greaterThan, a.value, b.value)) {
-        return 1;
-      }
-  
-      // if (a < b) {
-      if (doFloatCalculation(FloatCalculations.lessThan, a.value, b.value)) {
-        return -1;
-      }
-  
-      return 0;
-    });
-  }
-}
-
-function printHistoricalSamples(printExit: boolean): void {
-  let toPrint = '';
-
-  for (const stock of Object.keys(testHistoricalSamples).sort()) {
-    const positiveExits = testHistoricalSamples[stock].positiveExits;
-    const negativeExits = testHistoricalSamples[stock].negativeExits;
-    const exitValue = testHistoricalSamples[stock].exitValue;
-
-    const date = stock.split('__')[1];
-    if (printExit) {
-      toPrint += `${date}\t${exitValue?.value}\t${exitValue?.snapshot?.timestamp}\t${positiveExits.max.value}\t${positiveExits.max.snapshot?.timestamp}\t${negativeExits.max.value}\t${negativeExits.max.snapshot?.timestamp}\n`;
-    } else {
-      toPrint += `${date}\t${positiveExits.max.value}\t${positiveExits.max.snapshot?.timestamp}\t${negativeExits.max.value}\t${negativeExits.max.snapshot?.timestamp}\n`;
-    }
-    
-  }
-
-  // calculate average exit value
-  const averageExitValue: number = doFloatCalculation(FloatCalculations.divide, Object.keys(testHistoricalSamples).reduce((sum, stock) => {
-    const exitValue = testHistoricalSamples[stock].exitValue;
-    if (exitValue) {
-      return doFloatCalculation(FloatCalculations.add, sum, exitValue.value);
-    }
-
-    return sum;
-  }, 0), Object.keys(testHistoricalSamples).length);
-
-  if (printExit) {
-    toPrint += `average exit value: ${averageExitValue}\n`;
-  }
-  
-  console.log(toPrint);
-}
-
-const testRandomSamples: {[stock: string]: {
-  distance: number;
-  upOrDown: 'up' | 'down';
-  unrealizedValue: number;
-}[]} = {};
-
-async function debugRandomPrices({bid, ask}: Snapshot, stock: string, stockState: StockState): Promise<StockState> {
-  const aboveTopSell = doFloatCalculation(FloatCalculations.add, stockState.intervals[0][OrderSides.SELL].price, stockState.spaceBetweenIntervals);
-  if (doFloatCalculation(FloatCalculations.equal, bid, stockState.callStrikePrice || aboveTopSell)) {
-    return debugUpperOrLowerBound({bid, ask} as Snapshot, 'up', stock, stockState);
-  }
-
-  const belowBottomBuy = doFloatCalculation(FloatCalculations.subtract, stockState.intervals[stockState.intervals.length - 1][OrderSides.BUY].price, stockState.spaceBetweenIntervals);
-  if (doFloatCalculation(FloatCalculations.equal, ask, stockState.putStrikePrice || belowBottomBuy)) {
-    return debugUpperOrLowerBound({bid, ask} as Snapshot, 'down', stock, stockState);
-  }
-
-  return stockState;
-}
-
-async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up' | 'down', stock: string, stockState: StockState): Promise<StockState> {
-  if (stockState.tradingLogs.length === 0) {
-    restartSimulatedSnapshot();
-    return (await getStockStates([stock]))[stock];
-  }
-
-  stockState.unrealizedValue = getUnrealizedValue(stockState, snapshot);
-
-  console.log(`stock: ${stock}, bound: ${upperOrLowerBound}, ${bidOrAsk(upperOrLowerBound)}: ${snapshot[bidOrAsk(upperOrLowerBound)]}, position: ${stockState.position}, unrealizedValue: ${stockState.unrealizedValue}`);
-  syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
-  if (upperOrLowerBound === 'up' && stockState.position < stockState.targetPosition) {
-    debugger;
-  } else if (upperOrLowerBound === 'down' && stockState.position > -stockState.targetPosition) {
-    debugger;
-  }
-
-  const NUM_SAMPLES = 1000;
-
-  if (!testRandomSamples[stock]) {
-    testRandomSamples[stock] = [];
-  }
-
-  const samples = testRandomSamples[stock];
-
-  samples.push({
-    upOrDown: upperOrLowerBound,
-    distance: Math.abs(doFloatCalculation(FloatCalculations.subtract, stockState.tradingLogs[0].price, stockState.initialPrice)),
-    unrealizedValue: stockState.unrealizedValue,
-  });
-
-  if (samples.length === NUM_SAMPLES) {
-    debugger;
-
-    const averageDistance = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.distance), 0), samples.length);
-    const averageUnrealizedValue = doFloatCalculation(FloatCalculations.divide, samples.reduce((sum, sample) => doFloatCalculation(FloatCalculations.add, sum, sample.unrealizedValue), 0), samples.length);
-    console.log(`maxDistance: ${Math.max(...samples.map(sample => sample.distance))}`);
-    console.log(`averageDistance: ${averageDistance}`);
-    console.log(`averageUnrealizedValue: ${averageUnrealizedValue}`);
-    testRandomSamples[stock] = [];
-  }
-
-  restartSimulatedSnapshot();
-  return (await getStockStates([stock]))[stock];
-}
-
-function bidOrAsk(upperOrLowerBound: 'up' | 'down'): 'bid' | 'ask' {
-  return upperOrLowerBound === 'up' ? 'bid' : 'ask';
 }

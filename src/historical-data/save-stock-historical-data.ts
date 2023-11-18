@@ -5,12 +5,6 @@ import {jsonPrettyPrint, syncWriteJSONFile} from '../utils/file';
 import {existsSync, mkdirSync} from 'node:fs';
 import {setTimeout} from 'node:timers/promises';
 
-
-export enum DateType {
-  DAILY = 'daily',
-  DATE_RANGE = 'date-range',
-}
-
 export async function saveStockHistoricalDailyDataForStockFromStartToEndDate(stock: string, startDate: string, endDate: string): Promise<void> {
   const requests: Promise<void>[] = [];
   const dateRange = getWeekdaysInRange(startDate, endDate);
@@ -25,7 +19,7 @@ export async function saveStockHistoricalDailyDataForStockFromStartToEndDate(sto
 export async function saveStockHistoricalDataForStockOnDate(stock: string, date: string): Promise<void> {
   const polygonQuotes = await getPolygonQuotesForDate(stock, date);
   const snapshotsByTheSecond = getSnapshotsByTheSecond(polygonQuotes);
-  syncWriteJSONFile(getFilePathForStockOnDateType(stock, DateType.DAILY, date), jsonPrettyPrint(snapshotsByTheSecond));
+  syncWriteJSONFile(getFilePathForStockDataOnDate(stock, date), jsonPrettyPrint(snapshotsByTheSecond));
 }
 
 type PolygonQuote = Exclude<IQuotes['results'], undefined>[0];
@@ -77,24 +71,12 @@ function getSnapshotsByTheSecond(polygonQuotes: PolygonQuote[]): Snapshot[] {
   return snapshotsByTheSecond;
 }
 
-export function getFilePathForStockOnDateType(stock: string, dateType: DateType, startDate?: string, endDate?: string): string {
-  if (dateType === DateType.DATE_RANGE) {
-    if (!endDate) {
-      throw new Error('endDate must be provided when dateType is DATE_RANGE');
-    }
-
-    return `${getFolderPathForStockOnDateType(stock, dateType)}\\${startDate}_${endDate}.json`;
-  }
-
-  if (!startDate) {
-    throw new Error('startDate must always be provided');
-  }
-
-  return `${getFolderPathForStockOnDateType(stock, dateType)}\\${startDate}.json`;
+export function getFilePathForStockDataOnDate(stock: string, date: string): string {
+  return `${getFolderPathForStockData(stock)}\\${date}.json`;
 }
 
-function getFolderPathForStockOnDateType(stock: string, dateType: DateType): string {
-  const path = `${process.cwd()}\\src\\historical-data\\${dateType}\\${stock}`;
+function getFolderPathForStockData(stock: string): string {
+  const path = `${process.cwd()}\\src\\historical-data\\${stock}`;
 
   if (!existsSync(path)) {
     mkdirSync(path);
