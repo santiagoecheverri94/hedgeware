@@ -1,4 +1,4 @@
-import { OrderSides } from "../../brokerage-clients/brokerage-client";
+import {OrderSides} from '../../brokerage-clients/brokerage-client';
 
 export enum IntervalTypes {
   LONG = 'LONG',
@@ -25,10 +25,10 @@ export interface StockState {
   brokerageTradingCostPerShare: number;
   sharesPerInterval: number,
   intervalProfit: number;
-  premiumSold: number | null;
-  callStrikePrice: number | null;
-  initialPrice: number;
-  putStrikePrice: number | null;
+  premiumSold: number;
+  upperCallStrikePrice: number | null;
+  centralPrice: number;
+  lowerCallStrikePrice: number | null;
   spaceBetweenIntervals: number;
   numContracts: number;
   position: number;
@@ -41,6 +41,8 @@ export interface StockState {
     price: number;
     previousPosition: number;
     newPosition: number;
+    transitoryValue: number;
+    unrealizedValue: number;
   }[];
   transitoryValue: number;
   unrealizedValue: number;

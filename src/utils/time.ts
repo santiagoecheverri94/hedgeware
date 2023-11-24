@@ -94,6 +94,7 @@ export function getWeekdaysInRange(startDate: string, endDate: string): string[]
     if (current.day() !== 0 && current.day() !== 6) {
       result.push(current.format('MM-DD-YYYY'));
     }
+
     current.add(1, 'day');
   }
 
