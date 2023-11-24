@@ -44,7 +44,7 @@ function getFullStockState(partialStockState: StockState, centralPrice: number, 
   });
 
   // TODO: remove the following
-  let totalPremiumSold = doFloatCalculation(FloatCalculations.subtract, centralPrice, lowerCallStrikePrice);
+  let totalPremiumSold = lowerCallStrikePrice ? doFloatCalculation(FloatCalculations.subtract, centralPrice, lowerCallStrikePrice) : 0;
   totalPremiumSold = doFloatCalculation(FloatCalculations.add, totalPremiumSold, premiumSold);
 
   const newState: StockState = {

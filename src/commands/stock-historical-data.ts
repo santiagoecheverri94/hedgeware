@@ -10,8 +10,8 @@ export default class StockHistoricalData extends Command {
 
   static args = {
     stock: Args.string({description: 'stock to get historical data for', required: true}),
-    startDate: Args.string({description: 'start date, MM-DD-YYYY, of historical data', required: true}),
-    endDate: Args.string({description: 'end date, MM-DD-YYYY, of historical data', required: false}),
+    startDate: Args.string({description: 'start date, YYYY-MM-DD, of historical data', required: true}),
+    endDate: Args.string({description: 'end date, YYYY-MM-DD, of historical data', required: false}),
   }
 
   public async run(): Promise<void> {

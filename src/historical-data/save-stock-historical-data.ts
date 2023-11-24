@@ -9,7 +9,7 @@ export async function saveStockHistoricalDailyDataForStockFromStartToEndDate(sto
   const requests: Promise<void>[] = [];
   const dateRange = getWeekdaysInRange(startDate, endDate);
   for (const date of dateRange) {
-    await setTimeout(100);
+    await setTimeout(500);
     requests.push(saveStockHistoricalDataForStockOnDate(stock, date));
   }
 
