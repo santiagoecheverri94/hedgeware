@@ -89,11 +89,10 @@ async function getHistoricalSnapshots(fileName: string): Promise<{
 }> {
   let snapshotsByTheSecond: Snapshot[] = [];
 
-  const stock = getStock(fileName);
-  const {startDate, endDate} = getHistoricalSnapshotStartAndEndDates(fileName);
+  const {stock, startDate, endDate} = getHistoricalSnapshotStockAndStartAndEndDates(fileName);
   const dateRange = getWeekdaysInRange(startDate, endDate);
   for (const date of dateRange) {
-    const snapshotsForDate = await readJSONFile<Snapshot[]>(getFilePathForStockDataOnDate(stock, date));
+    const snapshotsForDate = await getSnapshotsForStockOnDate(stock, date);
     snapshotsByTheSecond = [...snapshotsByTheSecond, ...snapshotsForDate];
   }
 
@@ -103,11 +102,8 @@ async function getHistoricalSnapshots(fileName: string): Promise<{
   };
 }
 
-function getStock(fileName: string): string {
-  return fileName.split('__')[0];
-}
-
-function getHistoricalSnapshotStartAndEndDates(fileName: string): {startDate: string, endDate: string} {
+export function getHistoricalSnapshotStockAndStartAndEndDates(fileName: string): {stock: string, startDate: string, endDate: string} {
+  const stock = fileName.split('__')[0];
   const [startDate, endDate] = fileName.split('__')[1]?.split('_') || [];
 
   if (!startDate || !endDate) {
@@ -115,9 +111,14 @@ function getHistoricalSnapshotStartAndEndDates(fileName: string): {startDate: st
   }
 
   return {
+    stock,
     startDate,
     endDate,
   };
+}
+
+export async function getSnapshotsForStockOnDate(stock: string, date: string): Promise<Snapshot[]> {
+  return readJSONFile<Snapshot[]>(getFilePathForStockDataOnDate(stock, date));
 }
 
 export function isHistoricalSnapshotsExhausted(stock: string): boolean {

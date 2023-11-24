@@ -24,7 +24,7 @@ export default class StopLossArbNewState extends Command {
 
       if (!centralPrice) throw new Error(`No price provided for ${stock}`);
 
-      await createNewStockStateFromExisting(stock, Number.parseFloat(centralPrice), flags.static);
+      await createNewStockStateFromExisting(stock, Number.parseFloat(centralPrice), !flags.static);
     }
 
     this.exit();

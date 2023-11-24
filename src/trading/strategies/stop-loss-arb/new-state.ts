@@ -1,12 +1,28 @@
 import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
 import {jsonPrettyPrint, readJSONFile, syncWriteJSONFile} from '../../../utils/file';
-import {getStockStateFilePath} from './algo';
+import {getStockStateFilePath, getStocksFileNames} from './algo';
 import {IntervalTypes, SmoothingInterval, StockState} from './types';
+import {getHistoricalSnapshotStockAndStartAndEndDates, getSnapshotsForStockOnDate, isHistoricalSnapshot} from '../../../utils/price-simulator';
 
-export async function createNewStockStateFromExisting(stock: string, centralPrice: number, isStaticIntervals: boolean): Promise<void> {
+export async function refreshHistoricalStates(isDynamicIntervals: boolean): Promise<void> {
+  if (!isHistoricalSnapshot()) {
+    throw new Error('Must be in historical snapshot mode to refresh historical states');
+  }
+
+  const stocksFileNames = await getStocksFileNames();
+  for (const filename of stocksFileNames) {
+    const {stock, startDate} = getHistoricalSnapshotStockAndStartAndEndDates(filename);
+    const snapshotsForStockOnStartDate = await getSnapshotsForStockOnDate(stock, startDate);
+    const centralPrice = snapshotsForStockOnStartDate[0].ask;
+
+    await createNewStockStateFromExisting(filename, centralPrice, isDynamicIntervals);
+  }
+}
+
+export async function createNewStockStateFromExisting(stock: string, centralPrice: number, isDynamicIntervals: boolean): Promise<void> {
   const filePath = getStockStateFilePath(`${stock}`);
   const partialStockState = await readJSONFile<StockState>(filePath);
-  const newState = getFullStockState(partialStockState, centralPrice, !isStaticIntervals);
+  const newState = getFullStockState(partialStockState, centralPrice, isDynamicIntervals);
 
   syncWriteJSONFile(getStockStateFilePath(`${stock}`), jsonPrettyPrint(newState));
 }
@@ -19,8 +35,6 @@ function getFullStockState(partialStockState: StockState, centralPrice: number, 
     numContracts,
     targetPosition,
     premiumSold,
-    upperCallStrikePrice,
-    lowerCallStrikePrice,
     intervalProfit,
     spaceBetweenIntervals,
     lastAsk,
@@ -43,8 +57,10 @@ function getFullStockState(partialStockState: StockState, centralPrice: number, 
     sharesPerInterval,
   });
 
-  // TODO: remove the following
-  let totalPremiumSold = lowerCallStrikePrice ? doFloatCalculation(FloatCalculations.subtract, centralPrice, lowerCallStrikePrice) : 0;
+  // TODO: remove the following in a future iteration
+  const lowerCallStrikePrice = Math.floor(longIntervalsBelow[longIntervalsBelow.length - 1].BUY.price);
+  const upperCallStrikePrice = lowerCallStrikePrice + 2;
+  let totalPremiumSold = doFloatCalculation(FloatCalculations.subtract, centralPrice, lowerCallStrikePrice);
   totalPremiumSold = doFloatCalculation(FloatCalculations.add, totalPremiumSold, premiumSold);
 
   const newState: StockState = {

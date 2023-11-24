@@ -12,7 +12,7 @@ import {debugSimulation} from './debug';
 const brokerageClient = new IBKRClient();
 
 export async function startStopLossArb(): Promise<void> {
-  const stocks = await getStocks();
+  const stocks = await getStocksFileNames();
 
   const states = await getStockStates(stocks);
 
@@ -51,7 +51,7 @@ export async function startStopLossArb(): Promise<void> {
   debugger;
 }
 
-async function getStocks(): Promise<string[]> {
+export async function getStocksFileNames(): Promise<string[]> {
   const fileNames = await getFileNamesWithinFolder(getStockStatesFolderPath());
   return fileNames.filter(fileName => !['results', 'templates'].some(excludedFileName => fileName.includes(excludedFileName)) && !fileName.startsWith('_'));
 }
