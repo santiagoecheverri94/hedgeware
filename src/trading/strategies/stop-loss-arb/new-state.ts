@@ -1,8 +1,22 @@
 import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
-import {jsonPrettyPrint, readJSONFile, syncWriteJSONFile} from '../../../utils/file';
-import {getStockStateFilePath, getStocksFileNames} from './algo';
+import {jsonPrettyPrint, readJSONFile, syncWriteJSONFile, syncRenameFile} from '../../../utils/file';
 import {IntervalTypes, SmoothingInterval, StockState} from './types';
 import {getHistoricalSnapshotStockAndStartAndEndDates, getSnapshotsForStockOnDate, isHistoricalSnapshot} from '../../../utils/price-simulator';
+import {getStocksFileNames, getStockStateFilePath} from './start';
+
+export async function renameHistoricalStates(newStock: string): Promise<void> {
+  if (!isHistoricalSnapshot()) {
+    throw new Error('Must be in historical snapshot mode to rename historical states');
+  }
+
+  const previousStocksFileNames = await getStocksFileNames(false);
+  for (const prevFileName of previousStocksFileNames) {
+    const {startDate, endDate} = getHistoricalSnapshotStockAndStartAndEndDates(prevFileName);
+    const newFileName = `${newStock}__${startDate}_${endDate}`;
+
+    await syncRenameFile(getStockStateFilePath(prevFileName), getStockStateFilePath(newFileName));
+  }
+}
 
 export async function refreshHistoricalStates(isDynamicIntervals: boolean): Promise<void> {
   if (!isHistoricalSnapshot()) {
@@ -10,12 +24,12 @@ export async function refreshHistoricalStates(isDynamicIntervals: boolean): Prom
   }
 
   const stocksFileNames = await getStocksFileNames();
-  for (const filename of stocksFileNames) {
-    const {stock, startDate} = getHistoricalSnapshotStockAndStartAndEndDates(filename);
+  for (const fileName of stocksFileNames) {
+    const {stock, startDate} = getHistoricalSnapshotStockAndStartAndEndDates(fileName);
     const snapshotsForStockOnStartDate = await getSnapshotsForStockOnDate(stock, startDate);
     const centralPrice = snapshotsForStockOnStartDate[0].ask;
 
-    await createNewStockStateFromExisting(filename, centralPrice, isDynamicIntervals);
+    await createNewStockStateFromExisting(fileName, centralPrice, isDynamicIntervals);
   }
 }
 
@@ -37,8 +51,6 @@ function getFullStockState(partialStockState: StockState, centralPrice: number, 
     premiumSold,
     intervalProfit,
     spaceBetweenIntervals,
-    lastAsk,
-    lastBid,
   } = partialStockState;
 
   const longIntervalsAbove: SmoothingInterval[] = getLongIntervalsAbove({
@@ -60,6 +72,10 @@ function getFullStockState(partialStockState: StockState, centralPrice: number, 
   // TODO: remove the following in a future iteration
   const lowerCallStrikePrice = Math.floor(longIntervalsBelow[longIntervalsBelow.length - 1].BUY.price);
   const upperCallStrikePrice = lowerCallStrikePrice + 2;
+
+  // const upperCallStrikePrice = Math.ceil(longIntervalsAbove[0].SELL.price);
+  // const lowerCallStrikePrice = upperCallStrikePrice - 2;
+
   let totalPremiumSold = doFloatCalculation(FloatCalculations.subtract, centralPrice, lowerCallStrikePrice);
   totalPremiumSold = doFloatCalculation(FloatCalculations.add, totalPremiumSold, premiumSold);
 
@@ -76,8 +92,6 @@ function getFullStockState(partialStockState: StockState, centralPrice: number, 
     centralPrice,
     lowerCallStrikePrice,
     position: 0,
-    lastAsk,
-    lastBid,
     transitoryValue: doFloatCalculation(FloatCalculations.multiply, totalPremiumSold, 100),
     unrealizedValue: doFloatCalculation(FloatCalculations.multiply, totalPremiumSold, 100),
     isDynamicIntervals,

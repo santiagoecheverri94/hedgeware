@@ -1,8 +1,7 @@
-import {syncWriteJSONFile, jsonPrettyPrint} from '../../../utils/file';
 import {doFloatCalculation, FloatCalculations} from '../../../utils/float-calculator';
 import {isHistoricalSnapshot, isHistoricalSnapshotsExhausted, restartSimulatedSnapshot} from '../../../utils/price-simulator';
 import {OrderSides, Snapshot} from '../../brokerage-clients/brokerage-client';
-import {getStockStateFilePath, getStockStates} from './algo';
+import {getStockStates} from './start';
 import {StockState} from './types';
 
 export async function debugSimulation(stock: string, states: { [stock: string]: StockState; }, snapshot: Snapshot | null): Promise<{ stockState: StockState, shouldBreak: boolean }> {

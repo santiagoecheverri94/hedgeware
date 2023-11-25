@@ -1,0 +1,784 @@
+{
+  "brokerageId": "",
+  "brokerageTradingCostPerShare": 0.005,
+  "targetPosition": 200,
+  "sharesPerInterval": 20,
+  "spaceBetweenIntervals": 0.08,
+  "intervalProfit": 0.02,
+  "numContracts": 1,
+  "premiumSold": 0.86,
+  "upperCallStrikePrice": 32,
+  "centralPrice": 30.79,
+  "lowerCallStrikePrice": 30,
+  "position": 180,
+  "transitoryValue": -5355.7,
+  "unrealizedValue": 197.4,
+  "isDynamicIntervals": true,
+  "intervals": [
+    {
+      "type": "LONG",
+      "positionLimit": 200,
+      "SELL": {
+        "price": 29.4,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 29.38,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 180,
+      "SELL": {
+        "price": 29.32,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 29.3,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 160,
+      "SELL": {
+        "price": 29.24,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 29.22,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 140,
+      "SELL": {
+        "price": 29.16,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 29.14,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 120,
+      "SELL": {
+        "price": 29.08,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 29.06,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 100,
+      "SELL": {
+        "price": 29,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 28.98,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 80,
+      "SELL": {
+        "price": 28.92,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 28.9,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 60,
+      "SELL": {
+        "price": 28.84,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 28.82,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 40,
+      "SELL": {
+        "price": 28.76,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 28.74,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 20,
+      "SELL": {
+        "price": 28.68,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 28.66,
+        "active": false,
+        "crossed": false
+      }
+    }
+  ],
+  "tradingLogs": [
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 09:40:00am ET",
+      "price": 30.79,
+      "previousPosition": 0,
+      "newPosition": 100,
+      "transitoryValue": -2914.5,
+      "unrealizedValue": 85
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 09:41:40am ET",
+      "price": 30.68,
+      "previousPosition": 100,
+      "newPosition": 80,
+      "transitoryValue": -2301,
+      "unrealizedValue": 85
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 09:42:48am ET",
+      "price": 30.67,
+      "previousPosition": 80,
+      "newPosition": 100,
+      "transitoryValue": -2914.5,
+      "unrealizedValue": 85
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 09:43:26am ET",
+      "price": 30.74,
+      "previousPosition": 100,
+      "newPosition": 120,
+      "transitoryValue": -3529.4,
+      "unrealizedValue": 84.6
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 09:46:30am ET",
+      "price": 30.66,
+      "previousPosition": 120,
+      "newPosition": 100,
+      "transitoryValue": -2916.3,
+      "unrealizedValue": 83.2
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 09:51:22am ET",
+      "price": 30.66,
+      "previousPosition": 100,
+      "newPosition": 120,
+      "transitoryValue": -3529.6,
+      "unrealizedValue": 82.8
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 09:54:47am ET",
+      "price": 30.6,
+      "previousPosition": 120,
+      "newPosition": 100,
+      "transitoryValue": -2917.7,
+      "unrealizedValue": 81.8
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 09:56:09am ET",
+      "price": 30.58,
+      "previousPosition": 100,
+      "newPosition": 120,
+      "transitoryValue": -3529.4,
+      "unrealizedValue": 81.4
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 10:03:40am ET",
+      "price": 30.52,
+      "previousPosition": 120,
+      "newPosition": 100,
+      "transitoryValue": -2919.1,
+      "unrealizedValue": 80.4
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 10:06:14am ET",
+      "price": 30.5,
+      "previousPosition": 100,
+      "newPosition": 120,
+      "transitoryValue": -3529.2,
+      "unrealizedValue": 80
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 10:08:58am ET",
+      "price": 30.44,
+      "previousPosition": 120,
+      "newPosition": 100,
+      "transitoryValue": -2920.5,
+      "unrealizedValue": 79
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 10:11:16am ET",
+      "price": 30.5,
+      "previousPosition": 100,
+      "newPosition": 120,
+      "transitoryValue": -3530.6,
+      "unrealizedValue": 78.6
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 10:14:36am ET",
+      "price": 30.44,
+      "previousPosition": 120,
+      "newPosition": 100,
+      "transitoryValue": -2921.9,
+      "unrealizedValue": 77.6
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 10:15:03am ET",
+      "price": 30.42,
+      "previousPosition": 100,
+      "newPosition": 120,
+      "transitoryValue": -3530.4,
+      "unrealizedValue": 77.2
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 10:17:03am ET",
+      "price": 30.35,
+      "previousPosition": 120,
+      "newPosition": 100,
+      "transitoryValue": -2923.5,
+      "unrealizedValue": 76
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 10:25:32am ET",
+      "price": 30.2,
+      "previousPosition": 100,
+      "newPosition": 80,
+      "transitoryValue": -2319.6,
+      "unrealizedValue": 76
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 10:28:23am ET",
+      "price": 30.18,
+      "previousPosition": 80,
+      "newPosition": 100,
+      "transitoryValue": -2923.3,
+      "unrealizedValue": 76.2
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 10:28:54am ET",
+      "price": 30.12,
+      "previousPosition": 100,
+      "newPosition": 80,
+      "transitoryValue": -2321,
+      "unrealizedValue": 76.2
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 10:30:49am ET",
+      "price": 30.18,
+      "previousPosition": 80,
+      "newPosition": 100,
+      "transitoryValue": -2924.7,
+      "unrealizedValue": 74.8
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 10:38:16am ET",
+      "price": 30.12,
+      "previousPosition": 100,
+      "newPosition": 80,
+      "transitoryValue": -2322.4,
+      "unrealizedValue": 74.8
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 10:39:39am ET",
+      "price": 30.18,
+      "previousPosition": 80,
+      "newPosition": 100,
+      "transitoryValue": -2926.1,
+      "unrealizedValue": 73.4
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 10:41:51am ET",
+      "price": 30.26,
+      "previousPosition": 100,
+      "newPosition": 120,
+      "transitoryValue": -3531.4,
+      "unrealizedValue": 73
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 10:55:12am ET",
+      "price": 30.2,
+      "previousPosition": 120,
+      "newPosition": 100,
+      "transitoryValue": -2927.5,
+      "unrealizedValue": 72
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 10:57:29am ET",
+      "price": 30.26,
+      "previousPosition": 100,
+      "newPosition": 120,
+      "transitoryValue": -3532.8,
+      "unrealizedValue": 71.6
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 10:58:58am ET",
+      "price": 30.19,
+      "previousPosition": 120,
+      "newPosition": 100,
+      "transitoryValue": -2929.1,
+      "unrealizedValue": 70.4
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 11:04:15am ET",
+      "price": 30.26,
+      "previousPosition": 100,
+      "newPosition": 120,
+      "transitoryValue": -3534.4,
+      "unrealizedValue": 70
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 11:06:41am ET",
+      "price": 30.2,
+      "previousPosition": 120,
+      "newPosition": 100,
+      "transitoryValue": -2930.5,
+      "unrealizedValue": 69
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 11:10:58am ET",
+      "price": 30.18,
+      "previousPosition": 100,
+      "newPosition": 120,
+      "transitoryValue": -3534.2,
+      "unrealizedValue": 68.6
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 11:26:24am ET",
+      "price": 30.12,
+      "previousPosition": 120,
+      "newPosition": 100,
+      "transitoryValue": -2931.9,
+      "unrealizedValue": 67.6
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 11:27:31am ET",
+      "price": 30.18,
+      "previousPosition": 100,
+      "newPosition": 120,
+      "transitoryValue": -3535.6,
+      "unrealizedValue": 67.2
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 11:32:52am ET",
+      "price": 30.26,
+      "previousPosition": 120,
+      "newPosition": 140,
+      "transitoryValue": -4140.9,
+      "unrealizedValue": 68.4
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 11:44:17am ET",
+      "price": 30.2,
+      "previousPosition": 140,
+      "newPosition": 120,
+      "transitoryValue": -3537,
+      "unrealizedValue": 66.4
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 11:56:33am ET",
+      "price": 30.26,
+      "previousPosition": 120,
+      "newPosition": 140,
+      "transitoryValue": -4142.3,
+      "unrealizedValue": 67
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 11:59:55am ET",
+      "price": 30.2,
+      "previousPosition": 140,
+      "newPosition": 120,
+      "transitoryValue": -3538.4,
+      "unrealizedValue": 65
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 12:21:17pm ET",
+      "price": 30.18,
+      "previousPosition": 120,
+      "newPosition": 140,
+      "transitoryValue": -4142.1,
+      "unrealizedValue": 64
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 01:02:49pm ET",
+      "price": 30.26,
+      "previousPosition": 140,
+      "newPosition": 160,
+      "transitoryValue": -4747.4,
+      "unrealizedValue": 66.8
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 01:38:33pm ET",
+      "price": 30.2,
+      "previousPosition": 160,
+      "newPosition": 140,
+      "transitoryValue": -4143.5,
+      "unrealizedValue": 63.8
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 01:59:00pm ET",
+      "price": 30.18,
+      "previousPosition": 140,
+      "newPosition": 160,
+      "transitoryValue": -4747.2,
+      "unrealizedValue": 62.2
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-20 03:32:22pm ET",
+      "price": 30.12,
+      "previousPosition": 160,
+      "newPosition": 140,
+      "transitoryValue": -4144.9,
+      "unrealizedValue": 59.2
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-20 03:45:16pm ET",
+      "price": 30.18,
+      "previousPosition": 140,
+      "newPosition": 160,
+      "transitoryValue": -4748.6,
+      "unrealizedValue": 60.8
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-21 09:40:00am ET",
+      "price": 30.07,
+      "previousPosition": 160,
+      "newPosition": 140,
+      "transitoryValue": -4147.3,
+      "unrealizedValue": 54.8
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-21 09:42:16am ET",
+      "price": 29.95,
+      "previousPosition": 140,
+      "newPosition": 120,
+      "transitoryValue": -3548.4,
+      "unrealizedValue": 45
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-21 09:43:53am ET",
+      "price": 29.94,
+      "previousPosition": 120,
+      "newPosition": 140,
+      "transitoryValue": -4147.3,
+      "unrealizedValue": 42.2
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-21 09:47:00am ET",
+      "price": 30.02,
+      "previousPosition": 140,
+      "newPosition": 160,
+      "transitoryValue": -4747.8,
+      "unrealizedValue": 52
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-21 09:49:55am ET",
+      "price": 29.96,
+      "previousPosition": 160,
+      "newPosition": 140,
+      "transitoryValue": -4148.7,
+      "unrealizedValue": 45
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-21 09:51:12am ET",
+      "price": 30.02,
+      "previousPosition": 140,
+      "newPosition": 160,
+      "transitoryValue": -4749.2,
+      "unrealizedValue": 50.6
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-21 09:52:08am ET",
+      "price": 29.96,
+      "previousPosition": 160,
+      "newPosition": 140,
+      "transitoryValue": -4150.1,
+      "unrealizedValue": 43.6
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-21 09:57:49am ET",
+      "price": 29.94,
+      "previousPosition": 140,
+      "newPosition": 160,
+      "transitoryValue": -4749,
+      "unrealizedValue": 39
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-21 10:04:40am ET",
+      "price": 29.88,
+      "previousPosition": 160,
+      "newPosition": 140,
+      "transitoryValue": -4151.5,
+      "unrealizedValue": 31
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-21 10:12:01am ET",
+      "price": 29.86,
+      "previousPosition": 140,
+      "newPosition": 160,
+      "transitoryValue": -4748.8,
+      "unrealizedValue": 26.4
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-21 10:15:45am ET",
+      "price": 29.94,
+      "previousPosition": 160,
+      "newPosition": 180,
+      "transitoryValue": -5347.7,
+      "unrealizedValue": 38.8
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-21 10:20:53am ET",
+      "price": 29.88,
+      "previousPosition": 180,
+      "newPosition": 160,
+      "transitoryValue": -4750.2,
+      "unrealizedValue": 29.8
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-21 10:30:41am ET",
+      "price": 29.86,
+      "previousPosition": 160,
+      "newPosition": 180,
+      "transitoryValue": -5347.5,
+      "unrealizedValue": 24.6
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-21 10:41:23am ET",
+      "price": 29.8,
+      "previousPosition": 180,
+      "newPosition": 160,
+      "transitoryValue": -4751.6,
+      "unrealizedValue": 15.6
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-21 10:43:32am ET",
+      "price": 29.78,
+      "previousPosition": 160,
+      "newPosition": 180,
+      "transitoryValue": -5347.3,
+      "unrealizedValue": 10.4
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-21 10:46:28am ET",
+      "price": 29.72,
+      "previousPosition": 180,
+      "newPosition": 160,
+      "transitoryValue": -4753,
+      "unrealizedValue": 1.4
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-21 10:48:46am ET",
+      "price": 29.7,
+      "previousPosition": 160,
+      "newPosition": 180,
+      "transitoryValue": -5347.1,
+      "unrealizedValue": -3.8
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-21 10:53:10am ET",
+      "price": 29.64,
+      "previousPosition": 180,
+      "newPosition": 160,
+      "transitoryValue": -4754.4,
+      "unrealizedValue": -12.8
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-21 10:55:23am ET",
+      "price": 29.7,
+      "previousPosition": 160,
+      "newPosition": 180,
+      "transitoryValue": -5348.5,
+      "unrealizedValue": -5.2
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-21 11:00:13am ET",
+      "price": 29.78,
+      "previousPosition": 180,
+      "newPosition": 200,
+      "transitoryValue": -5944.2,
+      "unrealizedValue": 8.8
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-21 11:06:29am ET",
+      "price": 29.72,
+      "previousPosition": 200,
+      "newPosition": 180,
+      "transitoryValue": -5349.9,
+      "unrealizedValue": -1.2
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-21 11:14:13am ET",
+      "price": 29.7,
+      "previousPosition": 180,
+      "newPosition": 200,
+      "transitoryValue": -5944,
+      "unrealizedValue": -7
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-22 12:26:46pm ET",
+      "price": 29.63,
+      "previousPosition": 200,
+      "newPosition": 180,
+      "transitoryValue": -5351.5,
+      "unrealizedValue": -19
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-22 12:32:07pm ET",
+      "price": 29.62,
+      "previousPosition": 180,
+      "newPosition": 200,
+      "transitoryValue": -5944,
+      "unrealizedValue": -23
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-22 12:36:35pm ET",
+      "price": 29.56,
+      "previousPosition": 200,
+      "newPosition": 180,
+      "transitoryValue": -5352.9,
+      "unrealizedValue": -33
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-22 12:38:41pm ET",
+      "price": 29.54,
+      "previousPosition": 180,
+      "newPosition": 200,
+      "transitoryValue": -5943.8,
+      "unrealizedValue": -38.8
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-22 12:48:08pm ET",
+      "price": 29.48,
+      "previousPosition": 200,
+      "newPosition": 180,
+      "transitoryValue": -5354.3,
+      "unrealizedValue": -48.8
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2023-06-22 01:01:10pm ET",
+      "price": 29.46,
+      "previousPosition": 180,
+      "newPosition": 200,
+      "transitoryValue": -5943.6,
+      "unrealizedValue": -54.6
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2023-06-22 01:04:02pm ET",
+      "price": 29.4,
+      "previousPosition": 200,
+      "newPosition": 180,
+      "transitoryValue": -5355.7,
+      "unrealizedValue": -64.6
+    }
+  ],
+  "lastAsk": 32.31,
+  "lastBid": 32.3
+}

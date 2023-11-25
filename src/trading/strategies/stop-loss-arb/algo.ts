@@ -8,79 +8,14 @@ import {log} from '../../../utils/log';
 import {onUserInterrupt} from '../../../utils/system';
 import {IntervalTypes, StockState} from './types';
 import {debugSimulation} from './debug';
+import {getStockStateFilePath} from './start';
 
 const brokerageClient = new IBKRClient();
 
-export async function startStopLossArb(): Promise<void> {
-  const stocks = await getStocksFileNames();
-
-  const states = await getStockStates(stocks);
-
-  let userHasInterrupted = false;
-  if (isLiveTrading()) {
-    onUserInterrupt(() => {
-      userHasInterrupted = true;
-    });
-  }
-
-  await Promise.all(stocks.map(stock => (async () => {
-    await isMarketOpen(stock);
-    while ((await isMarketOpen(stock) && !userHasInterrupted)) {
-      const stockState = states[stock];
-      const snapshot = await reconcileStockPosition(stock, stockState);
-
-      if (isHistoricalSnapshot()) {
-        if (isHistoricalSnapshotsExhausted(stock)) {
-          break;
-        }
-      }
-
-      // if ((await debugSimulation(stock, states, snapshot)).shouldBreak) {
-      //   console.log(lastDifferentSnapshot);
-      //   console.log(`position: ${stockState.position}, unrealizedValue: ${stockState.unrealizedValue}`);
-      //   debugger;
-      //   break;
-      // }
-    }
-  })()));
-
-  for (const stock of Object.keys(states).sort()) {
-    console.log(`${stock}, unrealizedValue: $${states[stock].unrealizedValue}\n`);
-  }
-
-  debugger;
-}
-
-export async function getStocksFileNames(): Promise<string[]> {
-  const fileNames = await getFileNamesWithinFolder(getStockStatesFolderPath());
-  return fileNames.filter(fileName => !['results', 'templates'].some(excludedFileName => fileName.includes(excludedFileName)) && !fileName.startsWith('_'));
-}
-
-function getStockStatesFolderPath(): string {
-  if (!isLiveTrading()) {
-    return `${process.cwd()}\\src\\trading\\strategies\\stop-loss-arb\\stock-states\\simulated`;
-  }
-
-  return `${process.cwd()}\\src\\trading\\strategies\\stop-loss-arb\\stock-states`;
-}
-
-export async function getStockStates(stocks: string[]): Promise<{ [stock: string]: StockState; }> {
-  const states: {[stock: string]: StockState} = {};
-  for (const stock of stocks) {
-    states[stock] = await readJSONFile<StockState>(getStockStateFilePath(stock));
-  }
-
-  return states;
-}
-
-export function getStockStateFilePath(stock: string): string {
-  return `${getStockStatesFolderPath()}\\${stock}.json`;
-}
-
-async function reconcileStockPosition(stock: string, stockState: StockState): Promise<Snapshot | null> {
+export async function reconcileStockPosition(stock: string, stockState: StockState): Promise<Snapshot | null> {
   // 0)
   const snapshot = await brokerageClient.getSnapshot(stock, stockState.brokerageId);
-  if (isWideBidAskSpread(snapshot)) {
+  if (isWideBidAskSpread(snapshot) || !snapshot.bid || !snapshot.ask) {
     return null;
   }
 

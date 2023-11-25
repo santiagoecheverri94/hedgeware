@@ -1,5 +1,5 @@
 import {Args, Command, Flags} from '@oclif/core';
-import {startStopLossArb} from '../../trading/strategies/stop-loss-arb/algo';
+import {startStopLossArb} from '../../trading/strategies/stop-loss-arb/start';
 
 export default class StopLossArb extends Command {
   static description = 'describe the command here'
