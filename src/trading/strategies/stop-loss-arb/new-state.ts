@@ -2,7 +2,7 @@ import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calcul
 import {jsonPrettyPrint, readJSONFile, syncWriteJSONFile, syncRenameFile} from '../../../utils/file';
 import {IntervalTypes, SmoothingInterval, StockState} from './types';
 import {getHistoricalSnapshotStockAndStartAndEndDates, getSnapshotsForStockOnDate, isHistoricalSnapshot} from '../../../utils/price-simulator';
-import {getStocksFileNames, getStockStateFilePath} from './start';
+import {getStockStateFilePath, getStocksFileNames} from './state';
 
 export async function renameHistoricalStates(newStock: string): Promise<void> {
   if (!isHistoricalSnapshot()) {

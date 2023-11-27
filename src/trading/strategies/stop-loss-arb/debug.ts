@@ -1,7 +1,7 @@
 import {doFloatCalculation, FloatCalculations} from '../../../utils/float-calculator';
 import {isHistoricalSnapshot, isHistoricalSnapshotsExhausted, restartSimulatedSnapshot} from '../../../utils/price-simulator';
 import {OrderSides, Snapshot} from '../../brokerage-clients/brokerage-client';
-import {getStockStates} from './start';
+import {getStockStates} from './state';
 import {StockState} from './types';
 
 export async function debugSimulation(stock: string, states: { [stock: string]: StockState; }, snapshot: Snapshot | null): Promise<{ stockState: StockState, shouldBreak: boolean }> {

@@ -8,7 +8,6 @@
     "no-await-in-loop": "off",
     "unicorn/consistent-destructuring": "off",
     "unicorn/no-array-reduce": "off",
-    "unicorn/no-lonely-if": "off",
-    "no-unmodified-loop-condition": "off"
+    "unicorn/no-lonely-if": "off"
   }
 }
