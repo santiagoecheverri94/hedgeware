@@ -21,7 +21,7 @@ export async function setSecurityPosition({
 
   const side = determineIfOrderNeedBeBuyOrSell(currentPosition, newPosition);
   const quantity = getOrderQuantity(currentPosition, newPosition);
-  const price = await getOrderPrice({snapshot, orderSide: side});
+  const price = getOrderPrice({snapshot, orderSide: side});
 
   const orderDetails: OrderDetails = {
     brokerageIdOfSecurity,
@@ -90,13 +90,13 @@ function getOrderQuantity(currentPosition: number, newPosition: number): number 
   return Math.abs(currentPosition - newPosition);
 }
 
-async function getOrderPrice({
+function getOrderPrice({
   snapshot,
   orderSide,
 }: {
   snapshot: Snapshot,
   orderSide: OrderSides,
-}): Promise<number> {
+}): number {
   if (orderSide === OrderSides.BUY) {
     return snapshot.ask;
   }

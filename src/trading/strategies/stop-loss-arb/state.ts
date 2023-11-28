@@ -27,7 +27,7 @@ function getStockStatesFolderPath(): string {
 }
 
 export async function getStockStates(stocks: string[]): Promise<{ [stock: string]: StockState; }> {
-  const states: {[stock: string]: StockState} = {};
+  const states: { [stock: string]: StockState } = {};
   for (const stock of stocks) {
     states[stock] = await readJSONFile<StockState>(getStockStateFilePath(stock));
   }
@@ -48,7 +48,8 @@ export async function setNewPosition(
     snapshot,
     orderSide,
   }: {
-    stock: string, brokerageClient: BrokerageClient, stockState: StockState, newPosition: number, snapshot: Snapshot, orderSide: OrderSides}): Promise<void> {
+    stock: string, brokerageClient: BrokerageClient, stockState: StockState, newPosition: number, snapshot: Snapshot, orderSide: OrderSides
+  }): Promise<void> {
   await brokerageClient.setSecurityPosition({
     brokerageIdOfSecurity: stockState.brokerageId,
     currentPosition: stockState.position * stockState.numContracts,

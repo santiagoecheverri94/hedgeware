@@ -53,10 +53,14 @@ function getFullStockState(partialStockState: StockState, initialPrice: number, 
     spaceBetweenIntervals,
   } = partialStockState;
 
-  const centralPrice = getCentralPrice(initialPrice);
+  // TODO: remove the following in a future iteration
+  const lowerCallStrikePrice = Math.floor(initialPrice);
+  const upperCallStrikePrice = lowerCallStrikePrice + 2;
+  // const upperCallStrikePrice = Math.ceil(longIntervalsAbove[0].SELL.price);
+  // const lowerCallStrikePrice = upperCallStrikePrice - 2;
 
   const longIntervalsAbove: SmoothingInterval[] = getLongIntervalsAbove({
-    centralPrice,
+    centralPrice: lowerCallStrikePrice,
     targetPosition,
     intervalProfit,
     spaceBetweenIntervals,
@@ -64,19 +68,12 @@ function getFullStockState(partialStockState: StockState, initialPrice: number, 
   });
 
   const longIntervalsBelow: SmoothingInterval[] = getLongIntervalsBelow({
-    centralPrice,
+    centralPrice: lowerCallStrikePrice,
     targetPosition,
     intervalProfit,
     spaceBetweenIntervals,
     sharesPerInterval,
   });
-
-  // TODO: remove the following in a future iteration
-  const lowerCallStrikePrice = Math.floor(longIntervalsBelow[longIntervalsBelow.length - 1].BUY.price);
-  const upperCallStrikePrice = lowerCallStrikePrice + 2;
-
-  // const upperCallStrikePrice = Math.ceil(longIntervalsAbove[0].SELL.price);
-  // const lowerCallStrikePrice = upperCallStrikePrice - 2;
 
   let totalPremiumSold = doFloatCalculation(FloatCalculations.subtract, initialPrice, lowerCallStrikePrice);
   totalPremiumSold = doFloatCalculation(FloatCalculations.add, totalPremiumSold, premiumSold);
@@ -102,10 +99,6 @@ function getFullStockState(partialStockState: StockState, initialPrice: number, 
   };
 
   return newState;
-}
-
-function getCentralPrice(initialPrice: number): number {
-  return initialPrice;
 }
 
 function getLongIntervalsAbove({

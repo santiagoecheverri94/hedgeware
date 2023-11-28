@@ -39,7 +39,7 @@ export async function reconcileStockPosition(stock: string, stockState: StockSta
 
   const isSnapshotChanged = isSnapshotChange(snapshot, stockState);
   if (newPosition !== undefined) {
-    setNewPosition({
+    await setNewPosition({
       stock,
       brokerageClient,
       stockState,
