@@ -20,11 +20,11 @@ export default class StopLossArbNewState extends Command {
     const {args, flags} = await this.parse(StopLossArbNewState);
 
     for (const stockWithPrice of args.stocksWithPrice.split(',')) {
-      const [stock, centralPrice] = stockWithPrice.split(':');
+      const [stock, initial] = stockWithPrice.split(':');
 
-      if (!centralPrice) throw new Error(`No price provided for ${stock}`);
+      if (!initial) throw new Error(`No price provided for ${stock}`);
 
-      await createNewStockStateFromExisting(stock, Number.parseFloat(centralPrice), !flags.static);
+      await createNewStockStateFromExisting(stock, Number.parseFloat(initial), !flags.static);
     }
 
     this.exit();

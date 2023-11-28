@@ -27,7 +27,7 @@ export interface StockState {
   intervalProfit: number;
   premiumSold: number;
   upperCallStrikePrice: number | null;
-  centralPrice: number;
+  initialPrice: number;
   lowerCallStrikePrice: number | null;
   spaceBetweenIntervals: number;
   numContracts: number;

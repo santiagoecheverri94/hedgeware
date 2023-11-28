@@ -27,21 +27,21 @@ export async function refreshHistoricalStates(isDynamicIntervals: boolean): Prom
   for (const fileName of stocksFileNames) {
     const {stock, startDate} = getHistoricalSnapshotStockAndStartAndEndDates(fileName);
     const snapshotsForStockOnStartDate = await getSnapshotsForStockOnDate(stock, startDate);
-    const centralPrice = snapshotsForStockOnStartDate[0].ask;
+    const initialPrice = snapshotsForStockOnStartDate[0].ask;
 
-    await createNewStockStateFromExisting(fileName, centralPrice, isDynamicIntervals);
+    await createNewStockStateFromExisting(fileName, initialPrice, isDynamicIntervals);
   }
 }
 
-export async function createNewStockStateFromExisting(stock: string, centralPrice: number, isDynamicIntervals: boolean): Promise<void> {
+export async function createNewStockStateFromExisting(stock: string, initialPrice: number, isDynamicIntervals: boolean): Promise<void> {
   const filePath = getStockStateFilePath(`${stock}`);
   const partialStockState = await readJSONFile<StockState>(filePath);
-  const newState = getFullStockState(partialStockState, centralPrice, isDynamicIntervals);
+  const newState = getFullStockState(partialStockState, initialPrice, isDynamicIntervals);
 
   syncWriteJSONFile(getStockStateFilePath(`${stock}`), jsonPrettyPrint(newState));
 }
 
-function getFullStockState(partialStockState: StockState, centralPrice: number, isDynamicIntervals: boolean): StockState {
+function getFullStockState(partialStockState: StockState, initialPrice: number, isDynamicIntervals: boolean): StockState {
   const {
     brokerageId,
     brokerageTradingCostPerShare,
@@ -52,6 +52,8 @@ function getFullStockState(partialStockState: StockState, centralPrice: number, 
     intervalProfit,
     spaceBetweenIntervals,
   } = partialStockState;
+
+  const centralPrice = getCentralPrice(initialPrice);
 
   const longIntervalsAbove: SmoothingInterval[] = getLongIntervalsAbove({
     centralPrice,
@@ -76,7 +78,7 @@ function getFullStockState(partialStockState: StockState, centralPrice: number, 
   // const upperCallStrikePrice = Math.ceil(longIntervalsAbove[0].SELL.price);
   // const lowerCallStrikePrice = upperCallStrikePrice - 2;
 
-  let totalPremiumSold = doFloatCalculation(FloatCalculations.subtract, centralPrice, lowerCallStrikePrice);
+  let totalPremiumSold = doFloatCalculation(FloatCalculations.subtract, initialPrice, lowerCallStrikePrice);
   totalPremiumSold = doFloatCalculation(FloatCalculations.add, totalPremiumSold, premiumSold);
 
   const newState: StockState = {
@@ -89,7 +91,7 @@ function getFullStockState(partialStockState: StockState, centralPrice: number, 
     numContracts,
     premiumSold,
     upperCallStrikePrice,
-    centralPrice,
+    initialPrice,
     lowerCallStrikePrice,
     position: 0,
     transitoryValue: doFloatCalculation(FloatCalculations.multiply, totalPremiumSold, 100),
@@ -100,6 +102,10 @@ function getFullStockState(partialStockState: StockState, centralPrice: number, 
   };
 
   return newState;
+}
+
+function getCentralPrice(initialPrice: number): number {
+  return initialPrice;
 }
 
 function getLongIntervalsAbove({

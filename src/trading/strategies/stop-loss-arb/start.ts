@@ -38,7 +38,7 @@ async function hedgeStockWhileMarketIsOpen(stock: string, states: {[stock: strin
 
     if (isHistoricalSnapshot()) {
       if (isHistoricalSnapshotsExhausted(stock)) {
-        syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
+        // syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
         break;
       }
     }

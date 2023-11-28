@@ -64,7 +64,7 @@ async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up
 
   samples.push({
     upOrDown: upperOrLowerBound,
-    distance: Math.abs(doFloatCalculation(FloatCalculations.subtract, stockState.tradingLogs[0].price, stockState.centralPrice)),
+    distance: Math.abs(doFloatCalculation(FloatCalculations.subtract, stockState.tradingLogs[0].price, stockState.initialPrice)),
     unrealizedValue: stockState.unrealizedValue,
   });
 
