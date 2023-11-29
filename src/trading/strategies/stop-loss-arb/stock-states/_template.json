@@ -1,5 +1,5 @@
 {
-  "brokerageId": null,
+  "brokerageId": "",
   "brokerageTradingCostPerShare": 0.005,
   "targetPosition": 200,
   "sharesPerInterval": 20,

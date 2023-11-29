@@ -1,0 +1,249 @@
+{
+  "brokerageId": "554208351",
+  "brokerageTradingCostPerShare": 0.005,
+  "targetPosition": 220,
+  "sharesPerInterval": 20,
+  "spaceBetweenIntervals": 0.08,
+  "intervalProfit": 0.02,
+  "numContracts": 10,
+  "premiumSold": 0.55,
+  "isDynamicIntervals": true,
+  "upperCallStrikePrice": 11,
+  "initialPrice": 10.58,
+  "lowerCallStrikePrice": 10,
+  "position": 200,
+  "transitoryValue": 108.4,
+  "unrealizedValue": 2116.4,
+  "intervals": [
+    {
+      "type": "LONG",
+      "positionLimit": 220,
+      "SELL": {
+        "price": 10.13,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 10.11,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 200,
+      "SELL": {
+        "price": 10.05,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 10.03,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 180,
+      "SELL": {
+        "price": 9.97,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 9.95,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 160,
+      "SELL": {
+        "price": 9.89,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 9.87,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 140,
+      "SELL": {
+        "price": 9.81,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 9.79,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 120,
+      "SELL": {
+        "price": 9.73,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 9.71,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 100,
+      "SELL": {
+        "price": 9.65,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 9.63,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 80,
+      "SELL": {
+        "price": 9.57,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 9.55,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 60,
+      "SELL": {
+        "price": 9.49,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 9.47,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 40,
+      "SELL": {
+        "price": 9.41,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 9.39,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 20,
+      "SELL": {
+        "price": 9.33,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 9.31,
+        "active": false,
+        "crossed": false
+      }
+    }
+  ],
+  "tradingLogs": [
+    {
+      "action": "SELL",
+      "timeStamp": "2024-01-29 at 12:05:11pm ET",
+      "price": 10.28,
+      "previousPosition": 200,
+      "newPosition": 180,
+      "transitoryValue": 318.5,
+      "unrealizedValue": 2140
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2024-01-29 at 12:12:22pm ET",
+      "price": 10.27,
+      "previousPosition": 180,
+      "newPosition": 200,
+      "transitoryValue": 113,
+      "unrealizedValue": 2138
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2024-01-29 at 02:11:47pm ET",
+      "price": 10.35,
+      "previousPosition": 200,
+      "newPosition": 220,
+      "transitoryValue": -94.1,
+      "unrealizedValue": 2145.6
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2024-01-30 at 09:40:06am ET",
+      "price": 10.27,
+      "previousPosition": 220,
+      "newPosition": 200,
+      "transitoryValue": 111.2,
+      "unrealizedValue": 2137.2
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2024-01-30 at 09:42:16am ET",
+      "price": 10.27,
+      "previousPosition": 200,
+      "newPosition": 220,
+      "transitoryValue": -94.3,
+      "unrealizedValue": 2135.8
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2024-01-30 at 09:52:50am ET",
+      "price": 10.21,
+      "previousPosition": 220,
+      "newPosition": 200,
+      "transitoryValue": 109.8,
+      "unrealizedValue": 2129.8
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2024-01-30 at 10:17:43am ET",
+      "price": 10.19,
+      "previousPosition": 200,
+      "newPosition": 220,
+      "transitoryValue": -94.1,
+      "unrealizedValue": 2126.4
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2024-01-30 at 10:32:29am ET",
+      "price": 10.13,
+      "previousPosition": 220,
+      "newPosition": 200,
+      "transitoryValue": 108.4,
+      "unrealizedValue": 2120.4
+    }
+  ],
+  "lastAsk": 10.1,
+  "lastBid": 10.09
+}

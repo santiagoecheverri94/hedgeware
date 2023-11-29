@@ -30,14 +30,27 @@ async function tickleApiGatewayEveryMinute(): Promise<void> {
   const ONE_MINUTE = 60_000;
   await setTimeout(ONE_MINUTE);
 
-  const tickleResponse = await tickleApiGateway();
+  const response = await tickleApiGateway();
 
-  if (tickleResponse.status !== 200) {
-    stopSystem('Unable to tickle IBKR API Gateway.');
+  if (response.status && response.status >= 400 && response.status < 500) {
+    log('Failed due to our fault. Debugger will be triggered.');
+    debugger;
+    stopSystem('IBKR API Gateway tickle failed with 400.');
   }
 
-  if (!tickleResponse.data?.iserver.authStatus.authenticated) {
+  if (response.status && response.status >= 500 && response.status < 600) {
+    log('Failed due to server error. Debugger will be triggered, and will try again in a minute.');
+    // debugger;
+  }
+
+  if (response.data?.iserver.authStatus.authenticated === false) {
+    debugger;
     stopSystem('IBKR API Gateway became unauthenticated.');
+  }
+
+  if (!response.data) {
+    debugger;
+    stopSystem('IBKR API Gateway tickle failed due to bad response.');
   }
 
   if (process.env.VERBOSE) {

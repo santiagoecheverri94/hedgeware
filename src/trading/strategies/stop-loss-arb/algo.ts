@@ -1,6 +1,7 @@
 import {syncWriteJSONFile, jsonPrettyPrint} from '../../../utils/file';
 import {doFloatCalculation, FloatCalculations} from '../../../utils/float-calculator';
 import {isLiveTrading} from '../../../utils/price-simulator';
+import { getCurrentTimeStamp } from '../../../utils/time';
 import {Snapshot, OrderSides, BrokerageClient} from '../../brokerage-clients/brokerage-client';
 import {getStockStateFilePath, setNewPosition, doSnapShotChangeUpdates, isWideBidAskSpread, isSnapshotChange} from './state';
 import {StockState} from './types';

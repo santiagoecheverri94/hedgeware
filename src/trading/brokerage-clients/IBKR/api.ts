@@ -10,9 +10,10 @@ const syncApi = createApiSauceInstance({
   }),
 });
 
-const MAX_REQUESTS_PER_SECOND = 5;
+const MAX_REQUESTS_PER_SECOND = 2;
 const ONE_SECOND = 1000;
-const TIME_TO_WAIT_BETWEEN_REQUESTS = ONE_SECOND / MAX_REQUESTS_PER_SECOND;
+// TODO: fix the code below after adding streaming snapshots for scalibility
+const TIME_TO_WAIT_BETWEEN_REQUESTS = ONE_SECOND; //  MAX_REQUESTS_PER_SECOND;
 const apiThrottle = getNewThrottle();
 
 export async function getUncheckedIBKRApi(): Promise<ApisauceInstance> {

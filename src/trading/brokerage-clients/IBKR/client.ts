@@ -54,7 +54,9 @@ export class IBKRClient extends BrokerageClient {
     this.sessionId = await initiateApiSessionWithTickling();
 
     const accountsResponse = await (await this.getApi()).get<AccountsResponse>('/iserver/accounts');
-    this.account = accountsResponse.data!.accounts[0];
+
+    const accounts = accountsResponse.data!.accounts;
+    this.account = accounts[accounts.length - 1];
   }
 
   async getSnapshotImplementation(stock: string, conid: string): Promise<Snapshot> {
@@ -64,7 +66,14 @@ export class IBKRClient extends BrokerageClient {
       conids: conid,
       fields: Object.values(this.snapshotFields).join(','),
     }));
-    const snapshotResponse = response.data![0];
+
+    if (!response.data?.[0]) {
+      log('Failed to obtain snapshot. Will try agagin. Debugger will be triggered.');
+      debugger;
+      return this.getSnapshotImplementation(stock, conid);
+    }
+
+    const snapshotResponse = response.data[0];
 
     if (isSnapshotResponseWithAllFields(snapshotResponse, fields)) {
       return getSnapshotFromResponse(snapshotResponse, this.snapshotFields);
