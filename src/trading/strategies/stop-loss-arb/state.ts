@@ -9,7 +9,7 @@ import {StockState} from './types';
 export async function getStocksFileNames(filterUnderscores = true): Promise<string[]> {
   let fileNames = await getFileNamesWithinFolder(getStockStatesFolderPath());
 
-  fileNames = fileNames.filter(fileName => !['results', 'templates'].some(excludedFileName => fileName.includes(excludedFileName)));
+  fileNames = fileNames.filter(fileName => !['results', 'templates', 'historical'].some(excludedFileName => fileName.includes(excludedFileName)));
 
   if (filterUnderscores) {
     fileNames = fileNames.filter(fileName => !fileName.startsWith('_'));
@@ -91,7 +91,8 @@ export function isSnapshotChange(snapshot: Snapshot, stockState: StockState): bo
 export function doSnapShotChangeUpdates(stock: string, stockState: StockState, snapshot: Snapshot): void {
   stockState.lastAsk = snapshot.ask;
   stockState.lastBid = snapshot.bid;
-  stockState.unrealizedValue = getUnrealizedValue(stockState, snapshot);
+  // TODO: fix this
+  // stockState.unrealizedValue = getUnrealizedValue(stockState, snapshot);
 
   if (isLiveTrading()) {
     syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));

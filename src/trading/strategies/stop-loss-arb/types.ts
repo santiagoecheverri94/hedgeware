@@ -26,14 +26,13 @@ export interface StockState {
   sharesPerInterval: number,
   intervalProfit: number;
   premiumSold: number;
-  upperCallStrikePrice: number | null;
+  upperCallStrikePrice?: number | null; // TODO: consider making this more elegant
   initialPrice: number;
   lowerCallStrikePrice: number | null;
   spaceBetweenIntervals: number;
   numContracts: number;
   position: number;
   targetPosition: number;
-  isDynamicIntervals: boolean;
   intervals: SmoothingInterval[];
   tradingLogs: {
     timeStamp: string;
@@ -42,10 +41,10 @@ export interface StockState {
     previousPosition: number;
     newPosition: number;
     transitoryValue: number;
-    unrealizedValue: number;
+    unrealizedValue?: number; // TODO: consider making this more elegant
   }[];
   transitoryValue: number;
-  unrealizedValue: number;
+  unrealizedValue?: number; // TODO: consider making this more elegant
   lastAsk?: number;
   lastBid?: number;
 }

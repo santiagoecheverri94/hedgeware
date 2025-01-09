@@ -95,10 +95,6 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number {
     }
   }
 
-  if (!stockState.isDynamicIntervals) {
-    addSkippedBuysIfRequired(stockState, indexesToExecute);
-  }
-
   for (const index of indexesToExecute) {
     const interval = intervals[index];
 
@@ -116,28 +112,10 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number {
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.transitoryValue = doFloatCalculation(FloatCalculations.subtract, stockState.transitoryValue, tradingCosts);
 
-    if (stockState.isDynamicIntervals) {
-      correctBadBuyIfRequired(stockState, indexesToExecute);
-    }
+    correctBadBuyIfRequired(stockState, indexesToExecute);
   }
 
   return indexesToExecute.length;
-}
-
-function addSkippedBuysIfRequired(stockState: StockState, indexesToExecute: number[]): void {
-  if (indexesToExecute.length === 0) {
-    return;
-  }
-
-  const {intervals} = stockState;
-  const bottomOriginalIndexToExecute = indexesToExecute[indexesToExecute.length - 1];
-  for (let i = intervals.length - 1; i > bottomOriginalIndexToExecute; i--) {
-    const interval = intervals[i];
-
-    if (interval[OrderSides.BUY].active) { // && i !== indexesToExecute[indexesToExecute.length - 1] + stockState.uncrossedBuyingSkips) {
-      indexesToExecute.push(i); // TODO: splice this properly instead of pushing
-    }
-  }
 }
 
 function correctBadBuyIfRequired(stockState: StockState, indexesToExecute: number[]): void {
@@ -183,10 +161,6 @@ function getNumToSell(stockState: StockState, {bid}: Snapshot): number {
     }
   }
 
-  if (!stockState.isDynamicIntervals) {
-    addSkippedSellsIfRequired(stockState, indexesToExecute);
-  }
-
   for (const index of indexesToExecute) {
     const interval = intervals[index];
 
@@ -204,28 +178,10 @@ function getNumToSell(stockState: StockState, {bid}: Snapshot): number {
     const tradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, indexesToExecute.length * stockState.sharesPerInterval);
     stockState.transitoryValue = doFloatCalculation(FloatCalculations.subtract, stockState.transitoryValue, tradingCosts);
 
-    if (stockState.isDynamicIntervals) {
-      correctBadSellIfRequired(stockState, indexesToExecute);
-    }
+    correctBadSellIfRequired(stockState, indexesToExecute);
   }
 
   return indexesToExecute.length;
-}
-
-function addSkippedSellsIfRequired(stockState: StockState, indexesToExecute: number[]): void {
-  if (indexesToExecute.length === 0) {
-    return;
-  }
-
-  const {intervals} = stockState;
-  const topOriginalIndexToExecute = indexesToExecute[0];
-  for (let i = 0; i < topOriginalIndexToExecute; i++) {
-    const interval = intervals[i];
-
-    if (interval[OrderSides.SELL].active) { // && i !== indexesToExecute[0] - stockState.uncrossedSellingSkips) {
-      indexesToExecute.unshift(i); // TODO: splice this properly instead of unshifting
-    }
-  }
 }
 
 function correctBadSellIfRequired(stockState: StockState, indexesToExecute: number[]): void {

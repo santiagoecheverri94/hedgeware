@@ -1,10 +1,10 @@
 {
   "brokerageId": "",
   "brokerageTradingCostPerShare": 0.005,
-  "targetPosition": 200,
-  "sharesPerInterval": 20,
-  "spaceBetweenIntervals": 0.08,
-  "intervalProfit": 0.02,
+  "sharesPerInterval": 10,
   "numContracts": null,
-  "premiumSold": null
+  "targetPosition": 200,
+  "premiumSold": null,
+  "intervalProfit": 0.02,
+  "spaceBetweenIntervals": 0.08
 }

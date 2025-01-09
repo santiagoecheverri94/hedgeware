@@ -31,15 +31,15 @@ export interface IBKROrderDetails {
 
 export type OrdersResponse = Array<{
   id?: string;
-  order_id?: string; // eslint-disable-line camelcase
+  order_id?: string;
 }>;
 
 export interface CancelOrderResponse {
-  order_id?: string; // eslint-disable-line camelcase
+  order_id?: string;
 }
 
 export interface OrderStatusResponse {
-  order_status: string; // eslint-disable-line camelcase
+  order_status: string;
 }
 
 export type PositionResponse = [{

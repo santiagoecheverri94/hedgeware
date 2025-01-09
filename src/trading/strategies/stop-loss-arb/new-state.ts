@@ -33,9 +33,7 @@ export async function renameHistoricalStates(newStock: string): Promise<void> {
     }
 }
 
-export async function refreshHistoricalStates(
-    isDynamicIntervals: boolean
-): Promise<void> {
+export async function refreshHistoricalStates(): Promise<void> {
     if (!isHistoricalSnapshot()) {
         throw new Error(
             "Must be in historical snapshot mode to refresh historical states"
@@ -55,7 +53,6 @@ export async function refreshHistoricalStates(
         await createNewStockStateFromExisting(
             fileName,
             initialPrice,
-            isDynamicIntervals
         );
     }
 }
@@ -63,14 +60,12 @@ export async function refreshHistoricalStates(
 export async function createNewStockStateFromExisting(
     stock: string,
     initialPrice: number,
-    isDynamicIntervals: boolean
 ): Promise<void> {
     const filePath = getStockStateFilePath(`${stock}`);
     const partialStockState = await readJSONFile<StockState>(filePath);
     const newState = getFullStockState(
         partialStockState,
         initialPrice,
-        isDynamicIntervals
     );
 
     syncWriteJSONFile(getStockStateFilePath(`${stock}`), jsonPrettyPrint(newState));
@@ -79,7 +74,6 @@ export async function createNewStockStateFromExisting(
 function getFullStockState(
     partialStockState: StockState,
     initialPrice: number,
-    isDynamicIntervals: boolean
 ): StockState {
     const {
         brokerageId,
@@ -92,19 +86,16 @@ function getFullStockState(
         spaceBetweenIntervals,
     } = partialStockState;
 
-    // TODO: remove the following in a future iteration
     const lowerCallStrikePrice = Math.floor(initialPrice);
-    const upperCallStrikePrice = lowerCallStrikePrice + 2;
-    // const upperCallStrikePrice = Math.ceil(longIntervalsAbove[0].SELL.price);
-    // const lowerCallStrikePrice = upperCallStrikePrice - 2;
+    // const upperCallStrikePrice = lowerCallStrikePrice + 2;
 
-    const longIntervalsAbove: SmoothingInterval[] = getLongIntervalsAbove({
-        centralPrice: lowerCallStrikePrice,
-        targetPosition,
-        intervalProfit,
-        spaceBetweenIntervals,
-        sharesPerInterval,
-    });
+    // const longIntervalsAbove: SmoothingInterval[] = getLongIntervalsAbove({
+    //     centralPrice: lowerCallStrikePrice,
+    //     targetPosition,
+    //     intervalProfit,
+    //     spaceBetweenIntervals,
+    //     sharesPerInterval,
+    // });
 
     const longIntervalsBelow: SmoothingInterval[] = getLongIntervalsBelow({
         centralPrice: lowerCallStrikePrice,
@@ -134,8 +125,7 @@ function getFullStockState(
         intervalProfit,
         numContracts,
         premiumSold,
-        isDynamicIntervals,
-        upperCallStrikePrice,
+        // upperCallStrikePrice,
         initialPrice,
         lowerCallStrikePrice,
         position: 0,
@@ -146,12 +136,12 @@ function getFullStockState(
             totalPremiumSold,
             100
         ),
-        unrealizedValue: doFloatCalculation(
-            FloatCalculations.multiply,
-            totalPremiumSold,
-            100
-        ),
-        intervals: [...longIntervalsAbove, ...longIntervalsBelow],
+        // unrealizedValue: doFloatCalculation(
+        //     FloatCalculations.multiply,
+        //     totalPremiumSold,
+        //     100
+        // ),
+        intervals: [...longIntervalsBelow], // [...longIntervalsAbove, ...longIntervalsBelow],
         tradingLogs: [],
     };
 

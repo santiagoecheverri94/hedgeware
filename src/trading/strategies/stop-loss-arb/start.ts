@@ -15,7 +15,6 @@ export async function startStopLossArb(): Promise<void> {
 
   const states = await getStockStates(stocks);
 
-  // TODO: check if you can delete this
   // let userHasInterrupted = false;
   // if (isLiveTrading()) {
   //   onUserInterrupt(() => {

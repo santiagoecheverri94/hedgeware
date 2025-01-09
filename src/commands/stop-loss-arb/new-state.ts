@@ -12,19 +12,15 @@ export default class StopLossArbNewState extends Command {
     stocksWithPrice: Args.string({description: 'stocks to trade', required: true}),
   }
 
-  static flags = {
-    static: Flags.boolean({description: 'whether or not to use static intervals', required: false, default: false}),
-  }
-
   public async run(): Promise<void> {
-    const {args, flags} = await this.parse(StopLossArbNewState);
+    const {args} = await this.parse(StopLossArbNewState);
 
     for (const stockWithPrice of args.stocksWithPrice.split(',')) {
-      const [stock, initial] = stockWithPrice.split(':');
+      const [stock, initialPrice] = stockWithPrice.split(':');
 
-      if (!initial) throw new Error(`No price provided for ${stock}`);
+      if (!initialPrice) throw new Error(`No price provided for ${stock}`);
 
-      await createNewStockStateFromExisting(stock, Number.parseFloat(initial), !flags.static);
+      await createNewStockStateFromExisting(stock, Number.parseFloat(initialPrice));
     }
 
     this.exit();
