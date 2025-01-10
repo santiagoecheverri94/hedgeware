@@ -3,8 +3,9 @@
   "brokerageTradingCostPerShare": 0.005,
   "sharesPerInterval": 10,
   "numContracts": null,
-  "targetPosition": 200,
-  "premiumSold": null,
+  "targetPosition": 100,
   "intervalProfit": 0.02,
-  "spaceBetweenIntervals": 0.08
+  "spaceBetweenIntervals": 0.08,
+  "initialPrice": null,
+  "putStrikePrice": null
 }

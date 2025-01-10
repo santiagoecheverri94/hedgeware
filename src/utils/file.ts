@@ -1,27 +1,32 @@
-import {promises as fsPromises, renameSync, writeFileSync} from 'node:fs';
+import { promises as fsPromises, renameSync, writeFileSync } from "node:fs";
 
 export async function readJSONFile<T>(filePath: string): Promise<T> {
-  const file = await fsPromises.readFile(filePath, 'utf8');
-  return JSON.parse(file);
+    const file = await fsPromises.readFile(filePath, "utf8");
+    return JSON.parse(file);
 }
 
-export async function asyncWriteJSONFile(filePath: string, jsonString: string): Promise<void> {
-  await fsPromises.writeFile(filePath, jsonString);
+export async function asyncWriteJSONFile(
+    filePath: string,
+    jsonString: string
+): Promise<void> {
+    await fsPromises.writeFile(filePath, jsonString);
 }
 
 export function syncWriteJSONFile(filePath: string, jsonString: string): void {
-  writeFileSync(filePath, jsonString);
+    writeFileSync(filePath, jsonString);
 }
 
 export function syncRenameFile(oldPath: string, newPath: string): void {
-  renameSync(oldPath, newPath);
+    renameSync(oldPath, newPath);
 }
 
 export function jsonPrettyPrint(obj: unknown): string {
-  return `${JSON.stringify(obj, null, 2)}\n`;
+    return `${JSON.stringify(obj, null, 2)}\n`;
 }
 
 export async function getFileNamesWithinFolder(folderPath: string): Promise<string[]> {
-  const fileNames = await fsPromises.readdir(folderPath);
-  return fileNames.filter(fileName => fileName !== 'simulated').map(fileName => fileName.split('.')[0]);
+    const fileNames = await fsPromises.readdir(folderPath);
+    return fileNames
+        .filter((fileName) => fileName !== "simulated")
+        .map((fileName) => fileName.split(".")[0]);
 }

@@ -1,50 +1,50 @@
 export interface SsoValidateResponse {
-  RESULT: boolean;
+    RESULT: boolean;
 }
 
 export interface TickleResponse {
-  session: string;
-  iserver: {
-    authStatus: {
-      authenticated: boolean
-    }
-  }
+    session: string;
+    iserver: {
+        authStatus: {
+            authenticated: boolean;
+        };
+    };
 }
 
 export interface AccountsResponse {
-  accounts: string[]
+    accounts: string[];
 }
 
 export type SnapshotResponse = {
-  [field: string]: string;
-}
+    [field: string]: string;
+};
 
 export interface IBKROrderDetails {
-  tif: string;
-  orderType: string;
-  conidex: string;
-  price: number
-  side: string;
-  quantity: number;
-  useAdaptive: false;
+    ticker: string;
+    // exchange?
+    price: number;
+    side: string;
+    quantity: number;
 }
 
 export type OrdersResponse = Array<{
-  id?: string;
-  order_id?: string;
+    id?: string;
+    order_id?: string;
 }>;
 
 export interface CancelOrderResponse {
-  order_id?: string;
+    order_id?: string;
 }
 
 export interface OrderStatusResponse {
-  order_status: string;
+    order_status: string;
 }
 
-export type PositionResponse = [{
-  acctId: string,
-  conid: number,
-  contractDesc: string,
-  position: number,
-}];
+export type PositionResponse = [
+    {
+        acctId: string;
+        conid: number;
+        contractDesc: string;
+        position: number;
+    }
+];

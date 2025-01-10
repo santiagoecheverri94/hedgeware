@@ -1,20 +1,25 @@
-import {setTimeout} from 'node:timers/promises';
+import { setTimeout } from "node:timers/promises";
 
-export interface Throttle {awaiter: Promise<void> | null}
-
-export function getNewThrottle(): Throttle {
-  return {awaiter: null};
+export interface Throttle {
+    awaiter: Promise<void> | null;
 }
 
-export async function doThrottling(throttle: Throttle, throttleTimeMs: number): Promise<void> {
-  while (throttle.awaiter) {
-    const myAwaiter = throttle.awaiter;
-    await myAwaiter;
+export function getNewThrottle(): Throttle {
+    return { awaiter: null };
+}
 
-    if (myAwaiter === throttle.awaiter) {
-      throttle.awaiter = null;
+export async function doThrottling(
+    throttle: Throttle,
+    throttleTimeMs: number
+): Promise<void> {
+    while (throttle.awaiter) {
+        const myAwaiter = throttle.awaiter;
+        await myAwaiter;
+
+        if (myAwaiter === throttle.awaiter) {
+            throttle.awaiter = null;
+        }
     }
-  }
 
-  throttle.awaiter = setTimeout(throttleTimeMs);
+    throttle.awaiter = setTimeout(throttleTimeMs);
 }
