@@ -1,0 +1,160 @@
+{
+  "brokerageId": "",
+  "brokerageTradingCostPerShare": 0.005,
+  "targetPosition": 200,
+  "sharesPerInterval": 20,
+  "spaceBetweenIntervals": 0.08,
+  "intervalProfit": 0.02,
+  "numContracts": 1,
+  "premiumSold": 0.7,
+  "upperCallStrikePrice": 14,
+  "initialPrice": 13.58,
+  "lowerCallStrikePrice": 13,
+  "position": 0,
+  "transitoryValue": 128,
+  "unrealizedValue": 128,
+  "isDynamicIntervals": true,
+  "intervals": [
+    {
+      "type": "LONG",
+      "positionLimit": 200,
+      "SELL": {
+        "price": 13.37,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 13.35,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 180,
+      "SELL": {
+        "price": 13.29,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 13.27,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 160,
+      "SELL": {
+        "price": 13.21,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 13.19,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 140,
+      "SELL": {
+        "price": 13.13,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 13.11,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 120,
+      "SELL": {
+        "price": 13.05,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 13.03,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 100,
+      "SELL": {
+        "price": 12.97,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.95,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 80,
+      "SELL": {
+        "price": 12.89,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.87,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 60,
+      "SELL": {
+        "price": 12.81,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.79,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 40,
+      "SELL": {
+        "price": 12.73,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.71,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 20,
+      "SELL": {
+        "price": 12.65,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 12.63,
+        "active": true,
+        "crossed": true
+      }
+    }
+  ],
+  "tradingLogs": []
+}

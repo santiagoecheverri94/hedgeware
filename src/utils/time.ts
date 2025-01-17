@@ -7,7 +7,7 @@ import {isLiveTrading} from './price-simulator';
 export const MARKET_OPENS = '9:40:00am';
 export const MARKET_CLOSES = '3:50:00pm';
 
-const DATE_FORMAT = 'MM-DD-YYYY';
+const DATE_FORMAT = 'YYYY-MM-DD';
 const TIME_FORMAT = 'hh:mm:ssa';
 const MARKET_TIMEZONE = 'America/New_York';
 
@@ -87,13 +87,14 @@ export function getSecondsFromNanoSecondsTimestamp(nanoSecondsEpochTimestamp: nu
 
 export function getWeekdaysInRange(startDate: string, endDate: string): string[] {
   const result = [];
-  const current = moment(startDate, 'MM-DD-YYYY');
-  const end = moment(endDate, 'MM-DD-YYYY');
+  const current = moment(startDate, DATE_FORMAT);
+  const end = moment(endDate, DATE_FORMAT);
 
   while (current.isSameOrBefore(end, 'day')) {
     if (current.day() !== 0 && current.day() !== 6) {
-      result.push(current.format('MM-DD-YYYY'));
+      result.push(current.format(DATE_FORMAT));
     }
+
     current.add(1, 'day');
   }
 

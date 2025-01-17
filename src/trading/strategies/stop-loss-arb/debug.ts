@@ -1,9 +1,8 @@
-import { syncWriteJSONFile, jsonPrettyPrint } from "../../../utils/file";
-import { doFloatCalculation, FloatCalculations } from "../../../utils/float-calculator";
-import { isHistoricalSnapshot, isHistoricalSnapshotsExhausted, restartSimulatedSnapshot } from "../../../utils/price-simulator";
-import { OrderSides, Snapshot } from "../../brokerage-clients/brokerage-client";
-import { getStockStateFilePath, getStockStates, getUnrealizedValue } from "./algo";
-import { StockState } from "./types";
+import {doFloatCalculation, FloatCalculations} from '../../../utils/float-calculator';
+import {isHistoricalSnapshot, isHistoricalSnapshotsExhausted, restartSimulatedSnapshot} from '../../../utils/price-simulator';
+import {OrderSides, Snapshot} from '../../brokerage-clients/brokerage-client';
+import {getStockStates} from './state';
+import {StockState} from './types';
 
 export async function debugSimulation(stock: string, states: { [stock: string]: StockState; }, snapshot: Snapshot | null): Promise<{ stockState: StockState, shouldBreak: boolean }> {
   let shouldBreak = false;
@@ -18,7 +17,7 @@ export async function debugSimulation(stock: string, states: { [stock: string]: 
     states[stock] = await debugSimulatedPrices(snapshot, stock, states[stock]);
   }
 
-  return { stockState: states[stock], shouldBreak };
+  return {stockState: states[stock], shouldBreak};
 }
 
 const testSamples: {[stock: string]: {
@@ -29,12 +28,12 @@ const testSamples: {[stock: string]: {
 
 async function debugSimulatedPrices(snapshot: Snapshot, stock: string, stockState: StockState): Promise<StockState> {
   const aboveTopSell = doFloatCalculation(FloatCalculations.add, stockState.intervals[0][OrderSides.SELL].price, stockState.spaceBetweenIntervals);
-  if (doFloatCalculation(FloatCalculations.equal, snapshot.bid, stockState.callStrikePrice || aboveTopSell)) {
+  if (doFloatCalculation(FloatCalculations.equal, snapshot.bid, stockState.upperCallStrikePrice || aboveTopSell)) {
     return debugUpperOrLowerBound(snapshot, 'up', stock, stockState);
   }
 
   const belowBottomBuy = doFloatCalculation(FloatCalculations.subtract, stockState.intervals[stockState.intervals.length - 1][OrderSides.BUY].price, stockState.spaceBetweenIntervals);
-  if (doFloatCalculation(FloatCalculations.equal, snapshot.ask, stockState.putStrikePrice || belowBottomBuy)) {
+  if (doFloatCalculation(FloatCalculations.equal, snapshot.ask, stockState.lowerCallStrikePrice || belowBottomBuy)) {
     return debugUpperOrLowerBound(snapshot, 'down', stock, stockState);
   }
 
@@ -48,7 +47,7 @@ async function debugUpperOrLowerBound(snapshot: Snapshot, upperOrLowerBound: 'up
   }
 
   // console.log(`stock: ${stock}, bound: ${upperOrLowerBound}, ${bidOrAsk(upperOrLowerBound)}: ${snapshot[bidOrAsk(upperOrLowerBound)]}, position: ${stockState.position}, unrealizedValue: ${stockState.unrealizedValue}`);
-  syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
+  // syncWriteJSONFile(getStockStateFilePath(`results\\${stock}`), jsonPrettyPrint(stockState));
   if (upperOrLowerBound === 'up' && stockState.position < stockState.targetPosition) {
     debugger;
   } else if (upperOrLowerBound === 'down' && stockState.position > -stockState.targetPosition) {

@@ -1,7 +1,7 @@
 import {restClient, IQuotes} from '@polygon.io/client-js';
 import {getNanoSecondsEpochTimestampForDateAndTimeInNewYork, getSecondsFromNanoSecondsTimestamp, getTimestampForDateAndTimeInNewYorkFromNanoSecondsEpochTimestamp, getWeekdaysInRange, MARKET_CLOSES, MARKET_OPENS} from '../utils/time';
 import {Snapshot} from '../trading/brokerage-clients/brokerage-client';
-import {jsonPrettyPrint, syncWriteJSONFile} from '../utils/file';
+import {syncWriteJSONFile} from '../utils/file';
 import {existsSync, mkdirSync} from 'node:fs';
 import {setTimeout} from 'node:timers/promises';
 
@@ -9,7 +9,7 @@ export async function saveStockHistoricalDailyDataForStockFromStartToEndDate(sto
   const requests: Promise<void>[] = [];
   const dateRange = getWeekdaysInRange(startDate, endDate);
   for (const date of dateRange) {
-    await setTimeout(100);
+    await setTimeout(500);
     requests.push(saveStockHistoricalDataForStockOnDate(stock, date));
   }
 
@@ -19,7 +19,7 @@ export async function saveStockHistoricalDailyDataForStockFromStartToEndDate(sto
 export async function saveStockHistoricalDataForStockOnDate(stock: string, date: string): Promise<void> {
   const polygonQuotes = await getPolygonQuotesForDate(stock, date);
   const snapshotsByTheSecond = getSnapshotsByTheSecond(polygonQuotes);
-  syncWriteJSONFile(getFilePathForStockDataOnDate(stock, date), jsonPrettyPrint(snapshotsByTheSecond));
+  syncWriteJSONFile(getFilePathForStockDataOnDate(stock, date), JSON.stringify(snapshotsByTheSecond));
 }
 
 type PolygonQuote = Exclude<IQuotes['results'], undefined>[0];

@@ -1,80 +1,16 @@
-import {FloatCalculations, doFloatCalculation} from '../../../utils/float-calculator';
-import {getFileNamesWithinFolder, jsonPrettyPrint, readJSONFile, syncWriteJSONFile} from '../../../utils/file';
-import {isLiveTrading, restartSimulatedSnapshot} from '../../../utils/price-simulator';
-import {IBKRClient} from '../../brokerage-clients/IBKR/client';
-import {OrderSides, Snapshot} from '../../brokerage-clients/brokerage-client';
-import {getCurrentTimeStamp, isMarketOpen} from '../../../utils/time';
-import {log} from '../../../utils/log';
-import {onUserInterrupt} from '../../../utils/system';
-import { IntervalTypes, StockState } from './types';
-import { debugSimulation } from './debug';
+import {syncWriteJSONFile, jsonPrettyPrint} from '../../../utils/file';
+import {doFloatCalculation, FloatCalculations} from '../../../utils/float-calculator';
+import {isLiveTrading} from '../../../utils/price-simulator';
+import {Snapshot, OrderSides, BrokerageClient} from '../../brokerage-clients/brokerage-client';
+import {getStockStateFilePath, setNewPosition, doSnapShotChangeUpdates, isWideBidAskSpread, isSnapshotChange} from './state';
+import {StockState} from './types';
 
-const brokerageClient = new IBKRClient();
-
-export async function startStopLossArb(): Promise<void> {
-  const stocks = await getStocks();
-
-  const states = await getStockStates(stocks);
-
-  let userHasInterrupted = false;
-  if (isLiveTrading()) {
-    onUserInterrupt(() => {
-      userHasInterrupted = true;
-    });
-  }
-
-  await Promise.all(stocks.map(stock => (async () => {
-    await isMarketOpen(stock);
-    let lastDifferentSnapshot: Snapshot | null = null;
-    while ((await isMarketOpen(stock) && !userHasInterrupted)) {
-      const stockState = states[stock];
-      const snapshot = await reconcileStockPosition(stock, stockState);
-
-      if (snapshot) {
-        lastDifferentSnapshot = snapshot;
-      }
-
-      if ((await debugSimulation(stock, states, snapshot)).shouldBreak) {
-        console.log(lastDifferentSnapshot);
-        console.log(`position: ${stockState.position}, unrealizedValue: ${stockState.unrealizedValue}`);
-        debugger;
-        break;
-      }
-    }
-  })()));
-}
-
-async function getStocks(): Promise<string[]> {
-  const fileNames = await getFileNamesWithinFolder(getStockStatesFolderPath());
-  return fileNames.filter(fileName => !['results', 'templates'].some(excludedFileName => fileName.includes(excludedFileName)) && !fileName.startsWith('_'));
-}
-
-function getStockStatesFolderPath(): string {
-  if (!isLiveTrading()) {
-    return `${process.cwd()}\\src\\trading\\strategies\\stop-loss-arb\\stock-states\\simulated`;
-  }
-
-  return `${process.cwd()}\\src\\trading\\strategies\\stop-loss-arb\\stock-states`;
-}
-
-export async function getStockStates(stocks: string[]): Promise<{ [stock: string]: StockState; }> {
-  const states: {[stock: string]: StockState} = {};
-  for (const stock of stocks) {
-    states[stock] = await readJSONFile<StockState>(getStockStateFilePath(stock));
-  }
-
-  return states;
-}
-
-export function getStockStateFilePath(stock: string): string {
-  return `${getStockStatesFolderPath()}\\${stock}.json`;
-}
-
-async function reconcileStockPosition(stock: string, stockState: StockState): Promise<Snapshot | null> {
+export async function reconcileStockPosition(stock: string, stockState: StockState, brokerageClient: BrokerageClient): Promise<void> {
   // 0)
+  // TODO: support wider bid/ask spreads, maybe set the limit on the stockState itself
   const snapshot = await brokerageClient.getSnapshot(stock, stockState.brokerageId);
-  if (isWideBidAskSpread(snapshot)) {
-    return null;
+  if (isWideBidAskSpread(snapshot) || !snapshot.bid || !snapshot.ask) {
+    return;
   }
 
   // 1)
@@ -101,57 +37,25 @@ async function reconcileStockPosition(stock: string, stockState: StockState): Pr
     newPosition = stockState.position - (stockState.sharesPerInterval * numToSell);
   }
 
+  const isSnapshotChanged = isSnapshotChange(snapshot, stockState);
   if (newPosition !== undefined) {
-    // TODO: remove await, but need to keep track of unresolved orders before
-    // exiting
-    // brokerageClient.setSecurityPosition({
-
-    await brokerageClient.setSecurityPosition({
-      brokerageIdOfSecurity: stockState.brokerageId,
-      currentPosition: stockState.position * stockState.numContracts,
-      newPosition: newPosition * stockState.numContracts,
-      snapshot,
-    });
-
-    const tradingLog: typeof stockState.tradingLogs[number] = {
-      action: numToBuy > 0 ? OrderSides.BUY : OrderSides.SELL,
-      timeStamp: getCurrentTimeStamp(),
-      price: numToBuy > 0 ? snapshot.ask : snapshot.bid,
-      previousPosition: stockState.position,
+    await setNewPosition({
+      stock,
+      brokerageClient,
+      stockState,
       newPosition,
-    };
-
-    stockState.tradingLogs.push(tradingLog);
-
-    log(`Changed position for ${stock} (${stockState.numContracts} constracts): ${jsonPrettyPrint({
-      price: tradingLog.price,
-      previousPosition: tradingLog.previousPosition,
-      newPosition: tradingLog.newPosition,
-    })}`);
-
-    stockState.position = newPosition;
+      snapshot,
+      orderSide: numToBuy > 0 ? OrderSides.BUY : OrderSides.SELL,
+    });
 
     checkCrossings(stock, stockState, snapshot);
 
     if (isLiveTrading()) {
       syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
     }
+  } else if (isSnapshotChanged) { // 5)
+    doSnapShotChangeUpdates(stock, stockState, snapshot);
   }
-
-  // 5)
-  const isSnapshotChanged = isSnapshotChange(snapshot, stockState);
-  if (isSnapshotChanged) {
-    stockState.lastAsk = snapshot.ask;
-    stockState.lastBid = snapshot.bid;
-    stockState.unrealizedValue = getUnrealizedValue(stockState, snapshot);
-
-    if (isLiveTrading()) {
-      syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
-    }
-  }
-
-  // 6)
-  return newPosition !== undefined || isSnapshotChanged ? snapshot : null;
 }
 
 function checkCrossings(stock: string, stockState: StockState, {bid, ask}: Snapshot): boolean {
@@ -173,10 +77,6 @@ function checkCrossings(stock: string, stockState: StockState, {bid, ask}: Snaps
   return crossingHappened;
 }
 
-function isWideBidAskSpread({bid, ask}: Snapshot): boolean {
-  return doFloatCalculation(FloatCalculations.greaterThan, doFloatCalculation(FloatCalculations.subtract, ask, bid), 0.01) === 1;
-}
-
 function getNumToBuy(stockState: StockState, {ask}: Snapshot): number {
   const {intervals, position} = stockState;
 
@@ -186,7 +86,8 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number {
     const interval = intervals[i];
 
     if (doFloatCalculation(FloatCalculations.greaterThanOrEqual, ask, interval[OrderSides.BUY].price) && interval[OrderSides.BUY].active && interval[OrderSides.BUY].crossed) {
-      if ((interval.type === IntervalTypes.LONG && newPosition === interval.positionLimit) || newPosition < interval.positionLimit) {
+      // if ((interval.type === IntervalTypes.LONG && newPosition === interval.positionLimit) || newPosition < interval.positionLimit) {
+      if (newPosition < interval.positionLimit) {
         indexesToExecute.unshift(i);
         newPosition += stockState.sharesPerInterval;
       }
@@ -273,7 +174,8 @@ function getNumToSell(stockState: StockState, {bid}: Snapshot): number {
   const indexesToExecute: number[] = [];
   for (const [i, interval] of intervals.entries()) {
     if (doFloatCalculation(FloatCalculations.lessThanOrEqual, bid, interval[OrderSides.SELL].price)  && interval[OrderSides.SELL].active && interval[OrderSides.SELL].crossed) {
-      if ((interval.type === IntervalTypes.SHORT && newPosition === interval.positionLimit) || newPosition > interval.positionLimit) {
+      // if ((interval.type === IntervalTypes.SHORT && newPosition === interval.positionLimit) || newPosition > interval.positionLimit) {
+      if (newPosition > interval.positionLimit) {
         indexesToExecute.push(i);
         newPosition -= stockState.sharesPerInterval;
       }
@@ -351,35 +253,4 @@ function correctBadSellIfRequired(stockState: StockState, indexesToExecute: numb
     interval[OrderSides.BUY].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.BUY].price, stockState.spaceBetweenIntervals);
     interval[OrderSides.SELL].price = doFloatCalculation(FloatCalculations.subtract, interval[OrderSides.SELL].price, stockState.spaceBetweenIntervals);
   }
-}
-
-function isSnapshotChange(snapshot: Snapshot, stockState: StockState): boolean {
-  if (!stockState.lastAsk || !stockState.lastBid) {
-    return true;
-  }
-
-  return !doFloatCalculation(FloatCalculations.equal, stockState.lastAsk, snapshot.ask) || !doFloatCalculation(FloatCalculations.equal, stockState.lastBid, snapshot.bid);
-}
-
-export function getUnrealizedValue(stockState: StockState, {bid, ask}: Snapshot): number {
-  if (stockState.position === 0) {
-    return stockState.transitoryValue;
-  }
-
-  const optionsUnrealizedClosingPrice = stockState.position > 0 ? Math.min(bid, stockState.callStrikePrice || Number.POSITIVE_INFINITY) : Math.max(ask, stockState.putStrikePrice || Number.NEGATIVE_INFINITY);
-  const extraUnrealizedClosingPrice = stockState.position > 0 ? bid : ask;
-
-  let unrealizedTransactionValue: number;
-  if (Math.abs(stockState.position) <= 100) {
-    unrealizedTransactionValue = doFloatCalculation(FloatCalculations.multiply, Math.abs(stockState.position), optionsUnrealizedClosingPrice);
-  } else {
-    const optionsUnrealizedTransactionValue = doFloatCalculation(FloatCalculations.multiply, 100, optionsUnrealizedClosingPrice);
-    const extraUnrealizedTransactionValue = doFloatCalculation(FloatCalculations.multiply, Math.abs(stockState.position) - 100, extraUnrealizedClosingPrice);
-    unrealizedTransactionValue = doFloatCalculation(FloatCalculations.add, optionsUnrealizedTransactionValue, extraUnrealizedTransactionValue);
-  }
-
-  const unrealizedValue = doFloatCalculation(stockState.position > 0 ? FloatCalculations.add : FloatCalculations.subtract, stockState.transitoryValue, unrealizedTransactionValue);
-  const finalTradingCosts = doFloatCalculation(FloatCalculations.multiply, stockState.brokerageTradingCostPerShare, Math.abs(stockState.position));
-
-  return doFloatCalculation(FloatCalculations.subtract, unrealizedValue, finalTradingCosts);
 }

@@ -1,4 +1,4 @@
-import {promises as fsPromises, writeFileSync} from 'node:fs';
+import {promises as fsPromises, renameSync, writeFileSync} from 'node:fs';
 
 export async function readJSONFile<T>(filePath: string): Promise<T> {
   const file = await fsPromises.readFile(filePath, 'utf8');
@@ -11,6 +11,10 @@ export async function asyncWriteJSONFile(filePath: string, jsonString: string): 
 
 export function syncWriteJSONFile(filePath: string, jsonString: string): void {
   writeFileSync(filePath, jsonString);
+}
+
+export function syncRenameFile(oldPath: string, newPath: string): void {
+  renameSync(oldPath, newPath);
 }
 
 export function jsonPrettyPrint(obj: unknown): string {

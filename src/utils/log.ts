@@ -1,4 +1,4 @@
-import { isLiveTrading } from './price-simulator';
+import {isLiveTrading} from './price-simulator';
 import {getCurrentTimeStamp} from './time';
 
 export function log(msg: string): void {
