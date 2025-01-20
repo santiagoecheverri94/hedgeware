@@ -1,12 +1,12 @@
-import { isLiveTrading } from "../../../utils/price-simulator";
+import {isLiveTrading} from '../../../utils/price-simulator';
 import {
     BrokerageClient,
     OrderDetails,
     OrderAction,
     OrderStatus,
     Snapshot,
-} from "../brokerage-client";
-import { setTimeout } from "node:timers/promises";
+} from '../brokerage-client';
+import {setTimeout} from 'node:timers/promises';
 
 export async function setSecurityPosition({
     brokerageClient,
@@ -27,7 +27,7 @@ export async function setSecurityPosition({
 
     const side = determineIfOrderNeedBeBuyOrSell(currentPosition, newPosition);
     const quantity = getOrderQuantity(currentPosition, newPosition);
-    const price = getOrderPrice({ snapshot, orderSide: side });
+    const price = getOrderPrice({snapshot, orderSide: side});
 
     const orderDetails: OrderDetails = {
         ticker: brokerageIdOfSecurity,
@@ -83,7 +83,7 @@ export async function setSecurityPosition({
 
 async function isOrderFilled(
     brokerageClient: BrokerageClient,
-    orderId: string
+    orderId: string,
 ): Promise<boolean> {
     const orderStatus = await brokerageClient.getOrderStatus(orderId);
     return orderStatus === OrderStatus.FILLED;
@@ -91,7 +91,7 @@ async function isOrderFilled(
 
 function determineIfOrderNeedBeBuyOrSell(
     currentPosition: number,
-    newPosition: number
+    newPosition: number,
 ): OrderAction {
     return newPosition > currentPosition ? OrderAction.BUY : OrderAction.SELL;
 }

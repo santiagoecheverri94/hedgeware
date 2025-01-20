@@ -1,19 +1,19 @@
-import moment from "moment-timezone";
-import { setTimeout } from "node:timers/promises";
+import moment from 'moment-timezone';
+import {setTimeout} from 'node:timers/promises';
 
-import { log } from "./log";
-import { isLiveTrading } from "./price-simulator";
+import {log} from './log';
+import {isLiveTrading} from './price-simulator';
 
-export const MARKET_OPENS = "9:40:00am";
-export const MARKET_CLOSES = "3:50:00pm";
+export const MARKET_OPENS = '9:40:00am';
+export const MARKET_CLOSES = '3:50:00pm';
 
-const DATE_FORMAT = "YYYY-MM-DD";
-const TIME_FORMAT = "hh:mm:ssa";
-const MARKET_TIMEZONE = "America/New_York";
+const DATE_FORMAT = 'YYYY-MM-DD';
+const TIME_FORMAT = 'hh:mm:ssa';
+const MARKET_TIMEZONE = 'America/New_York';
 
 const NANO_SECONDS_FACTOR = 1_000_000_000;
 
-export async function isMarketOpen(stock = ""): Promise<boolean> {
+export async function isMarketOpen(stock = ''): Promise<boolean> {
     if (!isLiveTrading()) {
         return true;
     }
@@ -27,7 +27,7 @@ export async function isMarketOpen(stock = ""): Promise<boolean> {
         log(
             `Market is not open today yet. Will trade ${stock} in about ${moment
                 .duration(timeUntilMarketOpens)
-                .humanize()}.`
+                .humanize()}.`,
         );
         await setTimeout(timeUntilMarketOpens);
         return true;
@@ -58,13 +58,13 @@ function getCurrentMomentInNewYork(): moment.Moment {
 
 export function getCurrentTimeStamp(): string {
     return `${getCurrentMomentInNewYork().format(
-        DATE_FORMAT
+        DATE_FORMAT,
     )} at ${getCurrentMomentInNewYork().format(TIME_FORMAT)} ET`;
 }
 
 export function getNanoSecondsEpochTimestampForDateAndTimeInNewYork(
     date: string,
-    time: string
+    time: string,
 ): number {
     const secondsTimestamp = getMomentForDateAndTimeInNewYork(date, time).unix();
     return convertSecondsToNanoSeconds(secondsTimestamp);
@@ -74,7 +74,7 @@ function getMomentForDateAndTimeInNewYork(date: string, time: string): moment.Mo
     return moment.tz(
         `${date} ${time}`,
         `${DATE_FORMAT} ${TIME_FORMAT}`,
-        MARKET_TIMEZONE
+        MARKET_TIMEZONE,
     );
 }
 
@@ -83,15 +83,15 @@ function convertSecondsToNanoSeconds(seconds: number): number {
 }
 
 export function getTimestampForDateAndTimeInNewYorkFromNanoSecondsEpochTimestamp(
-    nanoSecondsEpochTimestamp: number
+    nanoSecondsEpochTimestamp: number,
 ): string {
     return `${getMomentInNewYorkFromNanoSecondsEpochTimestamp(
-        nanoSecondsEpochTimestamp
+        nanoSecondsEpochTimestamp,
     ).format(`${DATE_FORMAT} ${TIME_FORMAT}`)} ET`;
 }
 
 function getMomentInNewYorkFromNanoSecondsEpochTimestamp(
-    nanoSecondsEpochTimestamp: number
+    nanoSecondsEpochTimestamp: number,
 ): moment.Moment {
     return moment
         .unix(convertNanoSecondsToSeconds(nanoSecondsEpochTimestamp))
@@ -103,10 +103,10 @@ function convertNanoSecondsToSeconds(nanoSeconds: number): number {
 }
 
 export function getSecondsFromNanoSecondsTimestamp(
-    nanoSecondsEpochTimestamp: number
+    nanoSecondsEpochTimestamp: number,
 ): number {
     return getMomentInNewYorkFromNanoSecondsEpochTimestamp(
-        nanoSecondsEpochTimestamp
+        nanoSecondsEpochTimestamp,
     ).seconds();
 }
 
@@ -115,12 +115,12 @@ export function getWeekdaysInRange(startDate: string, endDate: string): string[]
     const current = moment(startDate, DATE_FORMAT);
     const end = moment(endDate, DATE_FORMAT);
 
-    while (current.isSameOrBefore(end, "day")) {
+    while (current.isSameOrBefore(end, 'day')) {
         if (current.day() !== 0 && current.day() !== 6) {
             result.push(current.format(DATE_FORMAT));
         }
 
-        current.add(1, "day");
+        current.add(1, 'day');
     }
 
     return result;

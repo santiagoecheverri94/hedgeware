@@ -1,7 +1,5 @@
-import { ApisauceInstance } from "apisauce";
-import { setSecurityPosition } from "./instructions/set-security-position";
-import { WebSocket } from "ws";
-import { getSimulatedSnapshot, isLiveTrading } from "../../utils/price-simulator";
+import {setSecurityPosition} from './instructions/set-security-position';
+import {getSimulatedSnapshot, isLiveTrading} from '../../utils/price-simulator';
 
 export abstract class BrokerageClient {
     protected abstract orderAction: { [side in OrderAction]: string };
@@ -21,6 +19,7 @@ export abstract class BrokerageClient {
         stock: string,
         brokerageIdOfSecurity: string
     ): Promise<Snapshot>;
+
     abstract placeOrder(orderDetails: OrderDetails): Promise<string>;
     abstract modifyOrder(orderId: string, orderDetails: OrderDetails): Promise<string>;
     abstract cancelOrder(orderId: string): Promise<void>;
@@ -49,8 +48,8 @@ export abstract class BrokerageClient {
 }
 
 export enum SnapShotFields {
-    bid = "bid",
-    ask = "ask",
+    bid = 'bid',
+    ask = 'ask',
     // last = 'last',
 }
 
@@ -61,12 +60,12 @@ export type Snapshot = {
 };
 
 export enum OrderAction {
-    BUY = "BUY",
-    SELL = "SELL",
+    BUY = 'BUY',
+    SELL = 'SELL',
 }
 
 export enum OrderStatus {
-    FILLED = "FILLED",
+    FILLED = 'FILLED',
     // Pending, Cancelled, etc.
 }
 

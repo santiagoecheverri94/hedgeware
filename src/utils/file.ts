@@ -1,13 +1,13 @@
-import { promises as fsPromises, renameSync, writeFileSync } from "node:fs";
+import {promises as fsPromises, renameSync, writeFileSync} from 'node:fs';
 
 export async function readJSONFile<T>(filePath: string): Promise<T> {
-    const file = await fsPromises.readFile(filePath, "utf8");
+    const file = await fsPromises.readFile(filePath, 'utf8');
     return JSON.parse(file);
 }
 
 export async function asyncWriteJSONFile(
     filePath: string,
-    jsonString: string
+    jsonString: string,
 ): Promise<void> {
     await fsPromises.writeFile(filePath, jsonString);
 }
@@ -27,6 +27,6 @@ export function jsonPrettyPrint(obj: unknown): string {
 export async function getFileNamesWithinFolder(folderPath: string): Promise<string[]> {
     const fileNames = await fsPromises.readdir(folderPath);
     return fileNames
-        .filter((fileName) => fileName !== "simulated")
-        .map((fileName) => fileName.split(".")[0]);
+        .filter(fileName => fileName !== 'simulated')
+        .map(fileName => fileName.split('.')[0]);
 }

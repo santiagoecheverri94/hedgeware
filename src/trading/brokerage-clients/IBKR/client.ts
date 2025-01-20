@@ -1,4 +1,3 @@
-import { ApisauceInstance } from "apisauce";
 import {
     BrokerageClient,
     OrderDetails,
@@ -6,34 +5,33 @@ import {
     OrderStatus,
     SnapShotFields,
     Snapshot,
-} from "../brokerage-client";
-import { ibkrApi } from "./api";
+} from '../brokerage-client';
+import {ibkrApi} from './api';
 import {
-    AccountsResponse,
     CancelOrderResponse,
     IBKROrderDetails,
     OrderStatusResponse,
     OrdersResponse,
     PositionResponse,
     SnapshotResponse,
-} from "./types";
-import { getSnapshotFromResponse, isSnapshotResponseWithAllFields } from "./snapshot";
-import { setTimeout } from "node:timers/promises";
-import { log } from "../../../utils/log";
+} from './types';
+import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
+import {setTimeout} from 'node:timers/promises';
+import {log} from '../../../utils/log';
 
 export class IBKRClient extends BrokerageClient {
     protected orderAction = {
-        [OrderAction.BUY]: "BUY",
-        [OrderAction.SELL]: "SELL",
+        [OrderAction.BUY]: 'BUY',
+        [OrderAction.SELL]: 'SELL',
     };
 
     protected orderStatus = {
-        [OrderStatus.FILLED]: "Filled",
+        [OrderStatus.FILLED]: 'Filled',
     };
 
     protected snapshotFields = {
-        [SnapShotFields.bid]: "BID",
-        [SnapShotFields.ask]: "ASK",
+        [SnapShotFields.bid]: 'BID',
+        [SnapShotFields.ask]: 'ASK',
         // [SnapShotFields.last]: '31',
     };
 
@@ -43,16 +41,16 @@ export class IBKRClient extends BrokerageClient {
         const fields = Object.values(this.snapshotFields);
 
         const response = await ibkrApi.get<SnapshotResponse[]>(
-            "/iserver/marketdata/snapshot",
+            '/iserver/marketdata/snapshot',
             {
                 conids: conid,
-                fields: Object.values(this.snapshotFields).join(","),
-            }
+                fields: Object.values(this.snapshotFields).join(','),
+            },
         );
 
         if (!response.data?.[0]) {
             log(
-                "Failed to obtain snapshot. Will try agagin. Debugger will be triggered."
+                'Failed to obtain snapshot. Will try agagin. Debugger will be triggered.',
             );
             debugger;
             return this.getSnapshotHelper(stock, conid);
@@ -68,7 +66,7 @@ export class IBKRClient extends BrokerageClient {
     }
 
     async placeOrder(orderDetails: OrderDetails): Promise<string> {
-        const response = await ibkrApi.post<OrdersResponse>(`/place-order`, {
+        const response = await ibkrApi.post<OrdersResponse>('/place-order', {
             orders: [
                 {
                     ...this.getIBKROrderDetails(orderDetails),
@@ -85,22 +83,22 @@ export class IBKRClient extends BrokerageClient {
 
         if (response.data?.[0]?.id) {
             log(
-                `Order-Confirmation Id '${response.data?.[0].id}' will be used for confirmation.`
+                `Order-Confirmation Id '${response.data?.[0].id}' will be used for confirmation.`,
             );
             return this.confirmOrder(response.data?.[0].id, orderDetails);
         }
 
         if (response.status && response.status >= 400 && response.status < 500) {
-            log("Failed due to our input. Debugger will be triggered.");
+            log('Failed due to our input. Debugger will be triggered.');
             debugger;
         }
 
         if (response.status && response.status >= 500 && response.status < 600) {
-            log("Failed due to server error. Debugger will be triggered.");
+            log('Failed due to server error. Debugger will be triggered.');
             debugger;
         }
 
-        log("Failed to place order. Will try again.");
+        log('Failed to place order. Will try again.');
         return this.placeOrder(orderDetails);
     }
 
@@ -115,13 +113,13 @@ export class IBKRClient extends BrokerageClient {
 
     private async confirmOrder(
         orderConfirmationId: string,
-        orderDetails: OrderDetails
+        orderDetails: OrderDetails,
     ): Promise<string> {
         const response = await ibkrApi.post<OrdersResponse>(
             `/iserver/reply/${orderConfirmationId}`,
             {
                 confirmed: true,
-            }
+            },
         );
 
         if (response.data?.[0]?.order_id) {
@@ -132,12 +130,12 @@ export class IBKRClient extends BrokerageClient {
 
         if (response.data?.[0]?.id) {
             log(
-                `Order-Confirmation Id '${response.data?.[0].id}' requires re-confirmation.`
+                `Order-Confirmation Id '${response.data?.[0].id}' requires re-confirmation.`,
             );
             return this.confirmOrder(response.data?.[0].id, orderDetails);
         }
 
-        log("Failed to confirm order. Will try again in a second.");
+        log('Failed to confirm order. Will try again in a second.');
         const ONE_SECOND = 1000;
         await setTimeout(ONE_SECOND);
         return this.confirmOrder(orderConfirmationId, orderDetails);
@@ -148,7 +146,7 @@ export class IBKRClient extends BrokerageClient {
             `/iserver/account/${this.account}/order/${orderId}`,
             {
                 ...this.getIBKROrderDetails(orderDetails),
-            }
+            },
         );
 
         if (response.data?.[0]?.order_id) {
@@ -162,7 +160,7 @@ export class IBKRClient extends BrokerageClient {
             return this.confirmOrder(response.data?.[0].id, orderDetails);
         }
 
-        log("Failed to modify order. Will try again in a second.");
+        log('Failed to modify order. Will try again in a second.');
         const ONE_SECOND = 1000;
         await setTimeout(ONE_SECOND);
         return this.modifyOrder(orderId, orderDetails);
@@ -170,7 +168,7 @@ export class IBKRClient extends BrokerageClient {
 
     async cancelOrder(orderId: string): Promise<void> {
         const response = await ibkrApi.delete<CancelOrderResponse>(
-            `/iserver/account/${this.account}/order/${orderId}`
+            `/iserver/account/${this.account}/order/${orderId}`,
         );
 
         if (!response.data?.order_id) {
@@ -183,12 +181,12 @@ export class IBKRClient extends BrokerageClient {
 
     async getOrderStatus(orderId: string): Promise<OrderStatus> {
         const response = await ibkrApi.get<OrderStatusResponse>(
-            `/iserver/account/order/status/${orderId}`
+            `/iserver/account/order/status/${orderId}`,
         );
         const ibkrStatus = response.data?.order_status;
 
         const genericStatus = Object.keys(this.orderStatus).find(
-            (status) => this.orderStatus[status as OrderStatus] === ibkrStatus
+            status => this.orderStatus[status as OrderStatus] === ibkrStatus,
         )! as OrderStatus;
         return genericStatus;
     }
@@ -198,7 +196,7 @@ export class IBKRClient extends BrokerageClient {
         await setTimeout(FIVE_MINUTES); // TODO: check if beta ccp interface allows for faster polling
 
         const response = await ibkrApi.get<PositionResponse>(
-            `/portfolio/${this.account}/position/${conid}`
+            `/portfolio/${this.account}/position/${conid}`,
         );
 
         if (response.data?.[0]?.position) {
@@ -206,7 +204,7 @@ export class IBKRClient extends BrokerageClient {
         }
 
         log(
-            `Failed to get position size for conid '${conid}'. Will try again in a second.`
+            `Failed to get position size for conid '${conid}'. Will try again in a second.`,
         );
         const ONE_SECOND = 1000;
         await setTimeout(ONE_SECOND);

@@ -1,14 +1,14 @@
-import { getCurrentTimeStamp } from "./time";
-import { createInterface } from "node:readline";
+import {getCurrentTimeStamp} from './time';
+import {createInterface} from 'node:readline';
 
 export function stopSystem(errorMsg: string): void {
     throw new Error(`${getCurrentTimeStamp()}: ${errorMsg}`);
 }
 
 export function onUserInterrupt(callback: () => void): void {
-    const USER_INTERRUPT = "SIGINT";
+    const USER_INTERRUPT = 'SIGINT';
 
-    if (process.platform === "win32") {
+    if (process.platform === 'win32') {
         const terminalInput = createInterface({
             input: process.stdin,
             output: process.stdout,

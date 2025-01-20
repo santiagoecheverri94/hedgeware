@@ -1,34 +1,34 @@
-import { FloatCalculator as fc } from "../../../utils/float-calculator";
+import {FloatCalculator as fc} from '../../../utils/float-calculator';
 import {
     jsonPrettyPrint,
     readJSONFile,
     syncWriteJSONFile,
     syncRenameFile,
-} from "../../../utils/file";
-import { SmoothingInterval, StockState } from "./types";
+} from '../../../utils/file';
+import {SmoothingInterval, StockState} from './types';
 import {
     getHistoricalSnapshotStockAndStartAndEndDates,
     getSnapshotsForStockOnDate,
     isHistoricalSnapshot,
-} from "../../../utils/price-simulator";
-import { getStockStateFilePath, getStocksFileNames } from "./state";
+} from '../../../utils/price-simulator';
+import {getStockStateFilePath, getStocksFileNames} from './state';
 
 export async function renameHistoricalStates(newStock: string): Promise<void> {
     if (!isHistoricalSnapshot()) {
         throw new Error(
-            "Must be in historical snapshot mode to rename historical states"
+            'Must be in historical snapshot mode to rename historical states',
         );
     }
 
     const previousStocksFileNames = await getStocksFileNames(false);
     for (const prevFileName of previousStocksFileNames) {
-        const { startDate, endDate } =
+        const {startDate, endDate} =
             getHistoricalSnapshotStockAndStartAndEndDates(prevFileName);
         const newFileName = `${newStock}__${startDate}_${endDate}`;
 
         await syncRenameFile(
             getStockStateFilePath(prevFileName),
-            getStockStateFilePath(newFileName)
+            getStockStateFilePath(newFileName),
         );
     }
 }
@@ -36,17 +36,17 @@ export async function renameHistoricalStates(newStock: string): Promise<void> {
 export async function refreshHistoricalStates(): Promise<void> {
     if (!isHistoricalSnapshot()) {
         throw new Error(
-            "Must be in historical snapshot mode to refresh historical states"
+            'Must be in historical snapshot mode to refresh historical states',
         );
     }
 
     const stocksFileNames = await getStocksFileNames();
     for (const fileName of stocksFileNames) {
-        const { stock, startDate } =
+        const {stock, startDate} =
             getHistoricalSnapshotStockAndStartAndEndDates(fileName);
         const snapshotsForStockOnStartDate = await getSnapshotsForStockOnDate(
             stock,
-            startDate
+            startDate,
         );
         const initialPrice = snapshotsForStockOnStartDate[0].ask;
 
@@ -137,7 +137,7 @@ function getLongIntervalsAboveWithSellTail({
 
         if (index !== numIntervals) {
             intervals.push({
-                positionLimit: targetPosition - sharesPerInterval * index,
+                positionLimit: targetPosition - (sharesPerInterval * index),
                 SELL: {
                     price: sellPrice,
                     active: false,
@@ -152,7 +152,7 @@ function getLongIntervalsAboveWithSellTail({
         } else {
             // SELL tail
             intervals.push({
-                positionLimit: targetPosition - sharesPerInterval * index,
+                positionLimit: targetPosition - (sharesPerInterval * index),
                 SELL: {
                     price: sellPrice,
                     active: true,
@@ -193,7 +193,7 @@ function getShortIntervalsBelowWithBuyHead({
 
         if (index !== numIntervals) {
             intervals.unshift({
-                positionLimit: -(targetPosition - sharesPerInterval * index),
+                positionLimit: -(targetPosition - (sharesPerInterval * index)),
                 SELL: {
                     price: fc.add(buyPrice, intervalProfit),
                     active: true,
@@ -208,7 +208,7 @@ function getShortIntervalsBelowWithBuyHead({
         } else {
             // BUY head
             intervals.unshift({
-                positionLimit: -(targetPosition - sharesPerInterval * index),
+                positionLimit: -(targetPosition - (sharesPerInterval * index)),
                 SELL: {
                     price: fc.add(buyPrice, intervalProfit),
                     active: false,
