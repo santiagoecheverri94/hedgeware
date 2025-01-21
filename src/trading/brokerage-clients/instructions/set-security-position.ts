@@ -83,7 +83,7 @@ export async function setSecurityPosition({
 
 async function isOrderFilled(
     brokerageClient: BrokerageClient,
-    orderId: string,
+    orderId: number,
 ): Promise<boolean> {
     const orderStatus = await brokerageClient.getOrderStatus(orderId);
     return orderStatus === OrderStatus.FILLED;

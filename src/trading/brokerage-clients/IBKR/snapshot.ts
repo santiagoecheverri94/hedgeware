@@ -6,7 +6,7 @@ export function isSnapshotResponseWithAllFields(
     fields: string[],
 ): boolean {
     for (const field of fields) {
-        if (!snapshotResponse[field]) {
+        if (!snapshotResponse?.[field]) {
             return false;
         }
     }

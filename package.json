@@ -21,7 +21,6 @@
     "@oclif/plugin-help": "^5",
     "@oclif/plugin-plugins": "^2.4.7",
     "@polygon.io/client-js": "^7.3.2",
-    "apisauce": "^3.0.1",
     "mathjs": "^11.9.1",
     "moment-timezone": "^0.5.43",
     "ws": "^8.13.0"

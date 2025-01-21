@@ -68,10 +68,10 @@ async function debugUpperOrLowerBound(
     }
 
     if (upperOrLowerBound === 'up' && // ) {
-        states[stock].position < (states[stock].targetPosition - 10)) {
+        states[stock].position < (states[stock].targetPosition - states[stock].sharesPerInterval)) {
         debugger;
     } else if (upperOrLowerBound === 'down' && // ) {
-        states[stock].position > -(states[stock].targetPosition - 10)) {
+        states[stock].position > -(states[stock].targetPosition - states[stock].sharesPerInterval)) {
         debugger;
     }
 

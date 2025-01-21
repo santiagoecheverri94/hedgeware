@@ -19,25 +19,13 @@ export type SnapshotResponse = {
     [field: string]: string;
 };
 
-export interface IBKROrderDetails {
-    ticker: string;
-    // exchange?
-    price: number;
-    side: string;
-    quantity: number;
-}
+export type OrdersResponse ={
+	"order_id": number;
+};
 
-export type OrdersResponse = Array<{
-    id?: string;
-    order_id?: string;
-}>;
-
-export interface CancelOrderResponse {
-    order_id?: string;
-}
-
-export interface OrderStatusResponse {
-    order_status: string;
+export interface OrderStatusResponse extends OrdersResponse {
+    status: string;
+    avg_fill_price: number;
 }
 
 export type PositionResponse = [

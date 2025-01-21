@@ -1,10 +1,8 @@
 import {setSecurityPosition} from './instructions/set-security-position';
 import {getSimulatedSnapshot, isLiveTrading} from '../../utils/price-simulator';
+import { OrdersResponse } from './IBKR/types';
 
 export abstract class BrokerageClient {
-    protected abstract orderAction: { [side in OrderAction]: string };
-    protected abstract orderStatus: { [status in OrderStatus]: string };
-
     protected abstract snapshotFields: { [field in SnapShotFields]: string };
 
     async getSnapshot(stock: string, brokerageIdOfSecurity: string): Promise<Snapshot> {
@@ -20,10 +18,9 @@ export abstract class BrokerageClient {
         brokerageIdOfSecurity: string
     ): Promise<Snapshot>;
 
-    abstract placeOrder(orderDetails: OrderDetails): Promise<string>;
-    abstract modifyOrder(orderId: string, orderDetails: OrderDetails): Promise<string>;
-    abstract cancelOrder(orderId: string): Promise<void>;
-    abstract getOrderStatus(orderId: string): Promise<OrderStatus>;
+    abstract placeOrder(orderDetails: OrderDetails): Promise<number>;
+    abstract modifyOrder(orderId: string, orderDetails: OrderDetails): Promise<number>;
+    abstract getOrderStatus(orderId: number): Promise<OrderStatus>;
     abstract getPositionSize(brokerageIdOfSecurity: string): Promise<number>;
 
     async setSecurityPosition({
@@ -65,8 +62,8 @@ export enum OrderAction {
 }
 
 export enum OrderStatus {
-    FILLED = 'FILLED',
-    // Pending, Cancelled, etc.
+    FILLED = 'Filled',
+    // Pending???
 }
 
 export interface OrderDetails {
