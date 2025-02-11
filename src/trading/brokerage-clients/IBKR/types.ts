@@ -1,50 +1,38 @@
 export interface SsoValidateResponse {
-  RESULT: boolean;
+    RESULT: boolean;
 }
 
 export interface TickleResponse {
-  session: string;
-  iserver: {
-    authStatus: {
-      authenticated: boolean
-    }
-  }
+    session: string;
+    iserver: {
+        authStatus: {
+            authenticated: boolean;
+        };
+    };
 }
 
 export interface AccountsResponse {
-  accounts: string[]
+    accounts: string[];
 }
 
 export type SnapshotResponse = {
-  [field: string]: string;
+    [field: string]: string;
+};
+
+export type OrdersResponse ={
+	"order_id": number;
+};
+
+export interface OrderStatusResponse extends OrdersResponse {
+    status: string;
+    avg_fill_price: number;
 }
 
-export interface IBKROrderDetails {
-  tif: string;
-  orderType: string;
-  conidex: string;
-  price: number
-  side: string;
-  quantity: number;
-  useAdaptive: false;
-}
-
-export type OrdersResponse = Array<{
-  id?: string;
-  order_id?: string; // eslint-disable-line camelcase
-}>;
-
-export interface CancelOrderResponse {
-  order_id?: string; // eslint-disable-line camelcase
-}
-
-export interface OrderStatusResponse {
-  order_status: string; // eslint-disable-line camelcase
-}
-
-export type PositionResponse = [{
-  acctId: string,
-  conid: number,
-  contractDesc: string,
-  position: number,
-}];
+export type PositionResponse = [
+    {
+        acctId: string;
+        conid: number;
+        contractDesc: string;
+        position: number;
+    }
+];

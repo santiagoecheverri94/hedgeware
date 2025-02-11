@@ -1,21 +1,24 @@
-import {ApisauceInstance, create as createApiSauceInstance} from 'apisauce';
-import {Agent as HttpsAgent} from 'node:https';
-import {doThrottling, getNewThrottle} from '../../../utils/throttle';
+export enum IbkrApiEndpoint {
+    stockSnapshot = "stock-snapshot",
+    placeOrder = "place-order",
+    orderStatus = "order-status",
+}
 
-const syncApi = createApiSauceInstance({
-  baseURL: 'https://localhost:5000/v1/api',
-  headers: {Accept: 'application/json', 'Content-Type': 'application/json'},
-  httpsAgent: new HttpsAgent({
-    rejectUnauthorized: false,
-  }),
-});
+export async function ibkrApiReq(path: IbkrApiEndpoint, body: any) {
+    const data = await fetch(`http://127.0.0.1:8001/${path}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+    });
 
-const MAX_REQUESTS_PER_SECOND = 5;
-const ONE_SECOND = 1000;
-const TIME_TO_WAIT_BETWEEN_REQUESTS = ONE_SECOND / MAX_REQUESTS_PER_SECOND;
-const apiThrottle = getNewThrottle();
+    const response = await data.json();
 
-export async function getUncheckedIBKRApi(): Promise<ApisauceInstance> {
-  await doThrottling(apiThrottle, TIME_TO_WAIT_BETWEEN_REQUESTS);
-  return syncApi;
+    if (data.status !== 200) {
+        debugger;
+        throw new Error(response.detail);
+    }
+
+    return response;
 }

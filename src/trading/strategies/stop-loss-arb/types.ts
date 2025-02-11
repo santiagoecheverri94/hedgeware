@@ -1,51 +1,41 @@
-import {OrderSides} from '../../brokerage-clients/brokerage-client';
-
-export enum IntervalTypes {
-  LONG = 'LONG',
-  SHORT = 'SHORT',
-}
+import {OrderAction} from '../../brokerage-clients/brokerage-client';
 
 export interface SmoothingInterval {
-  type: IntervalTypes;
-  positionLimit: number;
-  [OrderSides.SELL]: {
-    active: boolean;
-    crossed: boolean;
-    price: number;
-  };
-  [OrderSides.BUY]: {
-    active: boolean;
-    crossed: boolean;
-    price: number;
-  };
+    positionLimit: number;
+    [OrderAction.SELL]: {
+        active: boolean;
+        crossed: boolean;
+        price: number;
+    };
+    [OrderAction.BUY]: {
+        active: boolean;
+        crossed: boolean;
+        price: number;
+    };
 }
 
 export interface StockState {
-  brokerageId: string;
-  brokerageTradingCostPerShare: number;
-  sharesPerInterval: number,
-  intervalProfit: number;
-  premiumSold: number;
-  upperCallStrikePrice: number | null;
-  initialPrice: number;
-  lowerCallStrikePrice: number | null;
-  spaceBetweenIntervals: number;
-  numContracts: number;
-  position: number;
-  targetPosition: number;
-  isDynamicIntervals: boolean;
-  intervals: SmoothingInterval[];
-  tradingLogs: {
-    timeStamp: string;
-    action: OrderSides,
-    price: number;
-    previousPosition: number;
-    newPosition: number;
-    transitoryValue: number;
-    unrealizedValue: number;
-  }[];
-  transitoryValue: number;
-  unrealizedValue: number;
-  lastAsk?: number;
-  lastBid?: number;
+    brokerageId: string;
+    brokerageTradingCostPerShare: number;
+    sharesPerInterval: number;
+    intervalProfit: number;
+    callStrikePrice: number;
+    initialPrice: number;
+    putStrikePrice: number;
+    spaceBetweenIntervals: number;
+    numContracts: number;
+    position: number;
+    targetPosition: number;
+    intervals: SmoothingInterval[];
+    tradingLogs: {
+        timeStamp: string;
+        action: OrderAction;
+        price: number;
+        previousPosition: number;
+        newPosition: number;
+        tradingCosts: number;
+    }[];
+    tradingCosts: number;
+    lastAsk?: number;
+    lastBid?: number;
 }
