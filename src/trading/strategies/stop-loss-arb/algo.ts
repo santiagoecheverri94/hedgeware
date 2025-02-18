@@ -1,24 +1,24 @@
-import { syncWriteJSONFile, jsonPrettyPrint } from "../../../utils/file";
-import { FloatCalculator as fc } from "../../../utils/float-calculator";
-import { isLiveTrading } from "../../../utils/price-simulator";
+import {syncWriteJSONFile, jsonPrettyPrint} from '../../../utils/file';
+import {FloatCalculator as fc} from '../../../utils/float-calculator';
+import {isLiveTrading} from '../../../utils/price-simulator';
 import {
     Snapshot,
     OrderAction,
     BrokerageClient,
-} from "../../brokerage-clients/brokerage-client";
+} from '../../brokerage-clients/brokerage-client';
 import {
     getStockStateFilePath,
     setNewPosition,
     doSnapShotChangeUpdates,
     isWideBidAskSpread,
     isSnapshotChange,
-} from "./state";
-import { StockState } from "./types";
+} from './state';
+import {StockState} from './types';
 
 export async function reconcileStockPosition(
     stock: string,
     stockState: StockState,
-    brokerageClient: BrokerageClient
+    brokerageClient: BrokerageClient,
 ): Promise<Snapshot> {
     // 0)
     const snapshot = await brokerageClient.getSnapshot(stock, stockState.brokerageId);
@@ -66,7 +66,7 @@ export async function reconcileStockPosition(
         if (isLiveTrading()) {
             syncWriteJSONFile(
                 getStockStateFilePath(stock),
-                jsonPrettyPrint(stockState)
+                jsonPrettyPrint(stockState),
             );
         }
     } else if (isSnapshotChanged) {
@@ -80,9 +80,9 @@ export async function reconcileStockPosition(
 function checkCrossings(
     stock: string,
     stockState: StockState,
-    { bid, ask }: Snapshot
+    {bid, ask}: Snapshot,
 ): boolean {
-    const { intervals } = stockState;
+    const {intervals} = stockState;
 
     let crossingHappened = false;
     for (const interval of intervals) {
@@ -108,8 +108,8 @@ function checkCrossings(
     return crossingHappened;
 }
 
-function getNumToBuy(stockState: StockState, { ask }: Snapshot): number {
-    const { intervals, position } = stockState;
+function getNumToBuy(stockState: StockState, {ask}: Snapshot): number {
+    const {intervals, position} = stockState;
 
     let newPosition = position;
     const indexesToExecute: number[] = [];
@@ -145,13 +145,13 @@ function getNumToBuy(stockState: StockState, { ask }: Snapshot): number {
     if (indexesToExecute.length > 0) {
         const purchaseValue = fc.multiply(
             stockState.sharesPerInterval * indexesToExecute.length,
-            ask
+            ask,
         );
         stockState.tradingCosts = fc.subtract(stockState.tradingCosts, purchaseValue);
 
         const tradingCosts = fc.multiply(
             stockState.brokerageTradingCostPerShare,
-            indexesToExecute.length * stockState.sharesPerInterval
+            indexesToExecute.length * stockState.sharesPerInterval,
         );
         stockState.tradingCosts = fc.subtract(stockState.tradingCosts, tradingCosts);
 
@@ -165,7 +165,7 @@ function getNumToBuy(stockState: StockState, { ask }: Snapshot): number {
 
 function correctBadBuyIfRequired(
     stockState: StockState,
-    indexesToExecute: number[]
+    indexesToExecute: number[],
 ): void {
     const lowestIndexExecuted = indexesToExecute[indexesToExecute.length - 1];
     if (lowestIndexExecuted >= stockState.intervals.length - 1) {
@@ -192,17 +192,17 @@ function correctBadBuyIfRequired(
     for (const interval of stockState.intervals) {
         interval[OrderAction.BUY].price = fc.add(
             interval[OrderAction.BUY].price,
-            stockState.spaceBetweenIntervals
+            stockState.spaceBetweenIntervals,
         );
         interval[OrderAction.SELL].price = fc.add(
             interval[OrderAction.SELL].price,
-            stockState.spaceBetweenIntervals
+            stockState.spaceBetweenIntervals,
         );
     }
 }
 
-function getNumToSell(stockState: StockState, { bid }: Snapshot): number {
-    const { intervals, position } = stockState;
+function getNumToSell(stockState: StockState, {bid}: Snapshot): number {
+    const {intervals, position} = stockState;
 
     let newPosition = position;
     const indexesToExecute: number[] = [];
@@ -236,13 +236,13 @@ function getNumToSell(stockState: StockState, { bid }: Snapshot): number {
     if (indexesToExecute.length > 0) {
         const saleValue = fc.multiply(
             stockState.sharesPerInterval * indexesToExecute.length,
-            bid
+            bid,
         );
         stockState.tradingCosts = fc.add(stockState.tradingCosts, saleValue);
 
         const tradingCosts = fc.multiply(
             stockState.brokerageTradingCostPerShare,
-            indexesToExecute.length * stockState.sharesPerInterval
+            indexesToExecute.length * stockState.sharesPerInterval,
         );
         stockState.tradingCosts = fc.subtract(stockState.tradingCosts, tradingCosts);
 
@@ -256,7 +256,7 @@ function getNumToSell(stockState: StockState, { bid }: Snapshot): number {
 
 function correctBadSellIfRequired(
     stockState: StockState,
-    indexesToExecute: number[]
+    indexesToExecute: number[],
 ): void {
     const highestIndexExecuted = indexesToExecute[0];
     if (highestIndexExecuted === 0) {
@@ -284,24 +284,24 @@ function correctBadSellIfRequired(
     for (const interval of stockState.intervals) {
         interval[OrderAction.BUY].price = fc.subtract(
             interval[OrderAction.BUY].price,
-            stockState.spaceBetweenIntervals
+            stockState.spaceBetweenIntervals,
         );
         interval[OrderAction.SELL].price = fc.subtract(
             interval[OrderAction.SELL].price,
-            stockState.spaceBetweenIntervals
+            stockState.spaceBetweenIntervals,
         );
     }
 }
 
 function addSkippedBuysIfRequired(
     stockState: StockState,
-    indexesToExecute: number[]
+    indexesToExecute: number[],
 ): void {
     if (indexesToExecute.length === 0) {
         return;
     }
 
-    const { intervals } = stockState;
+    const {intervals} = stockState;
     const bottomOriginalIndexToExecute = indexesToExecute[indexesToExecute.length - 1];
     for (let i = intervals.length - 1; i > bottomOriginalIndexToExecute; i--) {
         const interval = intervals[i];
@@ -314,13 +314,13 @@ function addSkippedBuysIfRequired(
 
 function addSkippedSellsIfRequired(
     stockState: StockState,
-    indexesToExecute: number[]
+    indexesToExecute: number[],
 ): void {
     if (indexesToExecute.length === 0) {
         return;
     }
 
-    const { intervals } = stockState;
+    const {intervals} = stockState;
     const topOriginalIndexToExecute = indexesToExecute[0];
     for (let i = 0; i < topOriginalIndexToExecute; i++) {
         const interval = intervals[i];

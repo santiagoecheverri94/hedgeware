@@ -1,4 +1,4 @@
-import { OrderAction } from "../../brokerage-clients/brokerage-client";
+import {OrderAction} from '../../brokerage-clients/brokerage-client';
 
 export interface SmoothingInterval {
     positionLimit: number;

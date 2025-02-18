@@ -20,7 +20,7 @@ export type SnapshotResponse = {
 };
 
 export type OrdersResponse ={
-	"order_id": number;
+	'order_id': number;
 };
 
 export interface OrderStatusResponse extends OrdersResponse {

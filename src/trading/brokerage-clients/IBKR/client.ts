@@ -5,22 +5,22 @@ import {
     OrderStatus,
     SnapShotFields,
     Snapshot,
-} from "../brokerage-client";
-import { IbkrApiEndpoint, ibkrApiReq } from "./api";
+} from '../brokerage-client';
+import {IbkrApiEndpoint, ibkrApiReq} from './api';
 import {
     OrderStatusResponse,
     OrdersResponse,
     PositionResponse,
     SnapshotResponse,
-} from "./types";
-import { getSnapshotFromResponse, isSnapshotResponseWithAllFields } from "./snapshot";
-import { setTimeout } from "node:timers/promises";
-import { log } from "../../../utils/log";
+} from './types';
+import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
+import {setTimeout} from 'node:timers/promises';
+import {log} from '../../../utils/log';
 
 export class IBKRClient extends BrokerageClient {
     protected snapshotFields = {
-        [SnapShotFields.bid]: "BID",
-        [SnapShotFields.ask]: "ASK",
+        [SnapShotFields.bid]: 'BID',
+        [SnapShotFields.ask]: 'ASK',
         // [SnapShotFields.last]: '31',
     };
 
@@ -37,7 +37,7 @@ export class IBKRClient extends BrokerageClient {
             return getSnapshotFromResponse(response, this.snapshotFields);
         }
 
-        log("Failed to obtain snapshot. Will try agagin. Debugger will be triggered.");
+        log('Failed to obtain snapshot. Will try agagin. Debugger will be triggered.');
         debugger;
         return this.getSnapshotHelper(stock, conid);
     }
@@ -52,7 +52,7 @@ export class IBKRClient extends BrokerageClient {
 
     async modifyOrder(orderId: string, orderDetails: OrderDetails): Promise<number> {
         return 1;
-        
+
         // const response = await ibkrApi.post<OrdersResponse>(
         //     `/iserver/account/${this.account}/order/${orderId}`,
         //     {
@@ -79,7 +79,7 @@ export class IBKRClient extends BrokerageClient {
 
     async getOrderStatus(orderId: number): Promise<OrderStatus> {
         const response: OrderStatusResponse = await ibkrApiReq(IbkrApiEndpoint.orderStatus, {
-            "order_id": orderId,
+            order_id: orderId,
         });
 
         return response.status as OrderStatus;

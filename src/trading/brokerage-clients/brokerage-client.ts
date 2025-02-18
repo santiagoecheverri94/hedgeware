@@ -1,6 +1,6 @@
 import {setSecurityPosition} from './instructions/set-security-position';
 import {getSimulatedSnapshot, isLiveTrading} from '../../utils/price-simulator';
-import { OrdersResponse } from './IBKR/types';
+import {OrdersResponse} from './IBKR/types';
 
 export abstract class BrokerageClient {
     protected abstract snapshotFields: { [field in SnapShotFields]: string };
