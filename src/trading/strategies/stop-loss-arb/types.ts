@@ -1,4 +1,4 @@
-import {OrderAction} from '../../brokerage-clients/brokerage-client';
+import { OrderAction } from "../../brokerage-clients/brokerage-client";
 
 export interface SmoothingInterval {
     positionLimit: number;
@@ -15,6 +15,7 @@ export interface SmoothingInterval {
 }
 
 export interface StockState {
+    isStaticIntervals?: boolean;
     brokerageId: string;
     brokerageTradingCostPerShare: number;
     sharesPerInterval: number;

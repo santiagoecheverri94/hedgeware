@@ -3,30 +3,30 @@ import {
     jsonPrettyPrint,
     readJSONFile,
     syncWriteJSONFile,
-} from '../../../utils/file';
-import {FloatCalculator as fc} from '../../../utils/float-calculator';
-import {log} from '../../../utils/log';
-import {isLiveTrading} from '../../../utils/price-simulator';
-import {getCurrentTimeStamp} from '../../../utils/time';
+} from "../../../utils/file";
+import { FloatCalculator as fc } from "../../../utils/float-calculator";
+import { log } from "../../../utils/log";
+import { isLiveTrading } from "../../../utils/price-simulator";
+import { getCurrentTimeStamp } from "../../../utils/time";
 import {
     BrokerageClient,
     OrderAction,
     Snapshot,
-} from '../../brokerage-clients/brokerage-client';
-import {StockState} from './types';
+} from "../../brokerage-clients/brokerage-client";
+import { StockState } from "./types";
 
 export async function getStocksFileNames(filterUnderscores = true): Promise<string[]> {
     let fileNames = await getFileNamesWithinFolder(getStockStatesFolderPath());
 
     fileNames = fileNames.filter(
-        fileName =>
-            !['results', 'templates', 'historical'].some(excludedFileName =>
-                fileName.includes(excludedFileName),
-            ),
+        (fileName) =>
+            !["results", "templates", "historical"].some((excludedFileName) =>
+                fileName.includes(excludedFileName)
+            )
     );
 
     if (filterUnderscores) {
-        fileNames = fileNames.filter(fileName => !fileName.startsWith('_'));
+        fileNames = fileNames.filter((fileName) => !fileName.startsWith("_"));
     }
 
     return fileNames;
@@ -41,7 +41,7 @@ function getStockStatesFolderPath(): string {
 }
 
 export async function getStockStates(
-    stocks: string[],
+    stocks: string[]
 ): Promise<{ [stock: string]: StockState }> {
     const states: { [stock: string]: StockState } = {};
     for (const stock of stocks) {
@@ -70,12 +70,14 @@ export async function setNewPosition({
     snapshot: Snapshot;
     orderSide: OrderAction;
 }): Promise<void> {
-    await brokerageClient.setSecurityPosition({
-        brokerageIdOfSecurity: stockState.brokerageId,
-        currentPosition: stockState.position * stockState.numContracts,
-        newPosition: newPosition * stockState.numContracts,
-        snapshot,
-    });
+    if (isLiveTrading()) {
+        await brokerageClient.setSecurityPosition({
+            brokerageIdOfSecurity: stockState.brokerageId,
+            currentPosition: stockState.position * stockState.numContracts,
+            newPosition: newPosition * stockState.numContracts,
+            snapshot,
+        });
+    }
 
     const previousPosition = stockState.position;
     stockState.position = newPosition;
@@ -99,7 +101,7 @@ export async function setNewPosition({
             price: tradingLog.price,
             previousPosition: tradingLog.previousPosition,
             newPosition: tradingLog.newPosition,
-        })}`,
+        })}`
     );
 }
 
@@ -117,7 +119,7 @@ export function isSnapshotChange(snapshot: Snapshot, stockState: StockState): bo
 export function doSnapShotChangeUpdates(
     stock: string,
     stockState: StockState,
-    snapshot: Snapshot,
+    snapshot: Snapshot
 ): void {
     stockState.lastAsk = snapshot.ask;
     stockState.lastBid = snapshot.bid;
@@ -128,8 +130,8 @@ export function doSnapShotChangeUpdates(
 }
 
 export function isWideBidAskSpread(
-    {bid, ask}: Snapshot,
-    stockState: StockState,
+    { bid, ask }: Snapshot,
+    stockState: StockState
 ): boolean {
     return fc.gt(fc.subtract(ask, bid), stockState.intervalProfit) === 1;
 }

@@ -1,4 +1,3 @@
-import {isLiveTrading} from '../../../utils/price-simulator';
 import {
     BrokerageClient,
     OrderDetails,
@@ -35,10 +34,6 @@ export async function setSecurityPosition({
         quantity: quantity,
         price,
     };
-
-    if (!isLiveTrading()) {
-        return;
-    }
 
     // TODO: use code commented in this block if we ever want to stop assuming
     // that we can fulfill all our orders at the bid/ask

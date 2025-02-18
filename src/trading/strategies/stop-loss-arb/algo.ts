@@ -138,9 +138,9 @@ function getNumToBuy(stockState: StockState, { ask }: Snapshot): number {
         interval[OrderAction.SELL].crossed = false;
     }
 
-    // if (!stockState.isDynamicIntervals) {
-    //     addSkippedBuysIfRequired(stockState, indexesToExecute);
-    // }
+    if (stockState.isStaticIntervals) {
+        addSkippedBuysIfRequired(stockState, indexesToExecute);
+    }
 
     if (indexesToExecute.length > 0) {
         const purchaseValue = fc.multiply(
@@ -155,9 +155,9 @@ function getNumToBuy(stockState: StockState, { ask }: Snapshot): number {
         );
         stockState.tradingCosts = fc.subtract(stockState.tradingCosts, tradingCosts);
 
-        // if (stockState.isDynamicIntervals) {
-        correctBadBuyIfRequired(stockState, indexesToExecute);
-        // }
+        if (!stockState.isStaticIntervals) {
+            correctBadBuyIfRequired(stockState, indexesToExecute);
+        }
     }
 
     return indexesToExecute.length;
@@ -219,9 +219,9 @@ function getNumToSell(stockState: StockState, { bid }: Snapshot): number {
         }
     }
 
-    // if (!stockState.isDynamicIntervals) {
-    //     addSkippedSellsIfRequired(stockState, indexesToExecute);
-    // }
+    if (stockState.isStaticIntervals) {
+        addSkippedSellsIfRequired(stockState, indexesToExecute);
+    }
 
     for (const index of indexesToExecute) {
         const interval = intervals[index];
@@ -246,7 +246,9 @@ function getNumToSell(stockState: StockState, { bid }: Snapshot): number {
         );
         stockState.tradingCosts = fc.subtract(stockState.tradingCosts, tradingCosts);
 
-        correctBadSellIfRequired(stockState, indexesToExecute);
+        if (!stockState.isStaticIntervals) {
+            correctBadSellIfRequired(stockState, indexesToExecute);
+        }
     }
 
     return indexesToExecute.length;
@@ -291,38 +293,40 @@ function correctBadSellIfRequired(
     }
 }
 
-// function addSkippedBuysIfRequired(
-//     stockState: StockState,
-//     indexesToExecute: number[]
-// ): void {
-//     if (indexesToExecute.length === 0) {
-//         return;
-//     }
+function addSkippedBuysIfRequired(
+    stockState: StockState,
+    indexesToExecute: number[]
+): void {
+    if (indexesToExecute.length === 0) {
+        return;
+    }
 
-//     const { intervals } = stockState;
-//     const bottomOriginalIndexToExecute = indexesToExecute[indexesToExecute.length - 1];
-//     for (let i = intervals.length - 1; i > bottomOriginalIndexToExecute; i--) {
-//         const interval = intervals[i];
+    const { intervals } = stockState;
+    const bottomOriginalIndexToExecute = indexesToExecute[indexesToExecute.length - 1];
+    for (let i = intervals.length - 1; i > bottomOriginalIndexToExecute; i--) {
+        const interval = intervals[i];
 
-//         if (interval[OrderSides.BUY].active) {
-//             // && i !== indexesToExecute[indexesToExecute.length - 1] + stockState.uncrossedBuyingSkips) {
-//             indexesToExecute.push(i); // TODO: splice this properly instead of pushing
-//         }
-//     }
-// }
+        if (interval[OrderAction.BUY].active) {
+            indexesToExecute.push(i);
+        }
+    }
+}
 
-// function addSkippedSellsIfRequired(stockState: StockState, indexesToExecute: number[]): void {
-//     if (indexesToExecute.length === 0) {
-//       return;
-//     }
+function addSkippedSellsIfRequired(
+    stockState: StockState,
+    indexesToExecute: number[]
+): void {
+    if (indexesToExecute.length === 0) {
+        return;
+    }
 
-//     const {intervals} = stockState;
-//     const topOriginalIndexToExecute = indexesToExecute[0];
-//     for (let i = 0; i < topOriginalIndexToExecute; i++) {
-//       const interval = intervals[i];
+    const { intervals } = stockState;
+    const topOriginalIndexToExecute = indexesToExecute[0];
+    for (let i = 0; i < topOriginalIndexToExecute; i++) {
+        const interval = intervals[i];
 
-//       if (interval[OrderSides.SELL].active) { // && i !== indexesToExecute[0] - stockState.uncrossedSellingSkips) {
-//         indexesToExecute.unshift(i); // TODO: splice this properly instead of unshifting
-//       }
-//     }
-//   }
+        if (interval[OrderAction.SELL].active) {
+            indexesToExecute.unshift(i);
+        }
+    }
+}
