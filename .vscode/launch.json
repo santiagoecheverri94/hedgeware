@@ -1,15 +1,27 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-      {
-          "type": "node",
-          "request": "launch",
-          "name": "Execute Command",
-          "skipFiles": [
-              "<node_internals>/**"
-          ],
-          "program": "${workspaceFolder}/bin/dev",
-          "args": [],
-      }
-  ]
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Execute Command",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/bin/dev",
+            "args": [],
+        },
+        {
+            "name": "msvc debug",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "preLaunchTask": "C/C++: cl.exe build",
+            "program": "${workspaceFolder}/src/trading/strategies/stop-loss-arb/cpp/build/main.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal"
+        }
+    ]
 }

@@ -3,7 +3,7 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/include",
+                "${workspaceFolder}/src/trading/strategies/stop-loss-arb/cpp/include",
                 "${workspaceFolder}/node_modules/node-addon-api",
                 "C:/Users/santi/AppData/Local/node-gyp/Cache/20.5.0/include/node"
             ],
