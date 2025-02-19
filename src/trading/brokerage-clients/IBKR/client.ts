@@ -26,7 +26,7 @@ export class IBKRClient extends BrokerageClient {
 
     private account!: string;
 
-    async getSnapshotHelper(stock: string, conid: string): Promise<Snapshot> {
+    async getSnapshot(stock: string, conid: string): Promise<Snapshot> {
         const fields = Object.values(this.snapshotFields);
 
         const response: SnapshotResponse = await ibkrApiReq(IbkrApiEndpoint.stockSnapshot, {
@@ -39,7 +39,7 @@ export class IBKRClient extends BrokerageClient {
 
         log('Failed to obtain snapshot. Will try agagin. Debugger will be triggered.');
         debugger;
-        return this.getSnapshotHelper(stock, conid);
+        return this.getSnapshot(stock, conid);
     }
 
     async placeOrder(orderDetails: OrderDetails): Promise<number> {

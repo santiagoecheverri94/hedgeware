@@ -2,12 +2,7 @@ import {
     getFileNamesWithinFolder,
     readJSONFile,
 } from '../../../utils/file';
-import {FloatCalculator as fc} from '../../../utils/float-calculator';
-import {log} from '../../../utils/log';
 import {isLiveTrading} from '../../../utils/price-simulator';
-import {
-    Snapshot,
-} from '../../brokerage-clients/brokerage-client';
 import {StockState} from './types';
 
 export async function getStocksFileNames(filterUnderscores = true): Promise<string[]> {
@@ -48,22 +43,4 @@ export async function getStockStates(
 
 export function getStockStateFilePath(stock: string): string {
     return `${getStockStatesFolderPath()}\\${stock}.json`;
-}
-
-export function isSnapshotChange(snapshot: Snapshot, stockState: StockState): boolean {
-    if (!stockState.lastAsk || !stockState.lastBid) {
-        return true;
-    }
-
-    return (
-        !fc.eq(stockState.lastAsk, snapshot.ask) ||
-        !fc.eq(stockState.lastBid, snapshot.bid)
-    );
-}
-
-export function isWideBidAskSpread(
-    {bid, ask}: Snapshot,
-    stockState: StockState,
-): boolean {
-    return fc.gt(fc.subtract(ask, bid), stockState.intervalProfit) === 1;
 }

@@ -19,7 +19,7 @@ void Print(variant<std::wstring, std::string> message)
 std::string DoubleToStr(const double& value)
 {
     std::ostringstream oss;
-    oss.precision(std::numeric_limits<double>::digits10);
+    oss.precision(kDecimalPrecision);
     oss << value;
     return oss.str();
 }

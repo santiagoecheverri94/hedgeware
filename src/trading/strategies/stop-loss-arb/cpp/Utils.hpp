@@ -7,9 +7,10 @@
 
 void Print(std::variant<std::wstring, std::string> message);
 
-using Decimal =
-    boost::multiprecision::number<boost::multiprecision::backends::cpp_dec_float<
-        std::numeric_limits<double>::digits10>>;
+const int kDecimalPrecision = 8;
+
+using Decimal = boost::multiprecision::number<
+    boost::multiprecision::backends::cpp_dec_float<kDecimalPrecision>>;
 
 std::string DoubleToStr(const double& value);
 

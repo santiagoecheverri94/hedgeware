@@ -12,8 +12,8 @@ int main()
         Print("Hello from Main Debug C++ x64!");
         Print("Let's test some floating point operations.");
 
-        const Decimal left{DoubleToStr(2200.11112)};
-        const Decimal right{DoubleToStr(2200.11113)};
+        const Decimal left{DoubleToStr(2200.1111)};
+        const Decimal right{DoubleToStr(2200.1111)};
         const Decimal sum = left + right;
 
         Print(format("'sum' with str(): {}", sum.str()));

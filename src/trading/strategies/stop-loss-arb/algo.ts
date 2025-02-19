@@ -1,18 +1,14 @@
 import {syncWriteJSONFile, jsonPrettyPrint} from '../../../utils/file';
 import {FloatCalculator as fc} from '../../../utils/float-calculator';
 import {log} from '../../../utils/log';
-import {isLiveTrading} from '../../../utils/price-simulator';
+import {getSimulatedSnapshot, isLiveTrading} from '../../../utils/price-simulator';
 import {getCurrentTimeStamp} from '../../../utils/time';
 import {
     Snapshot,
     OrderAction,
     BrokerageClient,
 } from '../../brokerage-clients/brokerage-client';
-import {
-    getStockStateFilePath,
-    isWideBidAskSpread,
-    isSnapshotChange,
-} from './state';
+import {getStockStateFilePath} from './state';
 import {StockState} from './types';
 
 export async function reconcileStockPosition(
@@ -21,7 +17,9 @@ export async function reconcileStockPosition(
     brokerageClient: BrokerageClient,
 ): Promise<Snapshot> {
     // 0)
-    const snapshot = await brokerageClient.getSnapshot(stock, stockState.brokerageId);
+    let snapshot: Snapshot;
+    snapshot = await (isLiveTrading() ? brokerageClient.getSnapshot(stock, stockState.brokerageId) : getSimulatedSnapshot(stock));
+
     if (isWideBidAskSpread(snapshot, stockState) || !snapshot.bid || !snapshot.ask) {
         return snapshot;
     }
@@ -75,6 +73,10 @@ export async function reconcileStockPosition(
     }
 
     return snapshot;
+}
+
+function isWideBidAskSpread({bid, ask}: Snapshot, stockState: StockState): boolean {
+    return fc.gt(fc.subtract(ask, bid), stockState.intervalProfit) === 1;
 }
 
 function checkCrossings(
@@ -252,6 +254,17 @@ function getNumToSell(stockState: StockState, {bid}: Snapshot): number {
     }
 
     return indexesToExecute.length;
+}
+
+function isSnapshotChange(snapshot: Snapshot, stockState: StockState): boolean {
+    if (!stockState.lastAsk || !stockState.lastBid) {
+        return true;
+    }
+
+    return (
+        !fc.eq(stockState.lastAsk, snapshot.ask) ||
+        !fc.eq(stockState.lastBid, snapshot.bid)
+    );
 }
 
 async function setNewPosition({
