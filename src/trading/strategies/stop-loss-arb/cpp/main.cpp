@@ -1,14 +1,26 @@
+#include <format>
+
 #include "Utils.hpp"
 
 using namespace std;
-
-void HelloFromCpp() { Print("Hello from Main Debug C++ x64!"); }
 
 int main()
 {
     try
     {
-        HelloFromCpp();
+        Print("");
+        Print("Hello from Main Debug C++ x64!");
+        Print("Let's test some floating point operations.");
+
+        const Decimal left{DoubleToStr(2200.11112)};
+        const Decimal right{DoubleToStr(2200.11113)};
+        const Decimal sum = left + right;
+
+        Print(format("'sum' with str(): {}", sum.str()));
+
+        const auto decimal_operation = left < right;
+
+        Print(format("{} < {} = {}", left.str(), right.str(), decimal_operation));
     }
     catch (const std::exception& e)
     {
