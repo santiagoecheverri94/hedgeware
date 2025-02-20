@@ -39,15 +39,9 @@ function getRandomSnapshot(): Snapshot {
 }
 
 const INITIAL_PRICE = 12.75;
-let randomPrice: number;
+let randomPrice: number = INITIAL_PRICE;
 
 function getRandomPrice(): number {
-    if (!randomPrice) {
-        restartRandomPrice();
-
-        return randomPrice;
-    }
-
     const tickDown = fc.subtract(randomPrice, 0.01);
     const tickUp = fc.add(randomPrice, 0.01);
     const probabilityOfTickDown = Math.random();

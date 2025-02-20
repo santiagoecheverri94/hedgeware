@@ -25,7 +25,7 @@ export async function reconcileStockPosition(
     }
 
     // 1)
-    const crossingHappened = checkCrossings(stock, stockState, snapshot);
+    const crossingHappened = checkCrossings(stockState, snapshot);
 
     if (isLiveTrading() && crossingHappened) {
         syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
@@ -59,7 +59,7 @@ export async function reconcileStockPosition(
             orderSide: numToBuy > 0 ? OrderAction.BUY : OrderAction.SELL,
         });
 
-        checkCrossings(stock, stockState, snapshot);
+        checkCrossings(stockState, snapshot);
 
         if (isLiveTrading()) {
             syncWriteJSONFile(
@@ -80,7 +80,6 @@ function isWideBidAskSpread({bid, ask}: Snapshot, stockState: StockState): boole
 }
 
 function checkCrossings(
-    stock: string,
     stockState: StockState,
     {bid, ask}: Snapshot,
 ): boolean {
@@ -163,44 +162,6 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number {
     }
 
     return indexesToExecute.length;
-}
-
-function correctBadBuyIfRequired(
-    stockState: StockState,
-    indexesToExecute: number[],
-): void {
-    const lowestIndexExecuted = indexesToExecute[indexesToExecute.length - 1];
-    if (lowestIndexExecuted >= stockState.intervals.length - 1) {
-        return;
-    }
-
-    const intervalBelowLowestIntervalExecuted =
-        stockState.intervals[lowestIndexExecuted + 1];
-    if (!intervalBelowLowestIntervalExecuted[OrderAction.BUY].active) {
-        return;
-    }
-
-    intervalBelowLowestIntervalExecuted[OrderAction.BUY].active = false;
-    intervalBelowLowestIntervalExecuted[OrderAction.BUY].crossed = false;
-    intervalBelowLowestIntervalExecuted[OrderAction.SELL].active = true;
-    intervalBelowLowestIntervalExecuted[OrderAction.SELL].crossed = false;
-
-    const topIntervalExecuted = stockState.intervals[indexesToExecute[0]];
-    topIntervalExecuted[OrderAction.BUY].active = true;
-    topIntervalExecuted[OrderAction.BUY].crossed = false;
-    topIntervalExecuted[OrderAction.SELL].active = false;
-    topIntervalExecuted[OrderAction.SELL].crossed = false;
-
-    for (const interval of stockState.intervals) {
-        interval[OrderAction.BUY].price = fc.add(
-            interval[OrderAction.BUY].price,
-            stockState.spaceBetweenIntervals,
-        );
-        interval[OrderAction.SELL].price = fc.add(
-            interval[OrderAction.SELL].price,
-            stockState.spaceBetweenIntervals,
-        );
-    }
 }
 
 function getNumToSell(stockState: StockState, {bid}: Snapshot): number {
@@ -327,6 +288,44 @@ function doSnapShotChangeUpdates(
 
     if (isLiveTrading()) {
         syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
+    }
+}
+
+function correctBadBuyIfRequired(
+    stockState: StockState,
+    indexesToExecute: number[],
+): void {
+    const lowestIndexExecuted = indexesToExecute[indexesToExecute.length - 1];
+    if (lowestIndexExecuted >= stockState.intervals.length - 1) {
+        return;
+    }
+
+    const intervalBelowLowestIntervalExecuted =
+        stockState.intervals[lowestIndexExecuted + 1];
+    if (!intervalBelowLowestIntervalExecuted[OrderAction.BUY].active) {
+        return;
+    }
+
+    intervalBelowLowestIntervalExecuted[OrderAction.BUY].active = false;
+    intervalBelowLowestIntervalExecuted[OrderAction.BUY].crossed = false;
+    intervalBelowLowestIntervalExecuted[OrderAction.SELL].active = true;
+    intervalBelowLowestIntervalExecuted[OrderAction.SELL].crossed = false;
+
+    const topIntervalExecuted = stockState.intervals[indexesToExecute[0]];
+    topIntervalExecuted[OrderAction.BUY].active = true;
+    topIntervalExecuted[OrderAction.BUY].crossed = false;
+    topIntervalExecuted[OrderAction.SELL].active = false;
+    topIntervalExecuted[OrderAction.SELL].crossed = false;
+
+    for (const interval of stockState.intervals) {
+        interval[OrderAction.BUY].price = fc.add(
+            interval[OrderAction.BUY].price,
+            stockState.spaceBetweenIntervals,
+        );
+        interval[OrderAction.SELL].price = fc.add(
+            interval[OrderAction.SELL].price,
+            stockState.spaceBetweenIntervals,
+        );
     }
 }
 

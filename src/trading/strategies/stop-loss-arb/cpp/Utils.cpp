@@ -1,4 +1,4 @@
-#include "Utils.hpp"
+#include "utils.hpp"
 
 #include <sstream>
 
@@ -23,6 +23,8 @@ std::string DoubleToStr(const double& value)
     oss << value;
     return oss.str();
 }
+
+Decimal GetDecimal(const double& value) { return Decimal{DoubleToStr(value)}; }
 
 void Print1DVector(const std::vector<std::wstring>& vec)
 {

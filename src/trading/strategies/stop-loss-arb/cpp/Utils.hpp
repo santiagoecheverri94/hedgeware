@@ -7,12 +7,12 @@
 
 void Print(std::variant<std::wstring, std::string> message);
 
-const int kDecimalPrecision = 8;
+const int kDecimalPrecision = 12;
 
 using Decimal = boost::multiprecision::number<
     boost::multiprecision::backends::cpp_dec_float<kDecimalPrecision>>;
 
-std::string DoubleToStr(const double& value);
+Decimal GetDecimal(const double& value);
 
 using MyJSON = std::unordered_map<
     std::wstring,

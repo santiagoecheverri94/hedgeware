@@ -9,7 +9,7 @@ namespace JS = Napi;
 JS::String CppFunction(const JS::CallbackInfo& info)
 {
     JS::Env env = info.Env();
-    return JS::String::New(env, "Hello From CPP Node Addon!");
+    return JS::String::New(env, "Hello ... rebuild 5 ... From CPP Node Addon!");
 }
 
 JS::Object Init(JS::Env env, JS::Object exports)

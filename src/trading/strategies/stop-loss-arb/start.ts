@@ -17,10 +17,14 @@ import {setTimeout} from 'node:timers/promises';
 const brokerageClient = new IBKRClient();
 
 export async function startStopLossArb(): Promise<void> {
+    // TODO: test this, and if it works, introduce the cpp version depending on env variable
+
     const stocks = await getStocksFileNames();
-
     const states = await getStockStates(stocks);
+    await startStopLossArbNode(stocks, states);
+}
 
+async function startStopLossArbNode(stocks: string[], states: { [stock: string]: StockState }): Promise<void> {
     // let userHasInterrupted = false;
     // if (isLiveTrading()) {
     //   onUserInterrupt(() => {
@@ -28,11 +32,12 @@ export async function startStopLossArb(): Promise<void> {
     //   });
     // }
 
-    await Promise.all(
-        stocks.map(stock =>
-            hedgeStockWhileMarketIsOpen(stock, states, brokerageClient),
-        ),
-    );
+    const waitingForStocksToBeHedged: Promise<void>[] = [];
+    for (const stock of stocks) {
+        waitingForStocksToBeHedged.push(hedgeStockWhileMarketIsOpen(stock, states, brokerageClient));
+    }
+
+    await Promise.all(waitingForStocksToBeHedged);
 
     for (const stock of Object.keys(states).sort()) {
         console.log(`${stock}, tradingCosts: $${states[stock].tradingCosts}\n`);

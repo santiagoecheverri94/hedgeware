@@ -32,6 +32,20 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "type": "shell",
+            "label": "node-gyp rebuild",
+            "command": "yarn",
+            "args": [
+                "node-gyp",
+                "rebuild",
+                "--debug"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
         }
     ]
 }

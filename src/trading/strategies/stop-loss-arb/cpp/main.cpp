@@ -1,26 +1,45 @@
 #include <format>
 
-#include "Utils.hpp"
+#include "utils.hpp"
 
 using namespace std;
+
+void DecimalTest()
+{
+    const Decimal left = GetDecimal(2);
+    const Decimal right = GetDecimal(0.25);
+    const Decimal sum = left + right;
+
+    Print(std::format("'sum' with str(): {}", sum.str()));
+
+    const Decimal decimal_operation = left / right;
+
+    Print(std::format("{} / {} = {}", left.str(), right.str(), decimal_operation.str())
+    );
+}
 
 int main()
 {
     try
     {
-        Print("");
-        Print("Hello from Main Debug C++ x64!");
-        Print("Let's test some floating point operations.");
+        DecimalTest();
+        // // Command to run the Node.js script
+        // const char* command = "node test.js";
 
-        const Decimal left{DoubleToStr(2200.1111)};
-        const Decimal right{DoubleToStr(2200.1111)};
-        const Decimal sum = left + right;
+        // // Execute the command
+        // int result = std::system(command);
 
-        Print(format("'sum' with str(): {}", sum.str()));
+        // // Check the result
+        // if (result == 0)
+        // {
+        //     std::cout << "Node.js script executed successfully." << std::endl;
+        // }
+        // else
+        // {
+        //     std::cerr << "Failed to execute Node.js script." << std::endl;
+        // }
 
-        const auto decimal_operation = left < right;
-
-        Print(format("{} < {} = {}", left.str(), right.str(), decimal_operation));
+        // return result;
     }
     catch (const std::exception& e)
     {
