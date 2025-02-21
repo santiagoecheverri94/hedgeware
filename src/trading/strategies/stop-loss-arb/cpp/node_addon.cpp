@@ -6,17 +6,41 @@
 
 namespace JS = Napi;
 
-JS::String CppFunction(const JS::CallbackInfo& info)
+JS::String PrintFromCpp(const JS::CallbackInfo& info)
 {
     JS::Env env = info.Env();
-    return JS::String::New(env, "Hello ... rebuild 5 ... From CPP Node Addon!");
+    return JS::String::New(env, "Hello From CPP Node Addon!");
+}
+
+void ModifyObject(JS::CallbackInfo const& info)
+{
+    JS::Object obj = info[0].As<JS::Object>();
+    obj.Set("field4", "f4");
+}
+
+void CallJSFunction(const JS::CallbackInfo& info)
+{
+    JS::Env env = info.Env();
+
+    JS::Function callback = info[0].As<JS::Function>();
+    callback.Call({JS::String::New(env, "string from cpp"), JS::Number::New(env, 100)});
 }
 
 JS::Object Init(JS::Env env, JS::Object exports)
 {
     exports.Set(
-        JS::String::New(env, GET_SYMBOL_NAME(CppFunction)),
-        JS::Function::New(env, CppFunction)
+        JS::String::New(env, GET_SYMBOL_NAME(PrintFromCpp)),
+        JS::Function::New(env, PrintFromCpp)
+    );
+
+    exports.Set(
+        JS::String::New(env, GET_SYMBOL_NAME(ModifyObject)),
+        JS::Function::New(env, ModifyObject)
+    );
+
+    exports.Set(
+        JS::String::New(env, GET_SYMBOL_NAME(CallJSFunction)),
+        JS::Function::New(env, CallJSFunction)
     );
 
     return exports;
