@@ -1,8 +1,12 @@
 #pragma once
 
+#include <napi.h>
+
 #include <optional>
 
 #include "utils.hpp"
+
+namespace JS = Napi;
 
 struct Snapshot
 {
@@ -49,9 +53,9 @@ struct StockState
     int numContracts;
     int position;
     int targetPosition;
-    std::vector<SmoothingInterval> intervals;
-    std::vector<TradingLog> tradingLogs;
     Decimal tradingCosts;
     std::optional<Decimal> lastAsk;
     std::optional<Decimal> lastBid;
+    std::vector<SmoothingInterval> intervals;
+    std::vector<TradingLog> tradingLogs;
 };

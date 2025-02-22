@@ -1,24 +1,12 @@
-#ifndef MAIN_DEBUG
-
-#include <napi.h>
+#include "bindings.hpp"
+#include "start.hpp"
 
 #define GET_SYMBOL_NAME(symbol) #symbol
 
-namespace JS = Napi;
+using namespace std;
+using namespace JS;
 
-JS::String PrintFromCpp(const JS::CallbackInfo& info)
-{
-    JS::Env env = info.Env();
-    return JS::String::New(env, "Hello From CPP Node Addon!");
-}
-
-void ModifyObject(JS::CallbackInfo const& info)
-{
-    JS::Object obj = info[0].As<JS::Object>();
-    obj.Set("field4", "f4");
-}
-
-void CallJSFunction(const JS::CallbackInfo& info)
+void JsTestCallJSFunction(const JS::CallbackInfo& info)
 {
     JS::Env env = info.Env();
 
@@ -26,26 +14,30 @@ void CallJSFunction(const JS::CallbackInfo& info)
     callback.Call({JS::String::New(env, "string from cpp"), JS::Number::New(env, 100)});
 }
 
+void JsHedgeStockWhileMarketIsOpen(const JS::CallbackInfo& info)
+{
+    JS::Env env = info.Env();
+
+    auto stock = info[0].As<JS::String>().Utf8Value();
+    auto js_states = info[1].As<JS::Object>();
+    auto cpp_states = BindJsStatesToCppStates(js_states);
+
+    HedgeStockWhileMarketIsOpen(stock, cpp_states);
+}
+
 JS::Object Init(JS::Env env, JS::Object exports)
 {
     exports.Set(
-        JS::String::New(env, GET_SYMBOL_NAME(PrintFromCpp)),
-        JS::Function::New(env, PrintFromCpp)
+        JS::String::New(env, GET_SYMBOL_NAME(JsTestCallJSFunction)),
+        JS::Function::New(env, JsTestCallJSFunction)
     );
 
     exports.Set(
-        JS::String::New(env, GET_SYMBOL_NAME(ModifyObject)),
-        JS::Function::New(env, ModifyObject)
-    );
-
-    exports.Set(
-        JS::String::New(env, GET_SYMBOL_NAME(CallJSFunction)),
-        JS::Function::New(env, CallJSFunction)
+        JS::String::New(env, GET_SYMBOL_NAME(JsHedgeStockWhileMarketIsOpen)),
+        JS::Function::New(env, JsHedgeStockWhileMarketIsOpen)
     );
 
     return exports;
 }
 
 NODE_API_MODULE(deephedge, Init)
-
-#endif

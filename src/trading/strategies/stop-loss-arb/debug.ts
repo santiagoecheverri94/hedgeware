@@ -2,38 +2,18 @@ import {FloatCalculator as fc} from '../../../utils/float-calculator';
 import {
     isHistoricalSnapshot,
     isHistoricalSnapshotsExhausted,
-    restartSimulatedSnapshot,
+    isRandomSnapshot,
+    restartRandomPrice,
 } from '../../../utils/price-simulator';
 import {OrderAction, Snapshot} from '../../brokerage-clients/brokerage-client';
 import {StockState} from './types';
 
-export async function debugSimulation(
-    stock: string,
-    states: { [stock: string]: StockState },
-    originalStates: { [stock: string]: StockState },
-    snapshot: Snapshot,
-): Promise<{ stockState: StockState; shouldBreak: boolean }> {
-    let shouldBreak = false;
-
-    if (isHistoricalSnapshot()) {
-        if (isHistoricalSnapshotsExhausted(stock)) {
-            shouldBreak = true;
-        }
-    }
-
-    if (snapshot) {
-        states[stock] = await debugSimulatedPrices(snapshot, stock, states, originalStates);
-    }
-
-    return {stockState: states[stock], shouldBreak};
-}
-
-async function debugSimulatedPrices(
+export async function debugRandomPrices(
     snapshot: Snapshot,
     stock: string,
     states: { [stock: string]: StockState },
     originalStates: { [stock: string]: StockState },
-): Promise<StockState> {
+): Promise<void> {
     const stockState = states[stock];
 
     const aboveTopSell = fc.add(
@@ -41,7 +21,8 @@ async function debugSimulatedPrices(
         stockState.spaceBetweenIntervals,
     );
     if (fc.gte(snapshot.bid, aboveTopSell)) {
-        return debugUpperOrLowerBound('up', stock, states, originalStates);
+        debugUpperOrLowerBound('up', stock, states, originalStates);
+        return;
     }
 
     const belowBottomBuy = fc.subtract(
@@ -49,10 +30,9 @@ async function debugSimulatedPrices(
         stockState.spaceBetweenIntervals,
     );
     if (fc.lte(snapshot.ask, belowBottomBuy)) {
-        return debugUpperOrLowerBound('down', stock, states, originalStates);
+        debugUpperOrLowerBound('down', stock, states, originalStates);
+        return;
     }
-
-    return stockState;
 }
 
 async function debugUpperOrLowerBound(
@@ -60,23 +40,27 @@ async function debugUpperOrLowerBound(
     stock: string,
     states: { [stock: string]: StockState },
     originalStates: { [stock: string]: StockState },
-): Promise<StockState> {
+): Promise<void> {
     if (states[stock].tradingLogs.length === 0) {
-        restartSimulatedSnapshot();
+        restartRandomPrice();
         states[stock] = originalStates[stock];
-        return states[stock];
+        return;
     }
 
-    if (upperOrLowerBound === 'up' && // ) {
-        states[stock].position < (states[stock].targetPosition - states[stock].sharesPerInterval)) {
+    if (
+        upperOrLowerBound === 'up' && states[stock].position <
+            states[stock].targetPosition - states[stock].sharesPerInterval
+    ) {
         debugger;
-    } else if (upperOrLowerBound === 'down' && // ) {
-        states[stock].position > -(states[stock].targetPosition - states[stock].sharesPerInterval)) {
+    } else if (
+        upperOrLowerBound === 'down' && states[stock].position >
+            -(states[stock].targetPosition - states[stock].sharesPerInterval)
+    ) {
         debugger;
     }
 
-    restartSimulatedSnapshot();
+    restartRandomPrice();
     states[stock] = structuredClone(originalStates[stock]);
 
-    return states[stock];
+    return;
 }

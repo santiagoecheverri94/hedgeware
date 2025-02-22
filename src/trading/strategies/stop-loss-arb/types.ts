@@ -27,6 +27,9 @@ export interface StockState {
     numContracts: number;
     position: number;
     targetPosition: number;
+    tradingCosts: number;
+    lastAsk?: number;
+    lastBid?: number;
     intervals: SmoothingInterval[];
     tradingLogs: {
         timeStamp: string;
@@ -36,7 +39,4 @@ export interface StockState {
         newPosition: number;
         tradingCosts: number;
     }[];
-    tradingCosts: number;
-    lastAsk?: number;
-    lastBid?: number;
 }

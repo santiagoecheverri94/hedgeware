@@ -1,5 +1,6 @@
 #include "price_simulator.hpp"
 
+#include <format>
 #include <random>
 
 using namespace std;
@@ -21,5 +22,19 @@ Decimal GetRandomPrice()
 
     return randomPrice;
 }
+
+Snapshot GetRandomSnapshot()
+{
+    Snapshot snapshot;
+
+    auto random_price = GetRandomPrice();
+
+    snapshot.ask = random_price;
+    snapshot.bid = random_price - Decimal(GetDecimal(0.01));
+
+    return snapshot;
+}
+
+Snapshot GetSimulatedSnapshot(std::string stock) { return GetRandomSnapshot(); }
 
 void RestartRandomPrice() { randomPrice = INITIAL_PRICE; }

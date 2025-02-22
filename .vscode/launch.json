@@ -2,32 +2,29 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "msvc debug",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "preLaunchTask": "C/C++: cl.exe build",
-            "program": "${workspaceFolder}/src/trading/strategies/stop-loss-arb/cpp/build/main.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "environment": [],
-            "console": "integratedTerminal"
-        },
-        {
             "name": "node addon debug",
             "type": "cppvsdbg",
             "request": "launch",
-            "preLaunchTask": "node-gyp rebuild",
+            // "preLaunchTask": "node-gyp rebuild",
             "program": "C:\\Program Files\\nodejs\\node.exe",
             "args": [
                 // "--inspect-brk",
                 "C:\\Users\\santi\\Documents\\trading\\hedgeware\\bin\\dev.js",
-                "stop-loss-arb",
-                "test-cpp"
+                "stop-loss-arb"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
-            "environment": [],
+            "environment": [
+                {
+                    "name": "RANDOM_SNAPSHOT",
+                    "value": "true"
+                },
+                
+                {
+                    "name": "CPP_NODE_ADDON",
+                    "value": "true"
+                }
+            ],
             "console": "integratedTerminal"
         }
     ]

@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "price_simulator.hpp"
 #include "types.hpp"
 
 Snapshot ReconcileStockPosition(const std::string& stock, StockState& stockState)
@@ -10,7 +11,7 @@ Snapshot ReconcileStockPosition(const std::string& stock, StockState& stockState
     // 0)
     // Snapshot snapshot = isLiveTrading() ? brokerageClient.GetSnapshot(stock,
     // stockState.brokerageId) : GetSimulatedSnapshot(stock);
-    Snapshot snapshot = Snapshot{};  // GetSimulatedSnapshot(stock);
+    Snapshot snapshot = GetSimulatedSnapshot(stock);
 
     if (IsWideBidAskSpread(snapshot, stockState) || !snapshot.bid || !snapshot.ask)
     {

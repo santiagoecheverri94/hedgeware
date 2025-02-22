@@ -3,13 +3,13 @@ import {
     isLiveTrading,
     isHistoricalSnapshot,
     isHistoricalSnapshotsExhausted,
+    isRandomSnapshot,
 } from '../../../utils/price-simulator';
-import {onUserInterrupt} from '../../../utils/system';
 import {isMarketOpen} from '../../../utils/time';
 import {IBKRClient} from '../../brokerage-clients/IBKR/client';
 import {BrokerageClient} from '../../brokerage-clients/brokerage-client';
 import {reconcileStockPosition} from './algo';
-import {debugSimulation} from './debug';
+import {debugRandomPrices} from './debug';
 import {getStocksFileNames, getStockStates, getStockStateFilePath} from './state';
 import {StockState} from './types';
 import {setTimeout} from 'node:timers/promises';
@@ -44,11 +44,17 @@ async function startStopLossArbNode(stocks: string[], states: { [stock: string]:
     }
 }
 
+const addon = require('bindings')('deephedge');
+
 async function hedgeStockWhileMarketIsOpen(
     stock: string,
     states: { [stock: string]: StockState },
     brokerageClient: BrokerageClient,
 ) {
+    if (process.env.CPP_NODE_ADDON) {
+        return addon.JsHedgeStockWhileMarketIsOpen(stock, states);
+    }
+
     const originalStates = structuredClone(states);
 
     while (await isMarketOpen(stock)) {
@@ -58,11 +64,9 @@ async function hedgeStockWhileMarketIsOpen(
 
         if (isLiveTrading()) {
             await setTimeout(1000);
-        } else {
-            debugSimulation(stock, states, originalStates, snapshot);
-        }
-
-        if (isHistoricalSnapshot()) {
+        } else if (isRandomSnapshot()) {
+            debugRandomPrices(snapshot, stock, states, originalStates);
+        } else if (isHistoricalSnapshot()) {
             if (isHistoricalSnapshotsExhausted(stock)) {
                 syncWriteJSONFile(
                     getStockStateFilePath(stock),

@@ -50,11 +50,7 @@ function getRandomPrice(): number {
     return randomPrice;
 }
 
-export function restartSimulatedSnapshot(): void {
-    restartRandomPrice();
-}
-
-function restartRandomPrice(): void {
+export function restartRandomPrice(): void {
     randomPrice = INITIAL_PRICE;
 }
 

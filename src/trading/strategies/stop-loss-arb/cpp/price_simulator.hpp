@@ -1,5 +1,8 @@
+#pragma once
+
+#include "types.hpp"
 #include "utils.hpp"
 
-Decimal GetRandomPrice();
+Snapshot GetSimulatedSnapshot(std::string stock);
 
 void RestartRandomPrice();
