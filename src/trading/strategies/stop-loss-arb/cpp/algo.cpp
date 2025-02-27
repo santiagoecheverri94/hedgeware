@@ -143,13 +143,9 @@ int GetNumToBuy(StockState& stockState, const Snapshot& snapshot)
 
     if (!indexesToExecute.empty())
     {
-        Decimal purchaseValue =
-            stockState.sharesPerInterval * indexesToExecute.size() * snapshot.ask;
-        stockState.tradingCosts -= purchaseValue;
-
-        Decimal tradingCosts = stockState.brokerageTradingCostPerShare *
-                               indexesToExecute.size() * stockState.sharesPerInterval;
-        stockState.tradingCosts -= tradingCosts;
+        // Decimal purchaseValue =
+        //     stockState.sharesPerInterval * indexesToExecute.size() * snapshot.ask;
+        // stockState.tradingCosts -= purchaseValue;
 
         if (!stockState.isStaticIntervals)
         {
@@ -201,13 +197,9 @@ int GetNumToSell(StockState& stockState, const Snapshot& snapshot)
 
     if (!indexesToExecute.empty())
     {
-        Decimal saleValue =
-            stockState.sharesPerInterval * indexesToExecute.size() * snapshot.bid;
-        stockState.tradingCosts += saleValue;
-
-        Decimal tradingCosts = stockState.brokerageTradingCostPerShare *
-                               indexesToExecute.size() * stockState.sharesPerInterval;
-        stockState.tradingCosts -= tradingCosts;
+        // Decimal saleValue =
+        //     stockState.sharesPerInterval * indexesToExecute.size() * snapshot.bid;
+        // stockState.tradingCosts += saleValue;
 
         if (!stockState.isStaticIntervals)
         {
@@ -245,7 +237,7 @@ void SetNewPosition(
     tradingLog.price = (orderSide == "BUY") ? snapshot.ask : snapshot.bid;
     tradingLog.previousPosition = previousPosition;
     tradingLog.newPosition = newPosition;
-    tradingLog.tradingCosts = stockState.tradingCosts;
+    // tradingLog.tradingCosts = stockState.tradingCosts;
     stockState.tradingLogs.push_back(tradingLog);
 
     // if (isLiveTrading()) {

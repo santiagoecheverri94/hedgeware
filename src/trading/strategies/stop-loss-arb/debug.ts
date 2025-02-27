@@ -31,7 +31,6 @@ export async function debugRandomPrices(
     );
     if (fc.lte(snapshot.ask, belowBottomBuy)) {
         debugUpperOrLowerBound('down', stock, states, originalStates);
-        return;
     }
 }
 
@@ -49,18 +48,16 @@ async function debugUpperOrLowerBound(
 
     if (
         upperOrLowerBound === 'up' && states[stock].position <
-            states[stock].targetPosition - states[stock].sharesPerInterval
+            states[stock].targetPosition
     ) {
         debugger;
     } else if (
         upperOrLowerBound === 'down' && states[stock].position >
-            -(states[stock].targetPosition - states[stock].sharesPerInterval)
+            -states[stock].targetPosition
     ) {
         debugger;
     }
 
     restartRandomPrice();
     states[stock] = structuredClone(originalStates[stock]);
-
-    return;
 }

@@ -5,7 +5,7 @@ import {
     syncWriteJSONFile,
     syncRenameFile,
 } from '../../../utils/file';
-import {SmoothingInterval, StockState} from './types';
+import {IntervalType, SmoothingInterval, StockState} from './types';
 import {
     getHistoricalSnapshotStockAndStartAndEndDates,
     getSnapshotsForStockOnDate,
@@ -71,28 +71,30 @@ function getFullStockState(partialStockState: StockState): StockState {
         targetPosition,
         intervalProfit,
         spaceBetweenIntervals,
-        callStrikePrice,
         initialPrice,
-        putStrikePrice,
+        shiftIntervalsFromInitialPrice,
     } = partialStockState;
 
-    const longIntervals: SmoothingInterval[] = getLongIntervalsAboveWithSellTail({
-        callStrikePrice,
+    const longIntervals: SmoothingInterval[] = getLongIntervalsAboveInitialPrice({
+        initialPrice,
         targetPosition,
         intervalProfit,
         spaceBetweenIntervals,
         sharesPerInterval,
+        SHIFT: shiftIntervalsFromInitialPrice,
     });
 
-    const shortIntervals: SmoothingInterval[] = getShortIntervalsBelowWithBuyHead({
-        putStrikePrice,
+    const shortIntervals: SmoothingInterval[] = getShortIntervalsBelowInitialPrice({
+        initialPrice,
         targetPosition,
         intervalProfit,
         spaceBetweenIntervals,
         sharesPerInterval,
+        SHIFT: shiftIntervalsFromInitialPrice,
     });
 
     const newState: StockState = {
+        isStaticIntervals: false,
         brokerageId,
         brokerageTradingCostPerShare,
         targetPosition,
@@ -100,13 +102,15 @@ function getFullStockState(partialStockState: StockState): StockState {
         spaceBetweenIntervals,
         intervalProfit,
         numContracts,
-        callStrikePrice,
         initialPrice,
-        putStrikePrice,
+        shiftIntervalsFromInitialPrice,
         position: 0,
-        lastAsk: undefined,
-        lastBid: undefined,
-        tradingCosts: 0,
+        lastAsk: 0,
+        lastBid: 0,
+        realizedPnL: 0,
+        exitPnL: 0,
+        exitPnLAsPercent: 0,
+        maxMovingLossAsPercent: 0,
         intervals: [...longIntervals, ...shortIntervals],
         tradingLogs: [],
     };
@@ -114,113 +118,85 @@ function getFullStockState(partialStockState: StockState): StockState {
     return newState;
 }
 
-function getLongIntervalsAboveWithSellTail({
-    callStrikePrice,
+function getLongIntervalsAboveInitialPrice({
+    initialPrice,
     targetPosition,
     intervalProfit,
     spaceBetweenIntervals,
     sharesPerInterval,
+    SHIFT,
 }: {
-    callStrikePrice: number;
+    initialPrice: number;
     targetPosition: number;
     intervalProfit: number;
     spaceBetweenIntervals: number;
     sharesPerInterval: number;
+    SHIFT: number;
 }): SmoothingInterval[] {
     const intervals: SmoothingInterval[] = [];
     const numIntervals = targetPosition / sharesPerInterval;
 
-    const SHIFT = 3; // num extra positions above callStrikePrice
-    for (let index = 0; index <= numIntervals; index++) {
+    for (let index = 1; index <= numIntervals + 1; index++) {
         const spaceFromBaseInterval = fc.multiply(index + SHIFT, spaceBetweenIntervals);
-        const sellPrice = fc.subtract(callStrikePrice, spaceFromBaseInterval);
+        const sellPrice = fc.add(initialPrice, spaceFromBaseInterval);
 
-        if (index !== numIntervals) {
-            intervals.push({
-                positionLimit: targetPosition - (sharesPerInterval * index),
-                SELL: {
-                    price: sellPrice,
-                    active: false,
-                    crossed: false,
-                },
-                BUY: {
-                    price: fc.subtract(sellPrice, intervalProfit),
-                    active: true,
-                    crossed: true,
-                },
-            });
-        } else {
-            // SELL tail
-            intervals.push({
-                positionLimit: targetPosition - (sharesPerInterval * index),
-                SELL: {
-                    price: sellPrice,
-                    active: true,
-                    crossed: false,
-                },
-                BUY: {
-                    price: fc.subtract(sellPrice, intervalProfit),
-                    active: false,
-                    crossed: false,
-                },
-            });
-        }
+        intervals.unshift({
+            type: IntervalType.LONG,
+            positionLimit: sharesPerInterval * index,
+            SELL: {
+                price: sellPrice,
+                active: false,
+                crossed: false,
+                boughtAtPrice: Number.NaN,
+            },
+            BUY: {
+                price: fc.subtract(sellPrice, intervalProfit),
+                active: true,
+                crossed: true,
+            },
+        });
     }
 
     return intervals;
 }
 
-function getShortIntervalsBelowWithBuyHead({
-    putStrikePrice,
+function getShortIntervalsBelowInitialPrice({
+    initialPrice,
     targetPosition,
     intervalProfit,
     spaceBetweenIntervals,
     sharesPerInterval,
+    SHIFT,
 }: {
-    putStrikePrice: number;
+    initialPrice: number;
     targetPosition: number;
     intervalProfit: number;
     spaceBetweenIntervals: number;
     sharesPerInterval: number;
+    SHIFT: number;
 }): SmoothingInterval[] {
     const intervals: SmoothingInterval[] = [];
     const numIntervals = targetPosition / sharesPerInterval;
 
-    const SHIFT = 3; // num extra positions above putStrikePrice
-    for (let index = 0; index <= numIntervals; index++) {
+    for (let index = 1; index <= numIntervals + 1; index++) {
         const spaceFromBaseInterval = fc.multiply(index + SHIFT, spaceBetweenIntervals);
-        const buyPrice = fc.add(putStrikePrice, spaceFromBaseInterval);
+        const buyPrice = fc.subtract(initialPrice, spaceFromBaseInterval);
 
-        if (index !== numIntervals) {
-            intervals.unshift({
-                positionLimit: -(targetPosition - (sharesPerInterval * index)),
-                SELL: {
-                    price: fc.add(buyPrice, intervalProfit),
-                    active: true,
-                    crossed: true,
-                },
-                BUY: {
-                    price: buyPrice,
-                    active: false,
-                    crossed: false,
-                },
-            });
-        } else {
-            // BUY head
-            intervals.unshift({
-                positionLimit: -(targetPosition - (sharesPerInterval * index)),
-                SELL: {
-                    price: fc.add(buyPrice, intervalProfit),
-                    active: false,
-                    crossed: false,
-                },
-                BUY: {
-                    price: buyPrice,
-                    active: true,
-                    crossed: false,
-                },
-            });
-        }
+        intervals.push({
+            type: IntervalType.SHORT,
+            positionLimit: -(sharesPerInterval * index),
+            SELL: {
+                price: fc.add(buyPrice, intervalProfit),
+                active: true,
+                crossed: true,
+            },
+            BUY: {
+                price: buyPrice,
+                active: false,
+                crossed: false,
+                soldAtPrice: Number.NaN,
+            },
+        });
     }
 
     return intervals;

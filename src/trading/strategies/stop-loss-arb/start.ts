@@ -1,4 +1,5 @@
 import {syncWriteJSONFile, jsonPrettyPrint} from '../../../utils/file';
+import {FloatCalculator as fc} from '../../../utils/float-calculator';
 import {
     isLiveTrading,
     isHistoricalSnapshot,
@@ -24,7 +25,10 @@ export async function startStopLossArb(): Promise<void> {
     await startStopLossArbNode(stocks, states);
 }
 
-async function startStopLossArbNode(stocks: string[], states: { [stock: string]: StockState }): Promise<void> {
+async function startStopLossArbNode(
+    stocks: string[],
+    states: { [stock: string]: StockState },
+): Promise<void> {
     // let userHasInterrupted = false;
     // if (isLiveTrading()) {
     //   onUserInterrupt(() => {
@@ -34,13 +38,22 @@ async function startStopLossArbNode(stocks: string[], states: { [stock: string]:
 
     const waitingForStocksToBeHedged: Promise<void>[] = [];
     for (const stock of stocks) {
-        waitingForStocksToBeHedged.push(hedgeStockWhileMarketIsOpen(stock, states, brokerageClient));
+        waitingForStocksToBeHedged.push(
+            hedgeStockWhileMarketIsOpen(stock, states, brokerageClient),
+        );
     }
 
     await Promise.all(waitingForStocksToBeHedged);
 
     for (const stock of Object.keys(states).sort()) {
-        console.log(`${stock}, tradingCosts: $${states[stock].tradingCosts}\n`);
+        console.log(
+            `${stock}, Exit PnL: ${
+                fc.gt(states[stock].exitPnLAsPercent, 0) ? '+' : ''
+            }${fc.multiply(
+                states[stock].exitPnLAsPercent,
+                100,
+            )}%, Max Loss: ${fc.multiply(states[stock].maxMovingLossAsPercent, 100)}%\n`,
+        );
     }
 }
 
@@ -60,7 +73,16 @@ async function hedgeStockWhileMarketIsOpen(
     while (await isMarketOpen(stock)) {
         const stockState = states[stock];
 
-        const snapshot = await reconcileStockPosition(stock, stockState, brokerageClient);
+        const snapshot = await reconcileStockPosition(
+            stock,
+            stockState,
+            brokerageClient,
+        );
+
+        if (isExitPnlBeyondTresholds(stockState)) {
+            debugger;
+            break;
+        }
 
         if (isLiveTrading()) {
             await setTimeout(1000);
@@ -76,4 +98,31 @@ async function hedgeStockWhileMarketIsOpen(
             }
         }
     }
+}
+
+const LIVE_PROFIT_THRESHOLD = 0.005;
+const LIVE_LOSS_THRESHOLD = Number.NaN; // TODO: Tbd
+
+const HISTORICAL_PROFIT_THRESHOLD = Number.parseFloat(
+    process.env.HISTORICAL_PROFIT_THRESHOLD || '0.01',
+);
+
+function isExitPnlBeyondTresholds(stockState: StockState): boolean {
+    const exitPnLAsPercent = stockState.exitPnLAsPercent;
+
+    if (isHistoricalSnapshot()) {
+        if (fc.gte(exitPnLAsPercent, HISTORICAL_PROFIT_THRESHOLD)) {
+            return true;
+        }
+    } else if (isLiveTrading()) {
+        if (fc.gte(exitPnLAsPercent, LIVE_PROFIT_THRESHOLD)) {
+            return true;
+        }
+
+        if (fc.lte(exitPnLAsPercent, LIVE_LOSS_THRESHOLD)) {
+            return true;
+        }
+    }
+
+    return false;
 }

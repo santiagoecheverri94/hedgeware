@@ -38,14 +38,14 @@ function getRandomSnapshot(): Snapshot {
     };
 }
 
-const INITIAL_PRICE = 12.75;
+const INITIAL_PRICE = 9;
 let randomPrice: number = INITIAL_PRICE;
 
 function getRandomPrice(): number {
     const tickDown = fc.subtract(randomPrice, 0.01);
     const tickUp = fc.add(randomPrice, 0.01);
     const probabilityOfTickDown = Math.random();
-    randomPrice = fc.lte(probabilityOfTickDown, 0.5) ? tickDown : tickUp;
+    randomPrice = fc.lte(probabilityOfTickDown, 0.49) ? tickDown : tickUp;
 
     return randomPrice;
 }

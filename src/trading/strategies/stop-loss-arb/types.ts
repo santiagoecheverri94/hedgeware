@@ -1,35 +1,45 @@
 import {OrderAction} from '../../brokerage-clients/brokerage-client';
 
 export interface SmoothingInterval {
+    type: IntervalType;
     positionLimit: number;
     [OrderAction.SELL]: {
         active: boolean;
         crossed: boolean;
         price: number;
+        boughtAtPrice?: number;
     };
     [OrderAction.BUY]: {
         active: boolean;
         crossed: boolean;
         price: number;
+        soldAtPrice?: number;
     };
 }
 
+export enum IntervalType {
+    LONG = 'LONG',
+    SHORT = 'SHORT',
+}
+
 export interface StockState {
-    isStaticIntervals?: boolean;
+    isStaticIntervals: boolean;
     brokerageId: string;
     brokerageTradingCostPerShare: number;
     sharesPerInterval: number;
     intervalProfit: number;
-    callStrikePrice: number;
     initialPrice: number;
-    putStrikePrice: number;
+    shiftIntervalsFromInitialPrice: number;
     spaceBetweenIntervals: number;
     numContracts: number;
     position: number;
     targetPosition: number;
-    tradingCosts: number;
-    lastAsk?: number;
-    lastBid?: number;
+    realizedPnL: number;
+    exitPnL: number;
+    exitPnLAsPercent: number;
+    maxMovingLossAsPercent: number;
+    lastAsk: number;
+    lastBid: number;
     intervals: SmoothingInterval[];
     tradingLogs: {
         timeStamp: string;
@@ -37,6 +47,5 @@ export interface StockState {
         price: number;
         previousPosition: number;
         newPosition: number;
-        tradingCosts: number;
     }[];
 }

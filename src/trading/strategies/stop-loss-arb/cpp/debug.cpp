@@ -18,16 +18,14 @@ void DebugUpperOrLowerBound(
     }
 
     if (upperOrLowerBound == "up" &&
-        states[stock].position <
-            states[stock].targetPosition - states[stock].sharesPerInterval)
+        states[stock].position < states[stock].targetPosition)
     {
-        Print("Debugger: upper bound reached with bugs!\n");
+        __debugbreak();
     }
     else if (upperOrLowerBound == "down" &&
-             states[stock].position >
-                 -(states[stock].targetPosition - states[stock].sharesPerInterval))
+             states[stock].position > -states[stock].targetPosition)
     {
-        Print("Debugger: lower bound reached with bugs!\n");
+        __debugbreak();
     }
 
     RestartRandomPrice();

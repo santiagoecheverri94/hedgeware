@@ -5,7 +5,7 @@
 
 using namespace std;
 
-const Decimal INITIAL_PRICE = GetDecimal(12.75);
+const Decimal INITIAL_PRICE = GetDecimal(9.0);
 Decimal randomPrice = INITIAL_PRICE;
 
 Decimal GetRandomPrice()

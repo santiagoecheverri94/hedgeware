@@ -36,7 +36,6 @@ struct TradingLog
     Decimal price;
     int previousPosition;
     int newPosition;
-    Decimal tradingCosts;
 };
 
 struct StockState
@@ -53,7 +52,6 @@ struct StockState
     int numContracts;
     int position;
     int targetPosition;
-    Decimal tradingCosts;
     std::optional<Decimal> lastAsk;
     std::optional<Decimal> lastBid;
     std::vector<SmoothingInterval> intervals;

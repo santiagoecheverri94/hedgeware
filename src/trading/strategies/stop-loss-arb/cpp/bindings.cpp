@@ -26,29 +26,30 @@ std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
             js_stock_state.Get("brokerageId").As<JS::String>().Utf8Value();
 
         cpp_stock_state.brokerageTradingCostPerShare =
-            Decimal(js_stock_state.Get("brokerageTradingCostPerShare")
-                        .As<JS::Number>()
-                        .DoubleValue());
+            GetDecimal(js_stock_state.Get("brokerageTradingCostPerShare")
+                           .As<JS::Number>()
+                           .DoubleValue());
 
         cpp_stock_state.sharesPerInterval =
             js_stock_state.Get("sharesPerInterval").As<JS::Number>().Int32Value();
 
-        cpp_stock_state.intervalProfit =
-            Decimal(js_stock_state.Get("intervalProfit").As<JS::Number>().DoubleValue()
-            );
+        cpp_stock_state.intervalProfit = GetDecimal(
+            js_stock_state.Get("intervalProfit").As<JS::Number>().DoubleValue()
+        );
 
-        cpp_stock_state.callStrikePrice =
-            Decimal(js_stock_state.Get("callStrikePrice").As<JS::Number>().DoubleValue()
-            );
+        cpp_stock_state.callStrikePrice = GetDecimal(
+            js_stock_state.Get("callStrikePrice").As<JS::Number>().DoubleValue()
+        );
 
         cpp_stock_state.initialPrice =
-            Decimal(js_stock_state.Get("initialPrice").As<JS::Number>().DoubleValue());
-
-        cpp_stock_state.putStrikePrice =
-            Decimal(js_stock_state.Get("putStrikePrice").As<JS::Number>().DoubleValue()
+            GetDecimal(js_stock_state.Get("initialPrice").As<JS::Number>().DoubleValue()
             );
 
-        cpp_stock_state.spaceBetweenIntervals = Decimal(
+        cpp_stock_state.putStrikePrice = GetDecimal(
+            js_stock_state.Get("putStrikePrice").As<JS::Number>().DoubleValue()
+        );
+
+        cpp_stock_state.spaceBetweenIntervals = GetDecimal(
             js_stock_state.Get("spaceBetweenIntervals").As<JS::Number>().DoubleValue()
         );
 
@@ -61,19 +62,18 @@ std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
         cpp_stock_state.targetPosition =
             js_stock_state.Get("targetPosition").As<JS::Number>().Int32Value();
 
-        cpp_stock_state.tradingCosts =
-            Decimal(js_stock_state.Get("tradingCosts").As<JS::Number>().DoubleValue());
-
         if (js_stock_state.Has("lastAsk"))
         {
             cpp_stock_state.lastAsk =
-                Decimal(js_stock_state.Get("lastAsk").As<JS::Number>().DoubleValue());
+                GetDecimal(js_stock_state.Get("lastAsk").As<JS::Number>().DoubleValue()
+                );
         }
 
         if (js_stock_state.Has("lastBid"))
         {
             cpp_stock_state.lastBid =
-                Decimal(js_stock_state.Get("lastBid").As<JS::Number>().DoubleValue());
+                GetDecimal(js_stock_state.Get("lastBid").As<JS::Number>().DoubleValue()
+                );
         }
 
         JS::Array js_intervals = js_stock_state.Get("intervals").As<JS::Array>();
@@ -90,13 +90,13 @@ std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
             cpp_interval.SELL.crossed =
                 js_sell.Get("crossed").As<JS::Boolean>().Value();
             cpp_interval.SELL.price =
-                Decimal(js_sell.Get("price").As<JS::Number>().DoubleValue());
+                GetDecimal(js_sell.Get("price").As<JS::Number>().DoubleValue());
 
             JS::Object js_buy = js_interval.Get("BUY").As<JS::Object>();
             cpp_interval.BUY.active = js_buy.Get("active").As<JS::Boolean>().Value();
             cpp_interval.BUY.crossed = js_buy.Get("crossed").As<JS::Boolean>().Value();
             cpp_interval.BUY.price =
-                Decimal(js_buy.Get("price").As<JS::Number>().DoubleValue());
+                GetDecimal(js_buy.Get("price").As<JS::Number>().DoubleValue());
 
             cpp_stock_state.intervals.push_back(cpp_interval);
         }
@@ -109,13 +109,12 @@ std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
 
             cpp_log.timeStamp = js_log.Get("timeStamp").As<JS::String>().Utf8Value();
             cpp_log.action = js_log.Get("action").As<JS::String>().Utf8Value();
-            cpp_log.price = Decimal(js_log.Get("price").As<JS::Number>().DoubleValue());
+            cpp_log.price =
+                GetDecimal(js_log.Get("price").As<JS::Number>().DoubleValue());
             cpp_log.previousPosition =
                 js_log.Get("previousPosition").As<JS::Number>().Int32Value();
             cpp_log.newPosition =
                 js_log.Get("newPosition").As<JS::Number>().Int32Value();
-            cpp_log.tradingCosts =
-                Decimal(js_log.Get("tradingCosts").As<JS::Number>().DoubleValue());
 
             cpp_stock_state.tradingLogs.push_back(cpp_log);
         }
@@ -176,10 +175,6 @@ JS::Object BindCppStatesToJsStates(
         js_state.Set("numContracts", JS::Number::New(env, cpp_state.numContracts));
         js_state.Set("position", JS::Number::New(env, cpp_state.position));
         js_state.Set("targetPosition", JS::Number::New(env, cpp_state.targetPosition));
-        js_state.Set(
-            "tradingCosts",
-            JS::Number::New(env, cpp_state.tradingCosts.convert_to<double>())
-        );
 
         if (cpp_state.lastAsk.has_value())
         {
@@ -243,10 +238,6 @@ JS::Object BindCppStatesToJsStates(
                 "previousPosition", JS::Number::New(env, cpp_log.previousPosition)
             );
             js_log.Set("newPosition", JS::Number::New(env, cpp_log.newPosition));
-            js_log.Set(
-                "tradingCosts",
-                JS::Number::New(env, cpp_log.tradingCosts.convert_to<double>())
-            );
 
             js_tradingLogs.Set(j, js_log);
         }
