@@ -1,6 +1,21 @@
-#include "bindings.hpp"
+#include "js_bindings.hpp"
 
 using namespace std;
+
+std::vector<std::string> BindJsStocksToCppStocks(const JS::Array& js_stocks)
+{
+    std::vector<std::string> cpp_stocks;
+
+    cpp_stocks.reserve(js_stocks.Length());
+
+    for (int i = 0; i < js_stocks.Length(); ++i)
+    {
+        std::string stock = js_stocks.Get(i).As<JS::String>().Utf8Value();
+        cpp_stocks.push_back(stock);
+    }
+
+    return cpp_stocks;
+}
 
 std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
     const JS::Object& js_states
@@ -16,11 +31,8 @@ std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
 
         StockState cpp_stock_state;
 
-        if (js_stock_state.Has("isStaticIntervals"))
-        {
-            cpp_stock_state.isStaticIntervals =
-                js_stock_state.Get("isStaticIntervals").As<JS::Boolean>().Value();
-        }
+        cpp_stock_state.isStaticIntervals =
+            js_stock_state.Get("isStaticIntervals").As<JS::Boolean>().Value();
 
         cpp_stock_state.brokerageId =
             js_stock_state.Get("brokerageId").As<JS::String>().Utf8Value();
@@ -37,17 +49,14 @@ std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
             js_stock_state.Get("intervalProfit").As<JS::Number>().DoubleValue()
         );
 
-        cpp_stock_state.callStrikePrice = GetDecimal(
-            js_stock_state.Get("callStrikePrice").As<JS::Number>().DoubleValue()
-        );
-
         cpp_stock_state.initialPrice =
             GetDecimal(js_stock_state.Get("initialPrice").As<JS::Number>().DoubleValue()
             );
 
-        cpp_stock_state.putStrikePrice = GetDecimal(
-            js_stock_state.Get("putStrikePrice").As<JS::Number>().DoubleValue()
-        );
+        cpp_stock_state.shiftIntervalsFromInitialPrice =
+            js_stock_state.Get("shiftIntervalsFromInitialPrice")
+                .As<JS::Number>()
+                .Int32Value();
 
         cpp_stock_state.spaceBetweenIntervals = GetDecimal(
             js_stock_state.Get("spaceBetweenIntervals").As<JS::Number>().DoubleValue()
@@ -62,25 +71,36 @@ std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
         cpp_stock_state.targetPosition =
             js_stock_state.Get("targetPosition").As<JS::Number>().Int32Value();
 
-        if (js_stock_state.Has("lastAsk"))
-        {
-            cpp_stock_state.lastAsk =
-                GetDecimal(js_stock_state.Get("lastAsk").As<JS::Number>().DoubleValue()
-                );
-        }
+        cpp_stock_state.realizedPnL =
+            GetDecimal(js_stock_state.Get("realizedPnL").As<JS::Number>().DoubleValue()
+            );
 
-        if (js_stock_state.Has("lastBid"))
-        {
-            cpp_stock_state.lastBid =
-                GetDecimal(js_stock_state.Get("lastBid").As<JS::Number>().DoubleValue()
-                );
-        }
+        cpp_stock_state.exitPnL =
+            GetDecimal(js_stock_state.Get("exitPnL").As<JS::Number>().DoubleValue());
+
+        cpp_stock_state.exitPnLAsPercent = GetDecimal(
+            js_stock_state.Get("exitPnLAsPercent").As<JS::Number>().DoubleValue()
+        );
+
+        cpp_stock_state.maxMovingLossAsPercent = GetDecimal(
+            js_stock_state.Get("maxMovingLossAsPercent").As<JS::Number>().DoubleValue()
+        );
+
+        cpp_stock_state.lastAsk =
+            GetDecimal(js_stock_state.Get("lastAsk").As<JS::Number>().DoubleValue());
+
+        cpp_stock_state.lastBid =
+            GetDecimal(js_stock_state.Get("lastBid").As<JS::Number>().DoubleValue());
 
         JS::Array js_intervals = js_stock_state.Get("intervals").As<JS::Array>();
         for (int j = 0; j < js_intervals.Length(); ++j)
         {
             JS::Object js_interval = js_intervals.Get(j).As<JS::Object>();
             SmoothingInterval cpp_interval;
+
+            std::string typeStr = js_interval.Get("type").As<JS::String>().Utf8Value();
+            cpp_interval.type =
+                (typeStr == "LONG") ? IntervalType::LONG : IntervalType::SHORT;
 
             cpp_interval.positionLimit =
                 js_interval.Get("positionLimit").As<JS::Number>().Int32Value();
@@ -92,11 +112,25 @@ std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
             cpp_interval.SELL.price =
                 GetDecimal(js_sell.Get("price").As<JS::Number>().DoubleValue());
 
+            if (js_sell.Has("boughtAtPrice") && !js_sell.Get("boughtAtPrice").IsNull())
+            {
+                cpp_interval.SELL.boughtAtPrice = GetDecimal(
+                    js_sell.Get("boughtAtPrice").As<JS::Number>().DoubleValue()
+                );
+            }
+
             JS::Object js_buy = js_interval.Get("BUY").As<JS::Object>();
             cpp_interval.BUY.active = js_buy.Get("active").As<JS::Boolean>().Value();
             cpp_interval.BUY.crossed = js_buy.Get("crossed").As<JS::Boolean>().Value();
             cpp_interval.BUY.price =
                 GetDecimal(js_buy.Get("price").As<JS::Number>().DoubleValue());
+
+            if (js_buy.Has("soldAtPrice") && !js_buy.Get("soldAtPrice").IsNull())
+            {
+                cpp_interval.BUY.soldAtPrice =
+                    GetDecimal(js_buy.Get("soldAtPrice").As<JS::Number>().DoubleValue()
+                    );
+            }
 
             cpp_stock_state.intervals.push_back(cpp_interval);
         }
@@ -135,67 +169,85 @@ JS::Object BindCppStatesToJsStates(
     {
         JS::Object js_state = JS::Object::New(env);
 
-        if (cpp_state.isStaticIntervals.has_value())
-        {
-            js_state.Set(
-                "isStaticIntervals",
-                JS::Boolean::New(env, cpp_state.isStaticIntervals.value())
-            );
-        }
+        js_state.Set(
+            "isStaticIntervals", JS::Boolean::New(env, cpp_state.isStaticIntervals)
+        );
+
         js_state.Set("brokerageId", JS::String::New(env, cpp_state.brokerageId));
+
         js_state.Set(
             "brokerageTradingCostPerShare",
             JS::Number::New(
                 env, cpp_state.brokerageTradingCostPerShare.convert_to<double>()
             )
         );
+
         js_state.Set(
             "sharesPerInterval", JS::Number::New(env, cpp_state.sharesPerInterval)
         );
+
         js_state.Set(
             "intervalProfit",
             JS::Number::New(env, cpp_state.intervalProfit.convert_to<double>())
         );
-        js_state.Set(
-            "callStrikePrice",
-            JS::Number::New(env, cpp_state.callStrikePrice.convert_to<double>())
-        );
+
         js_state.Set(
             "initialPrice",
             JS::Number::New(env, cpp_state.initialPrice.convert_to<double>())
         );
+
         js_state.Set(
-            "putStrikePrice",
-            JS::Number::New(env, cpp_state.putStrikePrice.convert_to<double>())
+            "shiftIntervalsFromInitialPrice",
+            JS::Number::New(env, cpp_state.shiftIntervalsFromInitialPrice)
         );
+
         js_state.Set(
             "spaceBetweenIntervals",
             JS::Number::New(env, cpp_state.spaceBetweenIntervals.convert_to<double>())
         );
+
         js_state.Set("numContracts", JS::Number::New(env, cpp_state.numContracts));
+
         js_state.Set("position", JS::Number::New(env, cpp_state.position));
+
         js_state.Set("targetPosition", JS::Number::New(env, cpp_state.targetPosition));
 
-        if (cpp_state.lastAsk.has_value())
-        {
-            js_state.Set(
-                "lastAsk",
-                JS::Number::New(env, cpp_state.lastAsk.value().convert_to<double>())
-            );
-        }
-        if (cpp_state.lastBid.has_value())
-        {
-            js_state.Set(
-                "lastBid",
-                JS::Number::New(env, cpp_state.lastBid.value().convert_to<double>())
-            );
-        }
+        js_state.Set(
+            "realizedPnL",
+            JS::Number::New(env, cpp_state.realizedPnL.convert_to<double>())
+        );
+
+        js_state.Set(
+            "exitPnL", JS::Number::New(env, cpp_state.exitPnL.convert_to<double>())
+        );
+
+        js_state.Set(
+            "exitPnLAsPercent",
+            JS::Number::New(env, cpp_state.exitPnLAsPercent.convert_to<double>())
+        );
+
+        js_state.Set(
+            "maxMovingLossAsPercent",
+            JS::Number::New(env, cpp_state.maxMovingLossAsPercent.convert_to<double>())
+        );
+
+        js_state.Set(
+            "lastAsk", JS::Number::New(env, cpp_state.lastAsk.convert_to<double>())
+        );
+
+        js_state.Set(
+            "lastBid", JS::Number::New(env, cpp_state.lastBid.convert_to<double>())
+        );
 
         JS::Array js_intervals = JS::Array::New(env, cpp_state.intervals.size());
         for (size_t i = 0; i < cpp_state.intervals.size(); ++i)
         {
             const SmoothingInterval& cpp_interval = cpp_state.intervals[i];
             JS::Object js_interval = JS::Object::New(env);
+
+            std::string typeStr =
+                (cpp_interval.type == IntervalType::LONG) ? "LONG" : "SHORT";
+            js_interval.Set("type", JS::String::New(env, typeStr));
 
             js_interval.Set(
                 "positionLimit", JS::Number::New(env, cpp_interval.positionLimit)
@@ -208,6 +260,22 @@ JS::Object BindCppStatesToJsStates(
                 "price",
                 JS::Number::New(env, cpp_interval.SELL.price.convert_to<double>())
             );
+
+            if (cpp_interval.SELL.boughtAtPrice.has_value())
+            {
+                js_sell.Set(
+                    "boughtAtPrice",
+                    JS::Number::New(
+                        env,
+                        cpp_interval.SELL.boughtAtPrice.value().convert_to<double>()
+                    )
+                );
+            }
+            else
+            {
+                js_sell.Set("boughtAtPrice", env.Null());
+            }
+
             js_interval.Set("SELL", js_sell);
 
             JS::Object js_buy = JS::Object::New(env);
@@ -217,6 +285,21 @@ JS::Object BindCppStatesToJsStates(
                 "price",
                 JS::Number::New(env, cpp_interval.BUY.price.convert_to<double>())
             );
+
+            if (cpp_interval.BUY.soldAtPrice.has_value())
+            {
+                js_buy.Set(
+                    "soldAtPrice",
+                    JS::Number::New(
+                        env, cpp_interval.BUY.soldAtPrice.value().convert_to<double>()
+                    )
+                );
+            }
+            else
+            {
+                js_buy.Set("soldAtPrice", env.Null());
+            }
+
             js_interval.Set("BUY", js_buy);
 
             js_intervals.Set(i, js_interval);

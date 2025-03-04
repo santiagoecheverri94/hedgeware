@@ -6,3 +6,9 @@
 Snapshot GetSimulatedSnapshot(std::string stock);
 
 void RestartRandomPrice();
+
+bool IsRandomSnapshot();
+
+bool IsHistoricalSnapshot();
+
+bool IsLiveTrading();

@@ -5,6 +5,27 @@
 
 using namespace std;
 
+bool IsTruthyEnv(const char* envName)
+{
+    const char* val = std::getenv(envName);
+    if (val == nullptr)
+    {
+        return false;
+    }
+
+    std::string value = val;
+    // Empty string is considered false, any other value is true
+    // This matches JavaScript's Boolean() behavior
+    return !value.empty() && value != "0" && value != "false" && value != "undefined" &&
+           value != "null";
+}
+
+bool IsRandomSnapshot() { return IsTruthyEnv("RANDOM_SNAPSHOT"); }
+
+bool IsHistoricalSnapshot() { return IsTruthyEnv("HISTORICAL_SNAPSHOT"); }
+
+bool IsLiveTrading() { return !IsRandomSnapshot() && !IsHistoricalSnapshot(); }
+
 const Decimal INITIAL_PRICE = GetDecimal(9.0);
 Decimal randomPrice = INITIAL_PRICE;
 
@@ -18,7 +39,7 @@ Decimal GetRandomPrice()
 
     Decimal probabilityOfTickDown = GetDecimal(distribution(random_engine));
 
-    randomPrice = (probabilityOfTickDown <= 0.5) ? tickDown : tickUp;
+    randomPrice = (probabilityOfTickDown <= GetDecimal(0.49)) ? tickDown : tickUp;
 
     return randomPrice;
 }

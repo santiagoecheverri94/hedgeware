@@ -1,4 +1,4 @@
-#include "bindings.hpp"
+#include "js_bindings.hpp"
 #include "start.hpp"
 
 #define GET_SYMBOL_NAME(symbol) #symbol
@@ -14,15 +14,17 @@ void JsTestCallJSFunction(const JS::CallbackInfo& info)
     callback.Call({JS::String::New(env, "string from cpp"), JS::Number::New(env, 100)});
 }
 
-void JsHedgeStockWhileMarketIsOpen(const JS::CallbackInfo& info)
+void JsStartStopLossArbCpp(const JS::CallbackInfo& info)
 {
     JS::Env env = info.Env();
 
-    auto stock = info[0].As<JS::String>().Utf8Value();
-    auto js_states = info[1].As<JS::Object>();
+    const auto js_stocks = info[0].As<JS::Array>();
+    const auto js_states = info[1].As<JS::Object>();
+
+    const auto cpp_stocks = BindJsStocksToCppStocks(js_stocks);
     auto cpp_states = BindJsStatesToCppStates(js_states);
 
-    HedgeStockWhileMarketIsOpen(stock, cpp_states);
+    StartStopLossArbCpp(cpp_stocks, cpp_states);
 }
 
 JS::Object Init(JS::Env env, JS::Object exports)
@@ -33,8 +35,8 @@ JS::Object Init(JS::Env env, JS::Object exports)
     );
 
     exports.Set(
-        JS::String::New(env, GET_SYMBOL_NAME(JsHedgeStockWhileMarketIsOpen)),
-        JS::Function::New(env, JsHedgeStockWhileMarketIsOpen)
+        JS::String::New(env, GET_SYMBOL_NAME(JsStartStopLossArbCpp)),
+        JS::Function::New(env, JsStartStopLossArbCpp)
     );
 
     return exports;

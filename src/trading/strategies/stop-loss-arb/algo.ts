@@ -77,7 +77,7 @@ export async function reconcileStockPosition(
     // 6)
     const isSnapshotChanged = isSnapshotChange(snapshot, stockState);
     if (isSnapshotChanged) {
-        updateSnaphotOnState(stock, stockState, snapshot);
+        updateSnaphotOnState(stockState, snapshot);
 
         updateExitPnL(stockState);
 
@@ -151,10 +151,6 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number[] {
 
         interval[OrderAction.SELL].active = true;
         interval[OrderAction.SELL].crossed = false;
-
-        if (interval.type === IntervalType.LONG) {
-            interval[OrderAction.SELL].boughtAtPrice = ask;
-        }
     }
 
     if (stockState.isStaticIntervals) {
@@ -162,12 +158,6 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number[] {
     }
 
     if (indicesToExecute.length > 0) {
-        const commissionCosts = fc.multiply(
-            indicesToExecute.length * stockState.sharesPerInterval,
-            stockState.brokerageTradingCostPerShare,
-        );
-        stockState.realizedPnL = fc.subtract(stockState.realizedPnL, commissionCosts);
-
         if (!stockState.isStaticIntervals) {
             correctBadBuyIfRequired(stockState, indicesToExecute);
         }
@@ -206,19 +196,9 @@ function getNumToSell(stockState: StockState, {bid}: Snapshot): number[] {
 
         interval[OrderAction.BUY].active = true;
         interval[OrderAction.BUY].crossed = false;
-
-        if (interval.type === IntervalType.SHORT) {
-            interval[OrderAction.BUY].soldAtPrice = bid;
-        }
     }
 
     if (indicesToExecute.length > 0) {
-        const commissionCosts = fc.multiply(
-            indicesToExecute.length * stockState.sharesPerInterval,
-            stockState.brokerageTradingCostPerShare,
-        );
-        stockState.realizedPnL = fc.subtract(stockState.realizedPnL, commissionCosts);
-
         if (!stockState.isStaticIntervals) {
             correctBadSellIfRequired(stockState, indicesToExecute);
         }
@@ -291,23 +271,42 @@ function updateRealizedPnL(
     orderSide: OrderAction,
     price: number,
 ): void {
+    if (executedIndices.length === 0) {
+        return;
+    }
+
+    const commissionCosts = fc.multiply(
+        executedIndices.length * stockState.sharesPerInterval,
+        stockState.brokerageTradingCostPerShare,
+    );
+
+    stockState.realizedPnL = fc.subtract(stockState.realizedPnL, commissionCosts);
+
     for (const index of executedIndices) {
         const interval = stockState.intervals[index];
 
         let pnLFromThisExecution: number | undefined;
 
-        if (interval.type === IntervalType.LONG && orderSide === OrderAction.SELL) {
-            pnLFromThisExecution = fc.subtract(
-                price,
-                interval[OrderAction.SELL].boughtAtPrice!,
-            );
+        if (interval.type === IntervalType.LONG) {
+            if (orderSide === OrderAction.BUY) {
+                interval[OrderAction.SELL].boughtAtPrice = price;
+            } else if (orderSide === OrderAction.SELL) {
+                pnLFromThisExecution = fc.subtract(
+                    price,
+                    interval[OrderAction.SELL].boughtAtPrice!,
+                );
+            }
         }
 
-        if (interval.type === IntervalType.SHORT && orderSide === OrderAction.BUY) {
-            pnLFromThisExecution = fc.subtract(
-                interval[OrderAction.BUY].soldAtPrice!,
-                price,
-            );
+        if (interval.type === IntervalType.SHORT) {
+            if (orderSide === OrderAction.SELL) {
+                interval[OrderAction.BUY].soldAtPrice = price;
+            } else if (orderSide === OrderAction.BUY) {
+                pnLFromThisExecution = fc.subtract(
+                    interval[OrderAction.BUY].soldAtPrice!,
+                    price,
+                );
+            }
         }
 
         if (pnLFromThisExecution !== undefined) {
@@ -319,11 +318,7 @@ function updateRealizedPnL(
     }
 }
 
-function updateSnaphotOnState(
-    stock: string,
-    stockState: StockState,
-    snapshot: Snapshot,
-): void {
+function updateSnaphotOnState(stockState: StockState, snapshot: Snapshot): void {
     stockState.lastAsk = snapshot.ask;
     stockState.lastBid = snapshot.bid;
 }

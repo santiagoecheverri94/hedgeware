@@ -82,6 +82,7 @@
         "xtree": "cpp",
         "fstream": "cpp",
         "random": "cpp",
-        "cstdarg": "cpp"
+        "cstdarg": "cpp",
+        "future": "cpp"
     }
 }

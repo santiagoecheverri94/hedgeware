@@ -1,18 +1,20 @@
 #pragma once
 
-#include <napi.h>
-
 #include <optional>
 
 #include "utils.hpp"
-
-namespace JS = Napi;
 
 struct Snapshot
 {
     Decimal ask;
     Decimal bid;
     std::string timestamp;
+};
+
+enum class IntervalType
+{
+    LONG,
+    SHORT
 };
 
 struct SmoothingInterval
@@ -22,8 +24,11 @@ struct SmoothingInterval
         bool active;
         bool crossed;
         Decimal price;
+        std::optional<Decimal> boughtAtPrice;
+        std::optional<Decimal> soldAtPrice;
     };
 
+    IntervalType type;
     int positionLimit;
     OrderActionDetails SELL;
     OrderActionDetails BUY;
@@ -40,20 +45,23 @@ struct TradingLog
 
 struct StockState
 {
-    std::optional<bool> isStaticIntervals;
+    bool isStaticIntervals;
     std::string brokerageId;
     Decimal brokerageTradingCostPerShare;
     int sharesPerInterval;
     Decimal intervalProfit;
-    Decimal callStrikePrice;
     Decimal initialPrice;
-    Decimal putStrikePrice;
+    int shiftIntervalsFromInitialPrice;
     Decimal spaceBetweenIntervals;
     int numContracts;
     int position;
     int targetPosition;
-    std::optional<Decimal> lastAsk;
-    std::optional<Decimal> lastBid;
+    Decimal realizedPnL;
+    Decimal exitPnL;
+    Decimal exitPnLAsPercent;
+    Decimal maxMovingLossAsPercent;
+    Decimal lastAsk;
+    Decimal lastBid;
     std::vector<SmoothingInterval> intervals;
     std::vector<TradingLog> tradingLogs;
 };

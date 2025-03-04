@@ -4,6 +4,24 @@
 
 #include "price_simulator.hpp"
 
+using namespace std;
+
+void PrintPnLValues(
+    const std::string& stock, std::unordered_map<std::string, StockState>& states
+)
+{
+    const auto realizedPnL = states[stock].realizedPnL;
+    const auto exitPnL = states[stock].exitPnL;
+    const auto exitPnLAsPercent = states[stock].exitPnLAsPercent;
+    const auto maxMovingLossAsPercent = states[stock].maxMovingLossAsPercent;
+
+    Print(format("realizedPnL: {}", realizedPnL.str()));
+    Print(format("exitPnL: {}", exitPnL.str()));
+    Print(format("exitPnLAsPercent: {}", exitPnLAsPercent.str()));
+    Print(format("maxMovingLossAsPercent: {}", maxMovingLossAsPercent.str()));
+    Print("");
+}
+
 void DebugUpperOrLowerBound(
     const std::string& upperOrLowerBound, const std::string& stock,
     std::unordered_map<std::string, StockState>& states,
@@ -16,6 +34,8 @@ void DebugUpperOrLowerBound(
         states[stock] = originalStates.at(stock);
         return;
     }
+
+    PrintPnLValues(stock, states);
 
     if (upperOrLowerBound == "up" &&
         states[stock].position < states[stock].targetPosition)

@@ -11,9 +11,9 @@ bool IsWideBidAskSpread(const Snapshot& snapshot, const StockState& stockState);
 
 bool CheckCrossings(StockState& stockState, const Snapshot& snapshot);
 
-int GetNumToBuy(StockState& stockState, const Snapshot& snapshot);
+std::vector<int> GetNumToBuy(StockState& stockState, const Snapshot& snapshot);
 
-int GetNumToSell(StockState& stockState, const Snapshot& snapshot);
+std::vector<int> GetNumToSell(StockState& stockState, const Snapshot& snapshot);
 
 bool IsSnapshotChange(const Snapshot& snapshot, const StockState& stockState);
 
@@ -22,7 +22,7 @@ void SetNewPosition(
     const Snapshot& snapshot, std::string orderSide
 );
 
-void DoSnapShotChangeUpdates(StockState& stockState, const Snapshot& snapshot);
+void UpdateSnaphotOnState(StockState& stockState, const Snapshot& snapshot);
 
 void CorrectBadBuyIfRequired(
     StockState& stockState, std::vector<int>& indexesToExecute
@@ -39,3 +39,9 @@ void AddSkippedBuysIfRequired(
 void AddSkippedSellsIfRequired(
     StockState& stockState, std::vector<int>& indexesToExecute
 );
+
+void UpdateRealizedPnL(StockState& stockState, const std::vector<int>& executedIndices, const std::string& orderSide, Decimal price);
+
+void UpdateSnaphotOnState(const std::string& stock, StockState& stockState, const Snapshot& snapshot);
+
+void UpdateExitPnL(StockState& stockState);

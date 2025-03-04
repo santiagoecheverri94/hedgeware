@@ -29,6 +29,10 @@ async function startStopLossArbNode(
     stocks: string[],
     states: { [stock: string]: StockState },
 ): Promise<void> {
+    if (process.env.CPP_NODE_ADDON) {
+        return addon.JsStartStopLossArbCpp(stocks, states);
+    }
+
     // let userHasInterrupted = false;
     // if (isLiveTrading()) {
     //   onUserInterrupt(() => {
@@ -64,10 +68,6 @@ async function hedgeStockWhileMarketIsOpen(
     states: { [stock: string]: StockState },
     brokerageClient: BrokerageClient,
 ) {
-    if (process.env.CPP_NODE_ADDON) {
-        return addon.JsHedgeStockWhileMarketIsOpen(stock, states);
-    }
-
     const originalStates = structuredClone(states);
 
     while (await isMarketOpen(stock)) {
@@ -80,7 +80,6 @@ async function hedgeStockWhileMarketIsOpen(
         );
 
         if (isExitPnlBeyondTresholds(stockState)) {
-            debugger;
             break;
         }
 
@@ -101,7 +100,7 @@ async function hedgeStockWhileMarketIsOpen(
 }
 
 const LIVE_PROFIT_THRESHOLD = 0.005;
-const LIVE_LOSS_THRESHOLD = Number.NaN; // TODO: Tbd
+const LIVE_LOSS_THRESHOLD = Number.NEGATIVE_INFINITY; // TODO: Tbd
 
 const HISTORICAL_PROFIT_THRESHOLD = Number.parseFloat(
     process.env.HISTORICAL_PROFIT_THRESHOLD || '0.01',
