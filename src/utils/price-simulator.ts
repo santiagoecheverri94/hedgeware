@@ -123,3 +123,7 @@ export async function getSnapshotsForStockOnDate(
 export function isHistoricalSnapshotsExhausted(stock: string): boolean {
     return historicalSnapshots[stock].index === historicalSnapshots[stock].data.length;
 }
+
+export function deleteHistoricalSnapshots(stock: string): void {
+    delete historicalSnapshots[stock];
+}

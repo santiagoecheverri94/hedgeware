@@ -291,9 +291,9 @@ function updateRealizedPnL(
             if (orderSide === OrderAction.BUY) {
                 interval[OrderAction.SELL].boughtAtPrice = price;
             } else if (orderSide === OrderAction.SELL) {
-                pnLFromThisExecution = fc.subtract(
-                    price,
-                    interval[OrderAction.SELL].boughtAtPrice!,
+                pnLFromThisExecution = fc.multiply(
+                    stockState.sharesPerInterval,
+                    fc.subtract(price, interval[OrderAction.SELL].boughtAtPrice!),
                 );
             }
         }
@@ -302,9 +302,9 @@ function updateRealizedPnL(
             if (orderSide === OrderAction.SELL) {
                 interval[OrderAction.BUY].soldAtPrice = price;
             } else if (orderSide === OrderAction.BUY) {
-                pnLFromThisExecution = fc.subtract(
-                    interval[OrderAction.BUY].soldAtPrice!,
-                    price,
+                pnLFromThisExecution = fc.multiply(
+                    stockState.sharesPerInterval,
+                    fc.subtract(interval[OrderAction.BUY].soldAtPrice!, price),
                 );
             }
         }
@@ -337,12 +337,18 @@ function updateExitPnL(stockState: StockState): void {
 
         if (interval.type === IntervalType.LONG && interval[OrderAction.SELL].active) {
             const boughtAtPrice = interval[OrderAction.SELL].boughtAtPrice!;
-            intervalPnL = fc.subtract(lastBid, boughtAtPrice);
+            intervalPnL = fc.multiply(
+                stockState.sharesPerInterval,
+                fc.subtract(lastBid, boughtAtPrice),
+            );
         }
 
         if (interval.type === IntervalType.SHORT && interval[OrderAction.BUY].active) {
             const soldAtPrice = interval[OrderAction.BUY].soldAtPrice!;
-            intervalPnL = fc.subtract(soldAtPrice, lastAsk);
+            intervalPnL = fc.multiply(
+                stockState.sharesPerInterval,
+                fc.subtract(soldAtPrice, lastAsk),
+            );
         }
 
         if (intervalPnL !== undefined) {

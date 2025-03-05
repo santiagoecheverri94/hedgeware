@@ -51,15 +51,7 @@ void StartStopLossArbCpp(
     {
         const StockState& state = states[stock];
 
-        // Format the exit PnL as a percentage with + sign for positive values
-        string exitPnLSign = state.exitPnLAsPercent > 0 ? "+" : "";
-        Decimal exitPnLPercent = state.exitPnLAsPercent * 100;
-        Decimal maxLossPercent = state.maxMovingLossAsPercent * 100;
-
-        cout << stock << ", Exit PnL: " << exitPnLSign << exitPnLPercent
-             << "%, Max Loss: " << maxLossPercent << "%\n";
-
-        Print(format(""));
+        PrintPnLValues(stock, state);
     }
 }
 
@@ -91,9 +83,12 @@ void HedgeStockWhileMarketIsOpen(
         {
             // if (isHistoricalSnapshotsExhausted(stock))
             // {
+            //     deleteHistoricalSnapshots(stock);
+
             //     syncWriteJSONFile(
             //         getStockStateFilePath(stock), jsonPrettyPrint(stockState),
             //     );
+
             //     break;
             // }
         }

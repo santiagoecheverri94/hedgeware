@@ -5,12 +5,13 @@ import {
     isHistoricalSnapshot,
     isHistoricalSnapshotsExhausted,
     isRandomSnapshot,
+    deleteHistoricalSnapshots,
 } from '../../../utils/price-simulator';
 import {isMarketOpen} from '../../../utils/time';
 import {IBKRClient} from '../../brokerage-clients/IBKR/client';
 import {BrokerageClient} from '../../brokerage-clients/brokerage-client';
 import {reconcileStockPosition} from './algo';
-import {debugRandomPrices} from './debug';
+import {debugRandomPrices, printPnLValues} from './debug';
 import {getStocksFileNames, getStockStates, getStockStateFilePath} from './state';
 import {StockState} from './types';
 import {setTimeout} from 'node:timers/promises';
@@ -50,14 +51,7 @@ async function startStopLossArbNode(
     await Promise.all(waitingForStocksToBeHedged);
 
     for (const stock of Object.keys(states).sort()) {
-        console.log(
-            `${stock}, Exit PnL: ${
-                fc.gt(states[stock].exitPnLAsPercent, 0) ? '+' : ''
-            }${fc.multiply(
-                states[stock].exitPnLAsPercent,
-                100,
-            )}%, Max Loss: ${fc.multiply(states[stock].maxMovingLossAsPercent, 100)}%\n`,
-        );
+        printPnLValues(stock, states[stock]);
     }
 }
 
@@ -89,10 +83,13 @@ async function hedgeStockWhileMarketIsOpen(
             debugRandomPrices(snapshot, stock, states, originalStates);
         } else if (isHistoricalSnapshot()) {
             if (isHistoricalSnapshotsExhausted(stock)) {
+                deleteHistoricalSnapshots(stock);
+
                 syncWriteJSONFile(
                     getStockStateFilePath(stock),
                     jsonPrettyPrint(stockState),
                 );
+
                 break;
             }
         }

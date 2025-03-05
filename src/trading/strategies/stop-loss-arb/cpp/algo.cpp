@@ -289,7 +289,8 @@ void UpdateRealizedPnL(
             }
             else if (orderSide == "SELL")
             {
-                pnLFromThisExecution = price - interval.SELL.boughtAtPrice.value();
+                pnLFromThisExecution = GetDecimal(stockState.sharesPerInterval) *
+                                       (price - interval.SELL.boughtAtPrice.value());
             }
         }
 
@@ -301,7 +302,8 @@ void UpdateRealizedPnL(
             }
             else if (orderSide == "BUY")
             {
-                pnLFromThisExecution = interval.BUY.soldAtPrice.value() - price;
+                pnLFromThisExecution = GetDecimal(stockState.sharesPerInterval) *
+                                       (interval.BUY.soldAtPrice.value() - price);
             }
         }
 
@@ -338,13 +340,15 @@ void UpdateExitPnL(StockState& stockState)
         if (interval.type == IntervalType::LONG && interval.SELL.active)
         {
             const auto& boughtAtPrice = interval.SELL.boughtAtPrice.value();
-            intervalPnL = lastBid - boughtAtPrice;
+            intervalPnL =
+                GetDecimal(stockState.sharesPerInterval) * (lastBid - boughtAtPrice);
         }
 
         if (interval.type == IntervalType::SHORT && interval.BUY.active)
         {
             const auto& soldAtPrice = interval.BUY.soldAtPrice.value();
-            intervalPnL = soldAtPrice - lastAsk;
+            intervalPnL =
+                GetDecimal(stockState.sharesPerInterval) * (soldAtPrice - lastAsk);
         }
 
         if (intervalPnL.has_value())

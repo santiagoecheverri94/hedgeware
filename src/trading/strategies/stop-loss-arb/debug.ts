@@ -8,6 +8,20 @@ import {
 import {OrderAction, Snapshot} from '../../brokerage-clients/brokerage-client';
 import {StockState} from './types';
 
+export function printPnLValues(stock: string, stockState: StockState): void {
+    const realizedPnL = stockState.realizedPnL;
+    const exitPnL = stockState.exitPnL;
+    const exitPnLAsPercent = stockState.exitPnLAsPercent;
+    const maxMovingLossAsPercent = stockState.maxMovingLossAsPercent;
+
+    console.log(`stock: ${stock}`);
+    console.log(`realizedPnL: ${realizedPnL}`);
+    console.log(`exitPnL: ${exitPnL}`);
+    console.log(`exitPnLAsPercent: ${exitPnLAsPercent}`);
+    console.log(`maxMovingLossAsPercent: ${maxMovingLossAsPercent}`);
+    console.log('');
+}
+
 export async function debugRandomPrices(
     snapshot: Snapshot,
     stock: string,
@@ -47,13 +61,13 @@ async function debugUpperOrLowerBound(
     }
 
     if (
-        upperOrLowerBound === 'up' && states[stock].position <
-            states[stock].targetPosition
+        upperOrLowerBound === 'up' &&
+        states[stock].position < states[stock].targetPosition
     ) {
         debugger;
     } else if (
-        upperOrLowerBound === 'down' && states[stock].position >
-            -states[stock].targetPosition
+        upperOrLowerBound === 'down' &&
+        states[stock].position > -states[stock].targetPosition
     ) {
         debugger;
     }

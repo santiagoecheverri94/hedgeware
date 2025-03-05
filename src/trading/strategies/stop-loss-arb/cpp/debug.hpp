@@ -7,3 +7,5 @@ void DebugRandomPrices(
     std::unordered_map<std::string, StockState>& states,
     const std::unordered_map<std::string, StockState>& originalStates
 );
+
+void PrintPnLValues(const std::string stock, const StockState& stockState);

@@ -6,15 +6,14 @@
 
 using namespace std;
 
-void PrintPnLValues(
-    const std::string& stock, std::unordered_map<std::string, StockState>& states
-)
+void PrintPnLValues(const std::string stock, const StockState& stockState)
 {
-    const auto realizedPnL = states[stock].realizedPnL;
-    const auto exitPnL = states[stock].exitPnL;
-    const auto exitPnLAsPercent = states[stock].exitPnLAsPercent;
-    const auto maxMovingLossAsPercent = states[stock].maxMovingLossAsPercent;
+    const auto realizedPnL = stockState.realizedPnL;
+    const auto exitPnL = stockState.exitPnL;
+    const auto exitPnLAsPercent = stockState.exitPnLAsPercent;
+    const auto maxMovingLossAsPercent = stockState.maxMovingLossAsPercent;
 
+    Print(format("stock: {}", stock));
     Print(format("realizedPnL: {}", realizedPnL.str()));
     Print(format("exitPnL: {}", exitPnL.str()));
     Print(format("exitPnLAsPercent: {}", exitPnLAsPercent.str()));
@@ -35,7 +34,7 @@ void DebugUpperOrLowerBound(
         return;
     }
 
-    PrintPnLValues(stock, states);
+    // PrintPnLValues(stock, states);
 
     if (upperOrLowerBound == "up" &&
         states[stock].position < states[stock].targetPosition)
