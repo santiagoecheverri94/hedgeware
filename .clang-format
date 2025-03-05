@@ -3,3 +3,5 @@ IndentWidth: 4
 BreakBeforeBraces: Allman
 ColumnLimit: 88
 AlignAfterOpenBracket: BlockIndent
+BinPackArguments: false
+BinPackParameters: false

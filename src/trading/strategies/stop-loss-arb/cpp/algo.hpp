@@ -18,8 +18,11 @@ std::vector<int> GetNumToSell(StockState& stockState, const Snapshot& snapshot);
 bool IsSnapshotChange(const Snapshot& snapshot, const StockState& stockState);
 
 void SetNewPosition(
-    const std::string& stock, StockState& stockState, int newPosition,
-    const Snapshot& snapshot, std::string orderSide
+    const std::string& stock,
+    StockState& stockState,
+    int newPosition,
+    const Snapshot& snapshot,
+    std::string orderSide
 );
 
 void UpdateSnaphotOnState(StockState& stockState, const Snapshot& snapshot);
@@ -40,8 +43,15 @@ void AddSkippedSellsIfRequired(
     StockState& stockState, std::vector<int>& indexesToExecute
 );
 
-void UpdateRealizedPnL(StockState& stockState, const std::vector<int>& executedIndices, const std::string& orderSide, Decimal price);
+void UpdateRealizedPnL(
+    StockState& stockState,
+    const std::vector<int>& executedIndices,
+    const std::string& orderSide,
+    Decimal price
+);
 
-void UpdateSnaphotOnState(const std::string& stock, StockState& stockState, const Snapshot& snapshot);
+void UpdateSnaphotOnState(
+    const std::string& stock, StockState& stockState, const Snapshot& snapshot
+);
 
 void UpdateExitPnL(StockState& stockState);

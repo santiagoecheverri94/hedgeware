@@ -224,8 +224,11 @@ bool IsSnapshotChange(const Snapshot& snapshot, const StockState& stockState)
 }
 
 void SetNewPosition(
-    const std::string& stock, StockState& stockState, int newPosition,
-    const Snapshot& snapshot, std::string orderSide
+    const std::string& stock,
+    StockState& stockState,
+    int newPosition,
+    const Snapshot& snapshot,
+    std::string orderSide
 )
 {
     int previousPosition = stockState.position;
@@ -260,8 +263,10 @@ void SetNewPosition(
 }
 
 void UpdateRealizedPnL(
-    StockState& stockState, const std::vector<int>& executedIndices,
-    const std::string& orderSide, Decimal price
+    StockState& stockState,
+    const std::vector<int>& executedIndices,
+    const std::string& orderSide,
+    Decimal price
 )
 {
     if (executedIndices.empty())

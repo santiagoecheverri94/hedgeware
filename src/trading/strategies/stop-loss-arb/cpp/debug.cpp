@@ -22,7 +22,8 @@ void PrintPnLValues(const std::string stock, const StockState& stockState)
 }
 
 void DebugUpperOrLowerBound(
-    const std::string& upperOrLowerBound, const std::string& stock,
+    const std::string& upperOrLowerBound,
+    const std::string& stock,
     std::unordered_map<std::string, StockState>& states,
     const std::unordered_map<std::string, StockState>& originalStates
 )
@@ -54,7 +55,8 @@ void DebugUpperOrLowerBound(
 }
 
 void DebugRandomPrices(
-    const Snapshot& snapshot, const std::string& stock,
+    const Snapshot& snapshot,
+    const std::string& stock,
     std::unordered_map<std::string, StockState>& states,
     const std::unordered_map<std::string, StockState>& originalStates
 )
