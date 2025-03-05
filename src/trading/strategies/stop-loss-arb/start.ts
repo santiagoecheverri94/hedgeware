@@ -30,6 +30,7 @@ async function startStopLossArbNode(
     stocks: string[],
     states: { [stock: string]: StockState },
 ): Promise<void> {
+    debugger;
     if (process.env.CPP_NODE_ADDON) {
         return addon.JsStartStopLossArbCpp(stocks, states);
     }
@@ -42,6 +43,12 @@ async function startStopLossArbNode(
     // }
 
     const waitingForStocksToBeHedged: Promise<void>[] = [];
+
+    let startTime = 0;
+    if (isHistoricalSnapshot()) {
+        startTime = performance.now();
+    }
+
     for (const stock of stocks) {
         waitingForStocksToBeHedged.push(
             hedgeStockWhileMarketIsOpen(stock, states, brokerageClient),
@@ -50,8 +57,18 @@ async function startStopLossArbNode(
 
     await Promise.all(waitingForStocksToBeHedged);
 
+    let timeInSeconds = 0;
+    if (isHistoricalSnapshot()) {
+        const endTime = performance.now();
+        timeInSeconds = (endTime - startTime) / 1000;
+    }
+
     for (const stock of Object.keys(states).sort()) {
         printPnLValues(stock, states[stock]);
+    }
+
+    if (isHistoricalSnapshot()) {
+        console.log(`Hedging completed in ${timeInSeconds.toFixed(4)} seconds\n`);
     }
 }
 
@@ -73,25 +90,30 @@ async function hedgeStockWhileMarketIsOpen(
             brokerageClient,
         );
 
-        if (isExitPnlBeyondTresholds(stockState)) {
-            break;
+        if (isLiveTrading() || isHistoricalSnapshot()) {
+            if (
+                isExitPnlBeyondThresholds(stockState) ||
+                isHistoricalSnapshotsExhausted(stock)
+            ) {
+                if (isHistoricalSnapshot()) {
+                    deleteHistoricalSnapshots(stock);
+                }
+
+                // syncWriteJSONFile(
+                //     getStockStateFilePath(stock),
+                //     jsonPrettyPrint(stockState),
+                // );
+
+                break;
+            }
         }
 
         if (isLiveTrading()) {
             await setTimeout(1000);
-        } else if (isRandomSnapshot()) {
+        }
+
+        if (isRandomSnapshot()) {
             debugRandomPrices(snapshot, stock, states, originalStates);
-        } else if (isHistoricalSnapshot()) {
-            if (isHistoricalSnapshotsExhausted(stock)) {
-                deleteHistoricalSnapshots(stock);
-
-                syncWriteJSONFile(
-                    getStockStateFilePath(stock),
-                    jsonPrettyPrint(stockState),
-                );
-
-                break;
-            }
         }
     }
 }
@@ -103,7 +125,7 @@ const HISTORICAL_PROFIT_THRESHOLD = Number.parseFloat(
     process.env.HISTORICAL_PROFIT_THRESHOLD || '0.01',
 );
 
-function isExitPnlBeyondTresholds(stockState: StockState): boolean {
+function isExitPnlBeyondThresholds(stockState: StockState): boolean {
     const exitPnLAsPercent = stockState.exitPnLAsPercent;
 
     if (isHistoricalSnapshot()) {

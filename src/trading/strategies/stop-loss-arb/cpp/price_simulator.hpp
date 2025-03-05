@@ -12,3 +12,7 @@ bool IsRandomSnapshot();
 bool IsHistoricalSnapshot();
 
 bool IsLiveTrading();
+
+bool IsHistoricalSnapshotsExhausted(std::string stock);
+
+void DeleteHistoricalSnapshots(std::string stock);

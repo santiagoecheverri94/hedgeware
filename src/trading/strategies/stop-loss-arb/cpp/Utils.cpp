@@ -26,6 +26,28 @@ std::string DoubleToStr(const double& value)
 
 Decimal GetDecimal(const double& value) { return Decimal{DoubleToStr(value)}; }
 
+std::vector<std::string> string_split(const std::string& str, const char& delimiter){
+    vector<string> result;
+    string current;
+    
+    for (char character_in_input : str) {
+        if (character_in_input == delimiter) {
+            if (!current.empty()) {
+                result.push_back(current);
+                current.clear();
+            }
+        } else {
+            current += character_in_input;
+        }
+    }
+    
+    if (!current.empty()) {
+        result.push_back(current);
+    }
+    
+    return result;
+}
+
 void Print1DVector(const std::vector<std::wstring>& vec)
 {
     std::wostringstream woss;

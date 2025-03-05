@@ -5,7 +5,7 @@
             "name": "node addon debug",
             "type": "cppvsdbg",
             "request": "launch",
-            // "preLaunchTask": "node-gyp rebuild",
+            "preLaunchTask": "node-gyp rebuild",
             "program": "C:\\Program Files\\nodejs\\node.exe",
             "args": [
                 // "--inspect-brk",
@@ -15,11 +15,14 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [
+                // {
+                //     "name": "RANDOM_SNAPSHOT",
+                //     "value": "true"
+                // },
                 {
-                    "name": "RANDOM_SNAPSHOT",
+                    "name": "HISTORICAL_SNAPSHOT",
                     "value": "true"
                 },
-                
                 {
                     "name": "CPP_NODE_ADDON",
                     "value": "true"

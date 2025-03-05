@@ -7,31 +7,9 @@ import {
 } from '../../../utils/file';
 import {IntervalType, SmoothingInterval, StockState} from './types';
 import {
-    getHistoricalSnapshotStockAndStartAndEndDates,
-    getSnapshotsForStockOnDate,
     isHistoricalSnapshot,
 } from '../../../utils/price-simulator';
 import {getStockStateFilePath, getStocksFileNames} from './state';
-
-export async function renameHistoricalStates(newStock: string): Promise<void> {
-    if (!isHistoricalSnapshot()) {
-        throw new Error(
-            'Must be in historical snapshot mode to rename historical states',
-        );
-    }
-
-    const previousStocksFileNames = await getStocksFileNames(false);
-    for (const prevFileName of previousStocksFileNames) {
-        const {startDate, endDate} =
-            getHistoricalSnapshotStockAndStartAndEndDates(prevFileName);
-        const newFileName = `${newStock}__${startDate}_${endDate}`;
-
-        await syncRenameFile(
-            getStockStateFilePath(prevFileName),
-            getStockStateFilePath(newFileName),
-        );
-    }
-}
 
 export async function refreshHistoricalStates(): Promise<void> {
     if (!isHistoricalSnapshot()) {
@@ -42,14 +20,6 @@ export async function refreshHistoricalStates(): Promise<void> {
 
     const stocksFileNames = await getStocksFileNames();
     for (const fileName of stocksFileNames) {
-        const {stock, startDate} =
-            getHistoricalSnapshotStockAndStartAndEndDates(fileName);
-        const snapshotsForStockOnStartDate = await getSnapshotsForStockOnDate(
-            stock,
-            startDate,
-        );
-        const initialPrice = snapshotsForStockOnStartDate[0].ask;
-
         await createNewStockStateFromExisting(fileName);
     }
 }

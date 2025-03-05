@@ -9,16 +9,11 @@ import {OrderAction, Snapshot} from '../../brokerage-clients/brokerage-client';
 import {StockState} from './types';
 
 export function printPnLValues(stock: string, stockState: StockState): void {
-    const realizedPnL = stockState.realizedPnL;
-    const exitPnL = stockState.exitPnL;
-    const exitPnLAsPercent = stockState.exitPnLAsPercent;
-    const maxMovingLossAsPercent = stockState.maxMovingLossAsPercent;
-
     console.log(`stock: ${stock}`);
-    console.log(`realizedPnL: ${realizedPnL}`);
-    console.log(`exitPnL: ${exitPnL}`);
-    console.log(`exitPnLAsPercent: ${exitPnLAsPercent}`);
-    console.log(`maxMovingLossAsPercent: ${maxMovingLossAsPercent}`);
+    console.log(`realizedPnL: ${stockState.realizedPnL}`);
+    console.log(`exitPnL: ${stockState.exitPnL}`);
+    console.log(`exitPnLAsPercent: ${stockState.exitPnLAsPercent}`);
+    console.log(`maxMovingLossAsPercent: ${stockState.maxMovingLossAsPercent}`);
     console.log('');
 }
 

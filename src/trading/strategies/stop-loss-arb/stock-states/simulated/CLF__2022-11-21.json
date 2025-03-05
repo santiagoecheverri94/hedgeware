@@ -1,6 +1,6 @@
 {
   "isStaticIntervals": false,
-  "brokerageId": "CARG",
+  "brokerageId": "CLF",
   "brokerageTradingCostPerShare": 0.004,
   "targetPosition": 100,
   "sharesPerInterval": 10,

@@ -83,6 +83,14 @@
         "fstream": "cpp",
         "random": "cpp",
         "cstdarg": "cpp",
-        "future": "cpp"
+        "future": "cpp",
+        "condition_variable": "cpp",
+        "bitset": "cpp",
+        "shared_mutex": "cpp",
+        "source_location": "cpp",
+        "stdfloat": "cpp",
+        "any": "cpp",
+        "ranges": "cpp",
+        "span": "cpp"
     }
 }

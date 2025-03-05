@@ -16,7 +16,6 @@
 node_modules
 node_modules
 oclif.manifest.json
-/src/historical-data/**/*.json
 build
 src/trading/strategies/stop-loss-arb/cpp/build
 

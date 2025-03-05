@@ -110,7 +110,7 @@ export function getSecondsFromNanoSecondsTimestamp(
     ).seconds();
 }
 
-export function getWeekdaysInRange(startDate: string, endDate: string): string[] {
+function getWeekdaysInRange(startDate: string, endDate: string): string[] {
     const result = [];
     const current = moment(startDate, DATE_FORMAT);
     const end = moment(endDate, DATE_FORMAT);

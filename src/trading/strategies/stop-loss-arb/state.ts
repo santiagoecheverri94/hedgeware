@@ -1,7 +1,4 @@
-import {
-    getFileNamesWithinFolder,
-    readJSONFile,
-} from '../../../utils/file';
+import {getFileNamesWithinFolder, readJSONFile} from '../../../utils/file';
 import {isLiveTrading} from '../../../utils/price-simulator';
 import {StockState} from './types';
 
@@ -10,9 +7,7 @@ export async function getStocksFileNames(filterUnderscores = true): Promise<stri
 
     fileNames = fileNames.filter(
         fileName =>
-            !['results', 'templates', 'historical'].some(excludedFileName =>
-                fileName.includes(excludedFileName),
-            ),
+            ![].some(excludedFileName => fileName.includes(excludedFileName)),
     );
 
     if (filterUnderscores) {

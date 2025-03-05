@@ -899,6 +899,13 @@
     "@types/expect" "^1.20.4"
     "@types/node" "*"
 
+"@types/websocket@^1.0.10":
+  version "1.0.10"
+  resolved "https://registry.yarnpkg.com/@types/websocket/-/websocket-1.0.10.tgz#804b1a02780da522f5742bc184a6d16a2eb78c7c"
+  integrity sha512-svjGZvPB7EzuYS94cI7a+qhwgGU1y89wUgjT6E2wVUfmAGIvRfT7obBvRtnhXCSsoMdlG4gBFGE7MfkIXZLoww==
+  dependencies:
+    "@types/node" "*"
+
 "@types/ws@^8.5.5":
   version "8.5.5"
   resolved "https://registry.yarnpkg.com/@types/ws/-/ws-8.5.5.tgz#af587964aa06682702ee6dcbc7be41a80e4b28eb"

@@ -24,6 +24,12 @@ void StartStopLossArbCpp(
     vector<future<void>> waiting_for_stocks_to_be_hedged;
     waiting_for_stocks_to_be_hedged.reserve(stocks.size());
 
+    chrono::steady_clock::time_point start_time;
+    if (IsHistoricalSnapshot())
+    {
+        start_time = chrono::high_resolution_clock::now();
+    }
+
     for (const auto& stock : stocks)
     {
         // Use async with launch::async launch policy to ensure each call runs on its
@@ -36,6 +42,15 @@ void StartStopLossArbCpp(
     for (const auto& future : waiting_for_stocks_to_be_hedged)
     {
         future.wait();
+    }
+
+    double elapsed_seconds;
+    if (IsHistoricalSnapshot())
+    {
+        const auto end_time = chrono::high_resolution_clock::now();
+        elapsed_seconds =
+            chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count() /
+            1000.0;
     }
 
     // Get a sorted list of stock keys
@@ -53,6 +68,12 @@ void StartStopLossArbCpp(
 
         PrintPnLValues(stock, state);
     }
+
+    if (IsHistoricalSnapshot())
+    {
+        cout << "Hedging completed in " << fixed << setprecision(4) << elapsed_seconds
+             << " seconds" << endl;
+    }
 }
 
 void HedgeStockWhileMarketIsOpen(
@@ -67,45 +88,59 @@ void HedgeStockWhileMarketIsOpen(
 
         const auto snapshot = ReconcileStockPosition(stock, stockState);
 
-        if (IsExitPnlBeyondThresholds(stockState))
+        if (IsLiveTrading() || IsHistoricalSnapshot())
         {
-            break;
+            if (IsExitPnlBeyondThresholds(stockState) ||
+                IsHistoricalSnapshotsExhausted(stock))
+            {
+                if (IsHistoricalSnapshot)
+                {
+                    DeleteHistoricalSnapshots(stock);
+                }
+
+                // syncWriteJSONFile(
+                //     getStockStateFilePath(stock),
+                //     jsonPrettyPrint(stockState),
+                // );
+
+                break;
+            }
         }
 
-        // if (isLiveTrading()) {
-        //     await setTimeout(1000);
-        // } else
+        if (IsLiveTrading())
+        {
+            // await setTimeout(1000);
+        }
+
         if (IsRandomSnapshot())
         {
             DebugRandomPrices(snapshot, stock, states, originalStates);
-        }
-        else if (IsHistoricalSnapshot())
-        {
-            // if (isHistoricalSnapshotsExhausted(stock))
-            // {
-            //     deleteHistoricalSnapshots(stock);
-
-            //     syncWriteJSONFile(
-            //         getStockStateFilePath(stock), jsonPrettyPrint(stockState),
-            //     );
-
-            //     break;
-            // }
         }
     }
 }
 
 Decimal GetHistoricalProfitThreshold()
 {
+    const auto default_historical_profit_threshold = GetDecimal(0.01);
+
     const char* thresholdStr = getenv("HISTORICAL_PROFIT_THRESHOLD");
+    if (thresholdStr == nullptr)
+    {
+        return default_historical_profit_threshold;
+    }
+
     try
     {
         double value = stod(thresholdStr);
         return GetDecimal(value);
     }
+    catch (exception)
+    {
+        return default_historical_profit_threshold;
+    }
     catch (...)
     {
-        return GetDecimal(0.01);
+        return default_historical_profit_threshold;
     }
 }
 

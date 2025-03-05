@@ -8,16 +8,12 @@ using namespace std;
 
 void PrintPnLValues(const std::string stock, const StockState& stockState)
 {
-    const auto realizedPnL = stockState.realizedPnL;
-    const auto exitPnL = stockState.exitPnL;
-    const auto exitPnLAsPercent = stockState.exitPnLAsPercent;
-    const auto maxMovingLossAsPercent = stockState.maxMovingLossAsPercent;
-
     Print(format("stock: {}", stock));
-    Print(format("realizedPnL: {}", realizedPnL.str()));
-    Print(format("exitPnL: {}", exitPnL.str()));
-    Print(format("exitPnLAsPercent: {}", exitPnLAsPercent.str()));
-    Print(format("maxMovingLossAsPercent: {}", maxMovingLossAsPercent.str()));
+    Print(format("realizedPnL: {}", stockState.realizedPnL.str()));
+    Print(format("exitPnL: {}", stockState.exitPnL.str()));
+    Print(format("exitPnLAsPercent: {}", stockState.exitPnLAsPercent.str()));
+    Print(format("maxMovingLossAsPercent: {}", stockState.maxMovingLossAsPercent.str())
+    );
     Print("");
 }
 

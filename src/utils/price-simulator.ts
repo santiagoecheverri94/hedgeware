@@ -2,7 +2,6 @@ import {getFilePathForStockDataOnDate} from '../historical-data/save-stock-histo
 import {Snapshot} from '../trading/brokerage-clients/brokerage-client';
 import {readJSONFile} from './file';
 import {FloatCalculator as fc} from './float-calculator';
-import {getWeekdaysInRange} from './time';
 
 export function isLiveTrading(): boolean {
     return !isRandomSnapshot() && !isHistoricalSnapshot();
@@ -63,7 +62,7 @@ const historicalSnapshots: {
 
 async function getHistoricalSnapshot(stock: string): Promise<Snapshot> {
     if (!historicalSnapshots[stock]) {
-        historicalSnapshots[stock] = await getHistoricalSnapshots(stock);
+        historicalSnapshots[stock] = await getHistoricalSnapshotData(stock);
     }
 
     const snapshot = historicalSnapshots[stock].data[historicalSnapshots[stock].index];
@@ -72,44 +71,36 @@ async function getHistoricalSnapshot(stock: string): Promise<Snapshot> {
     return snapshot;
 }
 
-async function getHistoricalSnapshots(fileName: string): Promise<{
+async function getHistoricalSnapshotData(fileName: string): Promise<{
     data: Snapshot[];
     index: number;
 }> {
-    let snapshotsByTheSecond: Snapshot[] = [];
+    const {stock, date} = getStockAndDate(fileName);
 
-    const {stock, startDate, endDate} =
-        getHistoricalSnapshotStockAndStartAndEndDates(fileName);
-    const dateRange = getWeekdaysInRange(startDate, endDate);
-    for (const date of dateRange) {
-        const snapshotsForDate = await getSnapshotsForStockOnDate(stock, date);
-        snapshotsByTheSecond = [...snapshotsByTheSecond, ...snapshotsForDate];
-    }
+    const snapshotsData = await getSnapshotsForStockOnDate(stock, date);
 
     return {
-        data: snapshotsByTheSecond,
+        data: snapshotsData,
         index: 0,
     };
 }
 
-export function getHistoricalSnapshotStockAndStartAndEndDates(fileName: string): {
+function getStockAndDate(fileName: string): {
     stock: string;
-    startDate: string;
-    endDate: string;
+    date: string;
 } {
     const stock = fileName.split('__')[0];
-    const [startDate, endDate] = fileName.split('__')[1]?.split('_') || [];
+    const date = fileName.split('__')[1];
 
-    if (!startDate || !endDate) {
+    if (!date) {
         throw new Error(
-            `Invalid historical snapshot file name: "${fileName}" is missing start and end date`,
+            `Invalid historical snapshot file name: "${fileName}" is missing date`,
         );
     }
 
     return {
         stock,
-        startDate,
-        endDate,
+        date,
     };
 }
 
@@ -121,7 +112,14 @@ export async function getSnapshotsForStockOnDate(
 }
 
 export function isHistoricalSnapshotsExhausted(stock: string): boolean {
-    return historicalSnapshots[stock].index === historicalSnapshots[stock].data.length;
+    if (!isHistoricalSnapshot()) {
+        return false;
+    }
+
+    const isExhausted =
+        historicalSnapshots[stock].index === historicalSnapshots[stock].data.length;
+
+    return isExhausted;
 }
 
 export function deleteHistoricalSnapshots(stock: string): void {
