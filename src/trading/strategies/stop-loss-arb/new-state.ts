@@ -64,6 +64,7 @@ export function getFullStockState(partialStockState: StockState): StockState {
     });
 
     const newState: StockState = {
+        date: partialStockState.date,
         isStaticIntervals: false,
         brokerageId,
         brokerageTradingCostPerShare,
@@ -79,8 +80,9 @@ export function getFullStockState(partialStockState: StockState): StockState {
         lastBid: 0,
         realizedPnL: 0,
         exitPnL: 0,
-        exitPnLAsPercent: 0,
-        maxMovingLossAsPercent: 0,
+        exitPnLAsPercentage: 0,
+        maxMovingProfitAsPercentage: 0,
+        maxMovingLossAsPercentage: 0,
         intervals: [...longIntervals, ...shortIntervals],
         tradingLogs: [],
     };

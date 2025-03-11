@@ -82,8 +82,12 @@ void DeleteHistoricalSnapshots(std::string stock)
 string GetFilePathForStockDataOnDate(std::string stock, std::string date)
 {
     const string cwd = filesystem::current_path().string();
+    const string year = string_split(date, '-')[0];
+    const string month = string_split(date, '-')[1];
 
-    return format("{}\\..\\historical-data\\{}\\{}.json", cwd, stock, date);
+    return format(
+        "{}\\..\\historical-data\\{}\\{}\\{}\\{}.json", cwd, year, month, date, stock
+    );
 }
 
 vector<Snapshot>* GetSnapshotsForStockOnDate(std::string stock, std::string date)
@@ -96,12 +100,13 @@ vector<Snapshot>* GetSnapshotsForStockOnDate(std::string stock, std::string date
         std::ifstream file(file_path);
         if (!file.is_open())
         {
-            std::cerr << "Error: Unable to open file " << file_path << std::endl;
-            return data;
+            throw exception(format("Error: Unable to open file {}", file_path).c_str());
         }
 
-        json snapshots_json;
-        file >> snapshots_json;
+        json json_data;
+        file >> json_data;
+
+        const auto& snapshots_json = json_data["snapshots"];
 
         for (const auto& snapshot_json : snapshots_json)
         {
@@ -150,25 +155,26 @@ StockAndDate GetStockAndDate(std::string file_name)
     return StockAndDate{splitted[0], splitted[1]};
 }
 
-HistoricalSnapshotData GetHistoricalSnapshotData(std::string file_name)
+HistoricalSnapshotData GetHistoricalSnapshotData(StockState stock_state)
 {
-    StockAndDate stock_and_date = GetStockAndDate(file_name);
+    // StockAndDate stock_and_date = GetStockAndDate(file_name);
 
     vector<Snapshot>* data =
-        GetSnapshotsForStockOnDate(stock_and_date.stock, stock_and_date.date);
+        GetSnapshotsForStockOnDate(stock_state.brokerageId, stock_state.date);
 
     return HistoricalSnapshotData{data, 0};
 }
 
-Snapshot GetHistoricalSnapshot(std::string stock)
+Snapshot GetHistoricalSnapshot(StockState stock_state)
 {
     shared_lock read_lock{historical_snapshots_mutex};
-    if (!historical_snapshots.contains(stock))
+    if (!historical_snapshots.contains(stock_state.brokerageId))
     {
         read_lock.unlock();
         unique_lock write_lock{historical_snapshots_mutex};
 
-        historical_snapshots[stock] = GetHistoricalSnapshotData(stock);
+        historical_snapshots[stock_state.brokerageId] =
+            GetHistoricalSnapshotData(stock_state);
 
         write_lock.unlock();
     }
@@ -178,15 +184,16 @@ Snapshot GetHistoricalSnapshot(std::string stock)
         read_lock.lock();
     }
 
-    Snapshot snapshot =
-        historical_snapshots[stock].data->at(historical_snapshots[stock].index);
+    Snapshot snapshot = historical_snapshots[stock_state.brokerageId].data->at(
+        historical_snapshots[stock_state.brokerageId].index
+    );
 
-    historical_snapshots[stock].index++;
+    historical_snapshots[stock_state.brokerageId].index++;
 
     return snapshot;
 }
 
-Snapshot GetSimulatedSnapshot(std::string stock)
+Snapshot GetSimulatedSnapshot(StockState stock_state)
 {
     if (IsRandomSnapshot())
     {
@@ -195,7 +202,7 @@ Snapshot GetSimulatedSnapshot(std::string stock)
 
     if (IsHistoricalSnapshot())
     {
-        return GetHistoricalSnapshot(stock);
+        return GetHistoricalSnapshot(stock_state);
     }
 
     throw exception("No snapshot type specified");

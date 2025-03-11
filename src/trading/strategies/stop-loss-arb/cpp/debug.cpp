@@ -11,9 +11,13 @@ void PrintPnLValues(const std::string stock, const StockState& stockState)
     Print(format("stock: {}", stock));
     Print(format("realizedPnL: {}", stockState.realizedPnL.str()));
     Print(format("exitPnL: {}", stockState.exitPnL.str()));
-    Print(format("exitPnLAsPercent: {}", stockState.exitPnLAsPercent.str()));
-    Print(format("maxMovingLossAsPercent: {}", stockState.maxMovingLossAsPercent.str())
-    );
+    Print(format("exitPnLAsPercentage: {}", stockState.exitPnLAsPercentage.str()));
+    Print(format(
+        "maxMovingProfitAsPercentage: {}", stockState.maxMovingProfitAsPercentage.str()
+    ));
+    Print(format(
+        "maxMovingLossAsPercentage: {}", stockState.maxMovingLossAsPercentage.str()
+    ));
     Print("");
 }
 

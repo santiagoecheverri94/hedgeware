@@ -23,6 +23,7 @@ export enum IntervalType {
 }
 
 export interface StockState {
+    date: string;
     isStaticIntervals: boolean;
     brokerageId: string;
     brokerageTradingCostPerShare: number;
@@ -36,8 +37,9 @@ export interface StockState {
     targetPosition: number;
     realizedPnL: number;
     exitPnL: number;
-    exitPnLAsPercent: number;
-    maxMovingLossAsPercent: number;
+    exitPnLAsPercentage: number;
+    maxMovingProfitAsPercentage: number;
+    maxMovingLossAsPercentage: number;
     lastAsk: number;
     lastBid: number;
     intervals: SmoothingInterval[];

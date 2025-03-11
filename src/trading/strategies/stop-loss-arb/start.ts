@@ -26,9 +26,13 @@ export async function startStopLossArb(): Promise<void> {
 
         await startStopLossArbNode(stocks, states);
     } else {
+        debugger;
+        // TODO: make date dynamic later on
+        const date = '2025-03-07';
+
         const maxSpread = 0.05;
         const minPercentageChange = 1.25;
-        const states = await getHistoricalCppStockStates(maxSpread, minPercentageChange);
+        const states = await getHistoricalCppStockStates(date, maxSpread, minPercentageChange);
 
         return addon.JsStartStopLossArbCpp([], states);
     }

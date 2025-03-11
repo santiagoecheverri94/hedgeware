@@ -31,6 +31,8 @@ std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
 
         StockState cpp_stock_state;
 
+        cpp_stock_state.date = js_stock_state.Get("date").As<JS::String>().Utf8Value();
+
         cpp_stock_state.isStaticIntervals =
             js_stock_state.Get("isStaticIntervals").As<JS::Boolean>().Value();
 
@@ -78,13 +80,19 @@ std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
         cpp_stock_state.exitPnL =
             GetDecimal(js_stock_state.Get("exitPnL").As<JS::Number>().DoubleValue());
 
-        cpp_stock_state.exitPnLAsPercent = GetDecimal(
-            js_stock_state.Get("exitPnLAsPercent").As<JS::Number>().DoubleValue()
+        cpp_stock_state.exitPnLAsPercentage = GetDecimal(
+            js_stock_state.Get("exitPnLAsPercentage").As<JS::Number>().DoubleValue()
         );
 
-        cpp_stock_state.maxMovingLossAsPercent = GetDecimal(
-            js_stock_state.Get("maxMovingLossAsPercent").As<JS::Number>().DoubleValue()
-        );
+        cpp_stock_state.maxMovingProfitAsPercentage =
+            GetDecimal(js_stock_state.Get("maxMovingProfitAsPercentage")
+                           .As<JS::Number>()
+                           .DoubleValue());
+
+        cpp_stock_state.maxMovingLossAsPercentage =
+            GetDecimal(js_stock_state.Get("maxMovingLossAsPercentage")
+                           .As<JS::Number>()
+                           .DoubleValue());
 
         cpp_stock_state.lastAsk =
             GetDecimal(js_stock_state.Get("lastAsk").As<JS::Number>().DoubleValue());
@@ -169,6 +177,8 @@ JS::Object BindCppStatesToJsStates(
     {
         JS::Object js_state = JS::Object::New(env);
 
+        js_state.Set("date", JS::String::New(env, cpp_state.date));
+
         js_state.Set(
             "isStaticIntervals", JS::Boolean::New(env, cpp_state.isStaticIntervals)
         );
@@ -222,13 +232,22 @@ JS::Object BindCppStatesToJsStates(
         );
 
         js_state.Set(
-            "exitPnLAsPercent",
-            JS::Number::New(env, cpp_state.exitPnLAsPercent.convert_to<double>())
+            "exitPnLAsPercentage",
+            JS::Number::New(env, cpp_state.exitPnLAsPercentage.convert_to<double>())
         );
 
         js_state.Set(
-            "maxMovingLossAsPercent",
-            JS::Number::New(env, cpp_state.maxMovingLossAsPercent.convert_to<double>())
+            "maxMovingProfitAsPercentage",
+            JS::Number::New(
+                env, cpp_state.maxMovingProfitAsPercentage.convert_to<double>()
+            )
+        );
+
+        js_state.Set(
+            "maxMovingLossAsPercentage",
+            JS::Number::New(
+                env, cpp_state.maxMovingLossAsPercentage.convert_to<double>()
+            )
         );
 
         js_state.Set(

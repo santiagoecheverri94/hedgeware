@@ -40,10 +40,7 @@ export async function getStockStates(
     return states;
 }
 
-export async function getHistoricalCppStockStates(maxSpread: number, minPercentageChange: number): Promise<{ [stock: string]: StockState }> {
-    // TODO: make this dynamic later on
-    const date = '2025-03-07';
-
+export async function getHistoricalCppStockStates(date: string, maxSpread: number, minPercentageChange: number): Promise<{ [stock: string]: StockState }> {
     const year = date.split('-')[0];
     const month = date.split('-')[1];
 
@@ -73,6 +70,7 @@ export async function getHistoricalCppStockStates(maxSpread: number, minPercenta
         }
 
         const stockState = getFullStockState({
+            date,
             brokerageId: data.ticker,
             brokerageTradingCostPerShare: 0.004,
             numContracts: 1,

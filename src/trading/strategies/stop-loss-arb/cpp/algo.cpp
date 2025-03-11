@@ -13,7 +13,7 @@ Snapshot ReconcileStockPosition(const std::string& stock, StockState& stockState
     // 0)
     // Snapshot snapshot = isLiveTrading() ? brokerageClient.GetSnapshot(stock,
     // stockState.brokerageId) : GetSimulatedSnapshot(stock);
-    Snapshot snapshot = GetSimulatedSnapshot(stock);
+    Snapshot snapshot = GetSimulatedSnapshot(stockState);
 
     if (IsWideBidAskSpread(snapshot, stockState) || !snapshot.bid || !snapshot.ask)
     {
@@ -338,6 +338,11 @@ void UpdateExitPnL(StockState& stockState)
 
     Decimal exitPnL = stockState.realizedPnL;
 
+    Decimal commissionCosts =
+        GetDecimal(position) * stockState.brokerageTradingCostPerShare;
+
+    exitPnL -= commissionCosts;
+
     for (const auto& interval : stockState.intervals)
     {
         std::optional<Decimal> intervalPnL;
@@ -364,14 +369,21 @@ void UpdateExitPnL(StockState& stockState)
 
     stockState.exitPnL = exitPnL;
 
-    Decimal exitPnLAsPercent =
-        exitPnL / (GetDecimal(stockState.targetPosition) * stockState.initialPrice);
+    const auto percentage_denominator =
+        GetDecimal(stockState.targetPosition) * stockState.initialPrice;
 
-    stockState.exitPnLAsPercent = exitPnLAsPercent;
+    Decimal exitPnLAsPercentage = (exitPnL / percentage_denominator) * 100;
 
-    if (exitPnLAsPercent < stockState.maxMovingLossAsPercent)
+    stockState.exitPnLAsPercentage = exitPnLAsPercentage;
+
+    if (exitPnLAsPercentage > stockState.maxMovingProfitAsPercentage)
     {
-        stockState.maxMovingLossAsPercent = exitPnLAsPercent;
+        stockState.maxMovingProfitAsPercentage = exitPnLAsPercentage;
+    }
+
+    if (exitPnLAsPercentage < stockState.maxMovingLossAsPercentage)
+    {
+        stockState.maxMovingLossAsPercentage = exitPnLAsPercentage;
     }
 }
 

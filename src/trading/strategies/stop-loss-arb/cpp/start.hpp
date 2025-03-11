@@ -6,10 +6,7 @@
 
 #include "types.hpp"
 
-void StartStopLossArbCpp(
-    const std::vector<std::string>& stocks,
-    std::unordered_map<std::string, StockState>& states
-);
+void StartStopLossArbCpp(std::unordered_map<std::string, StockState>& states);
 
 void HedgeStockWhileMarketIsOpen(
     const std::string& stock, std::unordered_map<std::string, StockState>& states

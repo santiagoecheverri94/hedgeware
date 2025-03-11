@@ -9,20 +9,10 @@
 
 using namespace std;
 
-void StartStopLossArbCpp(
-    const std::vector<std::string>& stocks,
-    std::unordered_map<std::string, StockState>& states
-)
+void StartStopLossArbCpp(std::unordered_map<std::string, StockState>& states)
 {
-    // // Let userHasInterrupted = false;
-    // // if (isLiveTrading()) {
-    // //   onUserInterrupt(() => {
-    // //     userHasInterrupted = true;
-    // //   });
-    // // }
-
     vector<future<void>> waiting_for_stocks_to_be_hedged;
-    waiting_for_stocks_to_be_hedged.reserve(stocks.size());
+    waiting_for_stocks_to_be_hedged.reserve(states.size());
 
     chrono::steady_clock::time_point start_time;
     if (IsHistoricalSnapshot())
@@ -30,8 +20,10 @@ void StartStopLossArbCpp(
         start_time = chrono::high_resolution_clock::now();
     }
 
-    for (const auto& stock : stocks)
+    for (const auto& ticker_and_state_pair : states)
     {
+        const string& stock = ticker_and_state_pair.first;
+
         // Use async with launch::async launch policy to ensure each call runs on its
         // own thread
         waiting_for_stocks_to_be_hedged.push_back(

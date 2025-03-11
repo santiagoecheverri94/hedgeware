@@ -332,6 +332,13 @@ function updateExitPnL(stockState: StockState): void {
 
     let exitPnL = stockState.realizedPnL;
 
+    const commissionCosts = fc.multiply(
+        position,
+        stockState.brokerageTradingCostPerShare,
+    );
+
+    exitPnL = fc.subtract(exitPnL, commissionCosts);
+
     for (const interval of stockState.intervals) {
         let intervalPnL: number | undefined;
 
@@ -358,15 +365,21 @@ function updateExitPnL(stockState: StockState): void {
 
     stockState.exitPnL = exitPnL;
 
-    const exitPnLAsPercent = fc.divide(
+    const percentageDenominator = fc.multiply(stockState.targetPosition, stockState.initialPrice);
+
+    const exitPnLAsPercentage = fc.multiply(fc.divide(
         exitPnL,
-        fc.multiply(stockState.targetPosition, stockState.initialPrice),
-    );
+        percentageDenominator,
+    ), 100);
 
-    stockState.exitPnLAsPercent = exitPnLAsPercent;
+    stockState.exitPnLAsPercentage = exitPnLAsPercentage;
 
-    if (fc.lt(exitPnLAsPercent, stockState.maxMovingLossAsPercent)) {
-        stockState.maxMovingLossAsPercent = exitPnLAsPercent;
+    if (fc.gt(exitPnLAsPercentage, stockState.maxMovingProfitAsPercentage)) {
+        stockState.maxMovingProfitAsPercentage = exitPnLAsPercentage;
+    }
+
+    if (fc.lt(exitPnLAsPercentage, stockState.maxMovingLossAsPercentage)) {
+        stockState.maxMovingLossAsPercentage = exitPnLAsPercentage;
     }
 }
 

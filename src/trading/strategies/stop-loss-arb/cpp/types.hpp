@@ -45,6 +45,7 @@ struct TradingLog
 
 struct StockState
 {
+    std::string date;
     bool isStaticIntervals;
     std::string brokerageId;
     Decimal brokerageTradingCostPerShare;
@@ -58,8 +59,9 @@ struct StockState
     int targetPosition;
     Decimal realizedPnL;
     Decimal exitPnL;
-    Decimal exitPnLAsPercent;
-    Decimal maxMovingLossAsPercent;
+    Decimal exitPnLAsPercentage;
+    Decimal maxMovingProfitAsPercentage;
+    Decimal maxMovingLossAsPercentage;
     Decimal lastAsk;
     Decimal lastBid;
     std::vector<SmoothingInterval> intervals;

@@ -24,7 +24,7 @@ void JsStartStopLossArbCpp(const JS::CallbackInfo& info)
     const auto cpp_stocks = BindJsStocksToCppStocks(js_stocks);
     auto cpp_states = BindJsStatesToCppStates(js_states);
 
-    StartStopLossArbCpp(cpp_stocks, cpp_states);
+    StartStopLossArbCpp(cpp_states);
 }
 
 JS::Object Init(JS::Env env, JS::Object exports)
