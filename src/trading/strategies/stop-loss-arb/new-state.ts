@@ -5,10 +5,8 @@ import {
     syncWriteJSONFile,
     syncRenameFile,
 } from '../../../utils/file';
-import {IntervalType, SmoothingInterval, StockState} from './types';
-import {
-    isHistoricalSnapshot,
-} from '../../../utils/price-simulator';
+import {IntervalType, ProfitTracker, SmoothingInterval, StockState} from './types';
+import {isHistoricalSnapshot} from '../../../utils/price-simulator';
 import {getStockStateFilePath, getStocksFileNames} from './state';
 
 export async function refreshHistoricalStates(): Promise<void> {
@@ -32,49 +30,25 @@ export async function createNewStockStateFromExisting(stock: string): Promise<vo
     syncWriteJSONFile(getStockStateFilePath(`${stock}`), jsonPrettyPrint(newState));
 }
 
-export function getFullStockState(partialStockState: StockState): StockState {
-    const {
-        brokerageId,
-        brokerageTradingCostPerShare,
-        sharesPerInterval,
-        numContracts,
-        targetPosition,
-        intervalProfit,
-        spaceBetweenIntervals,
-        initialPrice,
-        shiftIntervalsFromInitialPrice,
-    } = partialStockState;
+export function getFullStockState(partial: StockState): StockState {
+    const longIntervals: SmoothingInterval[] =
+        getLongIntervalsAboveInitialPrice(partial);
 
-    const longIntervals: SmoothingInterval[] = getLongIntervalsAboveInitialPrice({
-        initialPrice,
-        targetPosition,
-        intervalProfit,
-        spaceBetweenIntervals,
-        sharesPerInterval,
-        SHIFT: shiftIntervalsFromInitialPrice,
-    });
-
-    const shortIntervals: SmoothingInterval[] = getShortIntervalsBelowInitialPrice({
-        initialPrice,
-        targetPosition,
-        intervalProfit,
-        spaceBetweenIntervals,
-        sharesPerInterval,
-        SHIFT: shiftIntervalsFromInitialPrice,
-    });
+    const shortIntervals: SmoothingInterval[] =
+        getShortIntervalsBelowInitialPrice(partial);
 
     const newState: StockState = {
-        date: partialStockState.date,
-        isStaticIntervals: false,
-        brokerageId,
-        brokerageTradingCostPerShare,
-        targetPosition,
-        sharesPerInterval,
-        spaceBetweenIntervals,
-        intervalProfit,
-        numContracts,
-        initialPrice,
-        shiftIntervalsFromInitialPrice,
+        date: partial.date,
+        brokerageId: partial.brokerageId,
+        brokerageTradingCostPerShare: partial.brokerageTradingCostPerShare,
+        targetPosition: partial.targetPosition,
+        sharesPerInterval: partial.sharesPerInterval,
+        spaceBetweenIntervals: partial.spaceBetweenIntervals,
+        intervalProfit: partial.intervalProfit,
+        numContracts: partial.numContracts,
+        initialPrice: partial.initialPrice,
+        shiftIntervalsFromInitialPrice: partial.shiftIntervalsFromInitialPrice,
+        isStaticIntervals: Boolean(partial.isStaticIntervals),
         position: 0,
         lastAsk: 0,
         lastBid: 0,
@@ -83,6 +57,10 @@ export function getFullStockState(partialStockState: StockState): StockState {
         exitPnLAsPercentage: 0,
         maxMovingProfitAsPercentage: 0,
         maxMovingLossAsPercentage: 0,
+        track1PercentageProfit: {} as ProfitTracker,
+        track075PercentageProfit: {} as ProfitTracker,
+        track05PercentageProfit: {} as ProfitTracker,
+        track025PercentageProfit: {} as ProfitTracker,
         intervals: [...longIntervals, ...shortIntervals],
         tradingLogs: [],
     };
@@ -90,31 +68,20 @@ export function getFullStockState(partialStockState: StockState): StockState {
     return newState;
 }
 
-function getLongIntervalsAboveInitialPrice({
-    initialPrice,
-    targetPosition,
-    intervalProfit,
-    spaceBetweenIntervals,
-    sharesPerInterval,
-    SHIFT,
-}: {
-    initialPrice: number;
-    targetPosition: number;
-    intervalProfit: number;
-    spaceBetweenIntervals: number;
-    sharesPerInterval: number;
-    SHIFT: number;
-}): SmoothingInterval[] {
+function getLongIntervalsAboveInitialPrice(partial: StockState): SmoothingInterval[] {
     const intervals: SmoothingInterval[] = [];
-    const numIntervals = targetPosition / sharesPerInterval;
+    const numIntervals = partial.targetPosition / partial.sharesPerInterval;
 
     for (let index = 1; index <= numIntervals + 1; index++) {
-        const spaceFromBaseInterval = fc.multiply(index + SHIFT, spaceBetweenIntervals);
-        const sellPrice = fc.add(initialPrice, spaceFromBaseInterval);
+        const spaceFromBaseInterval = fc.multiply(
+            index + partial.shiftIntervalsFromInitialPrice,
+            partial.spaceBetweenIntervals,
+        );
+        const sellPrice = fc.add(partial.initialPrice, spaceFromBaseInterval);
 
         intervals.unshift({
             type: IntervalType.LONG,
-            positionLimit: sharesPerInterval * index,
+            positionLimit: partial.sharesPerInterval * index,
             SELL: {
                 price: sellPrice,
                 active: false,
@@ -122,7 +89,7 @@ function getLongIntervalsAboveInitialPrice({
                 boughtAtPrice: Number.NaN,
             },
             BUY: {
-                price: fc.subtract(sellPrice, intervalProfit),
+                price: fc.subtract(sellPrice, partial.intervalProfit),
                 active: true,
                 crossed: true,
             },
@@ -132,33 +99,22 @@ function getLongIntervalsAboveInitialPrice({
     return intervals;
 }
 
-function getShortIntervalsBelowInitialPrice({
-    initialPrice,
-    targetPosition,
-    intervalProfit,
-    spaceBetweenIntervals,
-    sharesPerInterval,
-    SHIFT,
-}: {
-    initialPrice: number;
-    targetPosition: number;
-    intervalProfit: number;
-    spaceBetweenIntervals: number;
-    sharesPerInterval: number;
-    SHIFT: number;
-}): SmoothingInterval[] {
+function getShortIntervalsBelowInitialPrice(partial: StockState): SmoothingInterval[] {
     const intervals: SmoothingInterval[] = [];
-    const numIntervals = targetPosition / sharesPerInterval;
+    const numIntervals = partial.targetPosition / partial.sharesPerInterval;
 
     for (let index = 1; index <= numIntervals + 1; index++) {
-        const spaceFromBaseInterval = fc.multiply(index + SHIFT, spaceBetweenIntervals);
-        const buyPrice = fc.subtract(initialPrice, spaceFromBaseInterval);
+        const spaceFromBaseInterval = fc.multiply(
+            index + partial.shiftIntervalsFromInitialPrice,
+            partial.spaceBetweenIntervals,
+        );
+        const buyPrice = fc.subtract(partial.initialPrice, spaceFromBaseInterval);
 
         intervals.push({
             type: IntervalType.SHORT,
-            positionLimit: -(sharesPerInterval * index),
+            positionLimit: -(partial.sharesPerInterval * index),
             SELL: {
-                price: fc.add(buyPrice, intervalProfit),
+                price: fc.add(buyPrice, partial.intervalProfit),
                 active: true,
                 crossed: true,
             },

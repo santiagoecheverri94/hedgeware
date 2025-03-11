@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "node addon debug",
+            "name": "node cpp debug",
             "type": "cppvsdbg",
             "request": "launch",
             // "preLaunchTask": "node-gyp rebuild",
@@ -10,6 +10,7 @@
             "args": [
                 // "--inspect-brk",
                 "C:\\Users\\santi\\Documents\\trading\\hedgeware\\bin\\dev.js",
+                // "C:\\Users\\santi\\Documents\\trading\\hedgeware\\bin\\run.js",
                 "stop-loss-arb"
             ],
             "stopAtEntry": false,
@@ -29,6 +30,20 @@
                 }
             ],
             "console": "integratedTerminal"
+        },
+        {
+            "name": "node attach debug",
+            "type": "node",
+            "request": "attach",
+            "port": 9229,
+            "address": "127.0.0.1",
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "${workspaceFolder}",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "continueOnAttach": true,
+            "restart": true
         }
     ]
 }

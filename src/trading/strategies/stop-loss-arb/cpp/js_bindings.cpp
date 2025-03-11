@@ -2,19 +2,21 @@
 
 using namespace std;
 
-std::vector<std::string> BindJsStocksToCppStocks(const JS::Array& js_stocks)
+std::vector<std::unordered_map<std::string, StockState>>
+BindJsStatesListToCppStatesList(const JS::Array& js_states_list)
 {
-    std::vector<std::string> cpp_stocks;
+    int length = js_states_list.Length();
 
-    cpp_stocks.reserve(js_stocks.Length());
+    std::vector<std::unordered_map<std::string, StockState>> result;
+    result.reserve(length);
 
-    for (int i = 0; i < js_stocks.Length(); ++i)
+    for (int i = 0; i < length; ++i)
     {
-        std::string stock = js_stocks.Get(i).As<JS::String>().Utf8Value();
-        cpp_stocks.push_back(stock);
+        JS::Value js_state = js_states_list[i];
+        result.push_back(BindJsStatesToCppStates(js_state.As<JS::Object>()));
     }
 
-    return cpp_stocks;
+    return result;
 }
 
 std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
@@ -29,7 +31,7 @@ std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
         string stock = stocks.Get(i).As<JS::String>().Utf8Value();
         JS::Object js_stock_state = js_states.Get(stock).As<JS::Object>();
 
-        StockState cpp_stock_state;
+        StockState cpp_stock_state{};
 
         cpp_stock_state.date = js_stock_state.Get("date").As<JS::String>().Utf8Value();
 

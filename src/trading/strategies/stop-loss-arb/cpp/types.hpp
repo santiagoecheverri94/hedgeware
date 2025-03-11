@@ -43,6 +43,12 @@ struct TradingLog
     int newPosition;
 };
 
+struct HistoricalSnapshots
+{
+    std::vector<Snapshot>* data = nullptr;
+    int index = 0;
+};
+
 struct StockState
 {
     std::string date;
@@ -62,8 +68,17 @@ struct StockState
     Decimal exitPnLAsPercentage;
     Decimal maxMovingProfitAsPercentage;
     Decimal maxMovingLossAsPercentage;
+    bool reached_1_percentage_profit;
+    Decimal max_loss_when_reached_1_percentage_profit;
+    bool reached_0_75_percentage_profit;
+    Decimal max_loss_when_reached_0_75_percentage_profit;
+    bool reached_0_5_percentage_profit;
+    Decimal max_loss_when_reached_0_5_percentage_profit;
+    bool reached_0_25_percentage_profit;
+    Decimal max_loss_when_reached_0_25_percentage_profit;
     Decimal lastAsk;
     Decimal lastBid;
     std::vector<SmoothingInterval> intervals;
     std::vector<TradingLog> tradingLogs;
+    HistoricalSnapshots historicalSnapshots;
 };

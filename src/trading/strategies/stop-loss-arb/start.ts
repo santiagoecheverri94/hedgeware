@@ -1,4 +1,4 @@
-import {syncWriteJSONFile, jsonPrettyPrint} from '../../../utils/file';
+import {readJSONFile} from '../../../utils/file';
 import {FloatCalculator as fc} from '../../../utils/float-calculator';
 import {
     isLiveTrading,
@@ -13,7 +13,7 @@ import {IBKRClient} from '../../brokerage-clients/IBKR/client';
 import {BrokerageClient} from '../../brokerage-clients/brokerage-client';
 import {reconcileStockPosition} from './algo';
 import {debugRandomPrices, printPnLValues} from './debug';
-import {getStocksFileNames, getStockStates, getStockStateFilePath, getHistoricalCppStockStates} from './state';
+import {getStocksFileNames, getStockStates, getHistoricalCppStockStates} from './state';
 import {StockState} from './types';
 import {setTimeout} from 'node:timers/promises';
 
@@ -26,16 +26,29 @@ export async function startStopLossArb(): Promise<void> {
 
         await startStopLossArbNode(stocks, states);
     } else {
-        debugger;
-        // TODO: make date dynamic later on
-        const date = '2025-03-07';
+        const datesArrayCppPartitions = await getDatesArrayCppPartitions();
 
-        const maxSpread = 0.05;
-        const minPercentageChange = 1.25;
-        const states = await getHistoricalCppStockStates(date, maxSpread, minPercentageChange);
-
-        return addon.JsStartStopLossArbCpp([], states);
+        for (const dates of datesArrayCppPartitions) {
+            await runHistoricalDatesOnCpp(dates);
+        }
     }
+}
+
+async function getDatesArrayCppPartitions(): Promise<string[][]> {
+    const datesArray = await readJSONFile<string[][]>(`${process.cwd()}\\..\\deephedge\\historical-data-80\\cpp_historical_partitions.json`);
+
+    return datesArray;
+}
+
+async function runHistoricalDatesOnCpp(dates: string[]): Promise<void> {
+    const statesList: { [stock: string]: StockState }[] = [];
+
+    for (const date of dates) {
+        const states = await getHistoricalCppStockStates(date);
+        statesList.push(states);
+    }
+
+    addon.JsStartStopLossArbCpp(statesList);
 }
 
 async function startStopLossArbNode(
@@ -133,7 +146,7 @@ const HISTORICAL_PROFIT_THRESHOLD = Number.parseFloat(
 );
 
 function isExitPnlBeyondThresholds(stockState: StockState): boolean {
-    const exitPnLAsPercent = stockState.exitPnLAsPercent;
+    const exitPnLAsPercent = stockState.exitPnLAsPercentage;
 
     if (isHistoricalSnapshot()) {
         if (fc.gte(exitPnLAsPercent, HISTORICAL_PROFIT_THRESHOLD)) {

@@ -1,5 +1,6 @@
 #include "start.hpp"
 
+#include <chrono>
 #include <format>
 #include <future>
 
@@ -9,40 +10,53 @@
 
 using namespace std;
 
-void StartStopLossArbCpp(std::unordered_map<std::string, StockState>& states)
+void StartStopLossArbCpp(
+    std::vector<std::unordered_map<std::string, StockState>>& states_list
+)
 {
-    vector<future<void>> waiting_for_stocks_to_be_hedged;
-    waiting_for_stocks_to_be_hedged.reserve(states.size());
-
     chrono::steady_clock::time_point start_time;
-    if (IsHistoricalSnapshot())
-    {
-        start_time = chrono::high_resolution_clock::now();
-    }
+    start_time = chrono::high_resolution_clock::now();
 
-    for (const auto& ticker_and_state_pair : states)
-    {
-        const string& stock = ticker_and_state_pair.first;
+    vector<future<void>> waiting_for_dates_to_be_hedged;
+    waiting_for_dates_to_be_hedged.reserve(states_list.size());
 
-        // Use async with launch::async launch policy to ensure each call runs on its
-        // own thread
-        waiting_for_stocks_to_be_hedged.push_back(
-            async(launch::async, HedgeStockWhileMarketIsOpen, stock, ref(states))
+    const string start_date = states_list[0].begin()->second.date;
+    const string end_date = states_list[states_list.size() - 1].begin()->second.date;
+
+    for (auto& states : states_list)
+    {
+        waiting_for_dates_to_be_hedged.push_back(
+            async(launch::async, StartStopLossArbCppHelper, ref(states))
         );
     }
 
-    for (const auto& future : waiting_for_stocks_to_be_hedged)
+    for (const auto& future : waiting_for_dates_to_be_hedged)
     {
         future.wait();
     }
 
     double elapsed_seconds;
-    if (IsHistoricalSnapshot())
+    const auto end_time = chrono::high_resolution_clock::now();
+    elapsed_seconds =
+        chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count() /
+        1000.0;
+
+    Print(format(
+        "Hedging backtest of {} dates (start:'{}', end:'{}') completed in {:.4f} "
+        "seconds",
+        states_list.size(),
+        start_date,
+        end_date,
+        elapsed_seconds
+    ));
+}
+
+void StartStopLossArbCppHelper(std::unordered_map<std::string, StockState>& states)
+{
+    for (const auto& stock_to_state_pair : states)
     {
-        const auto end_time = chrono::high_resolution_clock::now();
-        elapsed_seconds =
-            chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count() /
-            1000.0;
+        const auto& stock = stock_to_state_pair.first;
+        HedgeStockWhileMarketIsOpen(stock, states);
     }
 
     // Get a sorted list of stock keys
@@ -58,13 +72,7 @@ void StartStopLossArbCpp(std::unordered_map<std::string, StockState>& states)
     {
         const StockState& state = states[stock];
 
-        PrintPnLValues(stock, state);
-    }
-
-    if (IsHistoricalSnapshot())
-    {
-        cout << "Hedging completed in " << fixed << setprecision(4) << elapsed_seconds
-             << " seconds" << endl;
+        // PrintPnLValues(stock, state);
     }
 }
 
@@ -80,16 +88,20 @@ void HedgeStockWhileMarketIsOpen(
 
         const auto snapshot = ReconcileStockPosition(stock, stockState);
 
-        if (IsLiveTrading() || IsHistoricalSnapshot())
+        if (IsHistoricalSnapshot() && IsHistoricalSnapshotsExhausted(stockState))
         {
-            if (IsExitPnlBeyondThresholds(stockState) ||
-                IsHistoricalSnapshotsExhausted(stock))
-            {
-                if (IsHistoricalSnapshot)
-                {
-                    DeleteHistoricalSnapshots(stock);
-                }
+            DeleteHistoricalSnapshots(stockState);
+            WritePnLAsPercentagesToSnapshotsFile(stockState);
 
+            break;
+        }
+
+        if (IsLiveTrading())
+        {
+            // await setTimeout(1000);
+
+            if (IsExitPnlBeyondThresholds(stockState))
+            {
                 // syncWriteJSONFile(
                 //     getStockStateFilePath(stock),
                 //     jsonPrettyPrint(stockState),
@@ -97,11 +109,6 @@ void HedgeStockWhileMarketIsOpen(
 
                 break;
             }
-        }
-
-        if (IsLiveTrading())
-        {
-            // await setTimeout(1000);
         }
 
         if (IsRandomSnapshot())
@@ -141,24 +148,26 @@ const Decimal LIVE_LOSS_THRESHOLD = -numeric_limits<double>::infinity();
 
 bool IsExitPnlBeyondThresholds(const StockState& stockState)
 {
-    const Decimal& exitPnLAsPercent = stockState.exitPnLAsPercent;
+    return false;
+
+    const Decimal& exitPnLAsPercentage = stockState.exitPnLAsPercentage;
 
     if (IsHistoricalSnapshot())
     {
         Decimal historicalProfitThreshold = GetHistoricalProfitThreshold();
-        if (exitPnLAsPercent >= historicalProfitThreshold)
+        if (exitPnLAsPercentage >= historicalProfitThreshold)
         {
             return true;
         }
     }
     else if (IsLiveTrading())
     {
-        if (exitPnLAsPercent >= LIVE_PROFIT_THRESHOLD)
+        if (exitPnLAsPercentage >= LIVE_PROFIT_THRESHOLD)
         {
             return true;
         }
 
-        if (exitPnLAsPercent <= LIVE_LOSS_THRESHOLD)
+        if (exitPnLAsPercentage <= LIVE_LOSS_THRESHOLD)
         {
             return true;
         }

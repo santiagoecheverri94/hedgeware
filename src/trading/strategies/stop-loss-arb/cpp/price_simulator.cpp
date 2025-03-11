@@ -51,7 +51,7 @@ Decimal GetRandomPrice()
 
 Snapshot GetRandomSnapshot()
 {
-    Snapshot snapshot;
+    Snapshot snapshot{};
 
     auto random_price = GetRandomPrice();
 
@@ -63,36 +63,87 @@ Snapshot GetRandomSnapshot()
 
 void RestartRandomPrice() { randomPrice = INITIAL_PRICE; }
 
-struct HistoricalSnapshotData
+void DeleteHistoricalSnapshots(StockState& stock_state)
 {
-    vector<Snapshot>* data;
-    int index = 0;
-};
-unordered_map<string, HistoricalSnapshotData> historical_snapshots;
-shared_mutex historical_snapshots_mutex;
-
-void DeleteHistoricalSnapshots(std::string stock)
-{
-    shared_lock read_lock{historical_snapshots_mutex};
-
-    auto data = historical_snapshots[stock].data;
-    delete data;
+    delete stock_state.historicalSnapshots.data;
 }
 
-string GetFilePathForStockDataOnDate(std::string stock, std::string date)
+string GetFilePathForStockDataOnDate(const StockState& stock_state)
 {
     const string cwd = filesystem::current_path().string();
-    const string year = string_split(date, '-')[0];
-    const string month = string_split(date, '-')[1];
+    const string year = string_split(stock_state.date, '-')[0];
+    const string month = string_split(stock_state.date, '-')[1];
 
     return format(
-        "{}\\..\\historical-data\\{}\\{}\\{}\\{}.json", cwd, year, month, date, stock
+        "{}\\..\\deephedge\\historical-data-80\\{}\\{}\\{}\\{}.json",
+        cwd,
+        year,
+        month,
+        stock_state.date,
+        stock_state.brokerageId
     );
 }
 
-vector<Snapshot>* GetSnapshotsForStockOnDate(std::string stock, std::string date)
+void WritePnLAsPercentagesToSnapshotsFile(const StockState& stock_state)
 {
-    string file_path = GetFilePathForStockDataOnDate(stock, date);
+    string file_path = GetFilePathForStockDataOnDate(stock_state);
+
+    try
+    {
+        std::ifstream file(file_path);
+        if (!file.is_open())
+        {
+            throw exception(format("Error: Unable to open file {}", file_path).c_str());
+        }
+
+        json json_data;
+        file >> json_data;
+
+        json_data["max_moving_profit_as_percentage"] =
+            stock_state.maxMovingProfitAsPercentage.convert_to<double>();
+
+        json_data["max_moving_loss_as_percentage"] =
+            stock_state.maxMovingLossAsPercentage.convert_to<double>();
+
+        json_data["reached_1_percentage_profit"] =
+            stock_state.reached_1_percentage_profit;
+        json_data["max_loss_when_reached_1_percentage_profit"] =
+            stock_state.max_loss_when_reached_1_percentage_profit.convert_to<double>();
+
+        json_data["reached_0_75_percentage_profit"] =
+            stock_state.reached_0_75_percentage_profit;
+        json_data["max_loss_when_reached_0_75_percentage_profit"] =
+            stock_state.max_loss_when_reached_0_75_percentage_profit.convert_to<double>(
+            );
+
+        json_data["reached_0_5_percentage_profit"] =
+            stock_state.reached_0_5_percentage_profit;
+        json_data["max_loss_when_reached_0_5_percentage_profit"] =
+            stock_state.max_loss_when_reached_0_5_percentage_profit.convert_to<double>(
+            );
+
+        json_data["reached_0_25_percentage_profit"] =
+            stock_state.reached_0_25_percentage_profit;
+        json_data["max_loss_when_reached_0_25_percentage_profit"] =
+            stock_state.max_loss_when_reached_0_25_percentage_profit.convert_to<double>(
+            );
+
+        std::ofstream out_file(file_path);
+        out_file << json_data.dump();
+    }
+    catch (const json::parse_error& e)
+    {
+        throw exception(format("JSON parse error: {}", e.what()).c_str());
+    }
+    catch (const std::exception& e)
+    {
+        throw exception(format("Error writing pnl to snapshots: {}", e.what()).c_str());
+    }
+}
+
+vector<Snapshot>* GetSnapshotsForStockOnDate(const StockState& stock_state)
+{
+    string file_path = GetFilePathForStockDataOnDate(stock_state);
     vector<Snapshot>* data = new vector<Snapshot>();
 
     try
@@ -110,7 +161,7 @@ vector<Snapshot>* GetSnapshotsForStockOnDate(std::string stock, std::string date
 
         for (const auto& snapshot_json : snapshots_json)
         {
-            Snapshot snapshot;
+            Snapshot snapshot{};
 
             snapshot.ask = GetDecimal(snapshot_json["ask"].get<double>());
             snapshot.bid = GetDecimal(snapshot_json["bid"].get<double>());
@@ -121,11 +172,11 @@ vector<Snapshot>* GetSnapshotsForStockOnDate(std::string stock, std::string date
     }
     catch (const json::parse_error& e)
     {
-        std::cerr << "JSON parse error: " << e.what() << std::endl;
+        throw exception(format("JSON parse error: {}", e.what()).c_str());
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Error reading snapshots: " << e.what() << std::endl;
+        throw exception(format("Error reading snapshots: {}", e.what()).c_str());
     }
 
     return data;
@@ -155,45 +206,22 @@ StockAndDate GetStockAndDate(std::string file_name)
     return StockAndDate{splitted[0], splitted[1]};
 }
 
-HistoricalSnapshotData GetHistoricalSnapshotData(StockState stock_state)
+Snapshot GetHistoricalSnapshot(StockState& stock_state)
 {
-    // StockAndDate stock_and_date = GetStockAndDate(file_name);
-
-    vector<Snapshot>* data =
-        GetSnapshotsForStockOnDate(stock_state.brokerageId, stock_state.date);
-
-    return HistoricalSnapshotData{data, 0};
-}
-
-Snapshot GetHistoricalSnapshot(StockState stock_state)
-{
-    shared_lock read_lock{historical_snapshots_mutex};
-    if (!historical_snapshots.contains(stock_state.brokerageId))
+    if (stock_state.historicalSnapshots.data == nullptr)
     {
-        read_lock.unlock();
-        unique_lock write_lock{historical_snapshots_mutex};
-
-        historical_snapshots[stock_state.brokerageId] =
-            GetHistoricalSnapshotData(stock_state);
-
-        write_lock.unlock();
+        stock_state.historicalSnapshots.data = GetSnapshotsForStockOnDate(stock_state);
     }
 
-    if (!read_lock.owns_lock())
-    {
-        read_lock.lock();
-    }
+    Snapshot snapshot =
+        stock_state.historicalSnapshots.data->at(stock_state.historicalSnapshots.index);
 
-    Snapshot snapshot = historical_snapshots[stock_state.brokerageId].data->at(
-        historical_snapshots[stock_state.brokerageId].index
-    );
-
-    historical_snapshots[stock_state.brokerageId].index++;
+    stock_state.historicalSnapshots.index++;
 
     return snapshot;
 }
 
-Snapshot GetSimulatedSnapshot(StockState stock_state)
+Snapshot GetSimulatedSnapshot(StockState& stock_state)
 {
     if (IsRandomSnapshot())
     {
@@ -208,17 +236,10 @@ Snapshot GetSimulatedSnapshot(StockState stock_state)
     throw exception("No snapshot type specified");
 }
 
-bool IsHistoricalSnapshotsExhausted(std::string stock)
+bool IsHistoricalSnapshotsExhausted(const StockState& stock_state)
 {
-    if (!IsHistoricalSnapshot())
-    {
-        return false;
-    }
-
-    shared_lock read_lock{historical_snapshots_mutex};
-
-    const bool isExhausted =
-        historical_snapshots[stock].index == historical_snapshots[stock].data->size();
+    const bool isExhausted = stock_state.historicalSnapshots.index ==
+                             stock_state.historicalSnapshots.data->size();
 
     return isExhausted;
 }

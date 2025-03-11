@@ -22,6 +22,12 @@ export enum IntervalType {
     SHORT = 'SHORT',
 }
 
+export interface ProfitTracker {
+    isReached: boolean;
+    percentageProfitWhenReached: number;
+    percentageLossWhenReached: number;
+}
+
 export interface StockState {
     date: string;
     isStaticIntervals: boolean;
@@ -40,6 +46,10 @@ export interface StockState {
     exitPnLAsPercentage: number;
     maxMovingProfitAsPercentage: number;
     maxMovingLossAsPercentage: number;
+    track1PercentageProfit: ProfitTracker;
+    track075PercentageProfit: ProfitTracker;
+    track05PercentageProfit: ProfitTracker;
+    track025PercentageProfit: ProfitTracker;
     lastAsk: number;
     lastBid: number;
     intervals: SmoothingInterval[];

@@ -26,6 +26,21 @@ export async function reconcileStockPosition(
         return snapshot;
     }
 
+    // TODO: do I still need this afterwards?
+    const isSnapshotChanged = isSnapshotChange(snapshot, stockState);
+    if (isSnapshotChanged) {
+        updateSnaphotOnState(stockState, snapshot);
+
+        updateExitPnL(stockState);
+
+        if (isLiveTrading()) {
+            syncWriteJSONFile(
+                getStockStateFilePath(stock),
+                jsonPrettyPrint(stockState),
+            );
+        }
+    }
+
     // 1)
     const crossingHappened = checkCrossings(stockState, snapshot);
 
@@ -75,7 +90,6 @@ export async function reconcileStockPosition(
     }
 
     // 6)
-    const isSnapshotChanged = isSnapshotChange(snapshot, stockState);
     if (isSnapshotChanged) {
         updateSnaphotOnState(stockState, snapshot);
 
@@ -93,7 +107,7 @@ export async function reconcileStockPosition(
 }
 
 function isWideBidAskSpread({bid, ask}: Snapshot, stockState: StockState): boolean {
-    return fc.gt(fc.subtract(ask, bid), stockState.intervalProfit) === 1;
+    return fc.gt(fc.subtract(ask, bid), stockState.spaceBetweenIntervals) === 1;
 }
 
 function checkCrossings(stockState: StockState, {bid, ask}: Snapshot): boolean {
@@ -365,7 +379,7 @@ function updateExitPnL(stockState: StockState): void {
 
     stockState.exitPnL = exitPnL;
 
-    const percentageDenominator = fc.multiply(stockState.targetPosition, stockState.initialPrice);
+    const percentageDenominator = fc.multiply(stockState.targetPosition + stockState.sharesPerInterval, stockState.initialPrice);
 
     const exitPnLAsPercentage = fc.multiply(fc.divide(
         exitPnL,
@@ -381,6 +395,8 @@ function updateExitPnL(stockState: StockState): void {
     if (fc.lt(exitPnLAsPercentage, stockState.maxMovingLossAsPercentage)) {
         stockState.maxMovingLossAsPercentage = exitPnLAsPercentage;
     }
+
+    // Here the cpp version is different, because it has the reched_when losses...
 }
 
 function correctBadBuyIfRequired(

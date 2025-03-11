@@ -64,7 +64,7 @@ export function getFilePathForStockDataOnDate(stock: string, date: string): stri
 }
 
 function getFolderPathForStockData(stock: string): string {
-    const path = `${process.cwd()}\\..\\historical-data\\${stock}`;
+    const path = `${process.cwd()}\\..\\deephedge\\historical-data-80\\${stock}`;
 
     if (!existsSync(path)) {
         mkdirSync(path);

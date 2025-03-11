@@ -3,7 +3,7 @@
 #include "types.hpp"
 #include "utils.hpp"
 
-Snapshot GetSimulatedSnapshot(StockState stock_state);
+Snapshot GetSimulatedSnapshot(StockState& stock_state);
 
 void RestartRandomPrice();
 
@@ -13,6 +13,8 @@ bool IsHistoricalSnapshot();
 
 bool IsLiveTrading();
 
-bool IsHistoricalSnapshotsExhausted(std::string stock);
+bool IsHistoricalSnapshotsExhausted(const StockState& stock_state);
 
-void DeleteHistoricalSnapshots(std::string stock);
+void DeleteHistoricalSnapshots(StockState& stock_state);
+
+void WritePnLAsPercentagesToSnapshotsFile(const StockState& stock_state);

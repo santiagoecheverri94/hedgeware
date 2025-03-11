@@ -20,6 +20,21 @@ Snapshot ReconcileStockPosition(const std::string& stock, StockState& stockState
         return snapshot;
     }
 
+    const bool isSnapshotChanged = IsSnapshotChange(snapshot, stockState);
+    if (isSnapshotChanged)
+    {
+        UpdateSnaphotOnState(stockState, snapshot);
+
+        UpdateExitPnL(stockState);
+
+        // if (isLiveTrading()) {
+        //     SyncWriteJSONFile(
+        //         GetStockStateFilePath(stock),
+        //         JsonPrettyPrint(stockState)
+        //     );
+        // }
+    }
+
     // 1)
     bool crossingHappened = CheckCrossings(stockState, snapshot);
 
@@ -65,7 +80,6 @@ Snapshot ReconcileStockPosition(const std::string& stock, StockState& stockState
     }
 
     // 6)
-    const bool isSnapshotChanged = IsSnapshotChange(snapshot, stockState);
     if (isSnapshotChanged)
     {
         UpdateSnaphotOnState(stockState, snapshot);
@@ -85,7 +99,7 @@ Snapshot ReconcileStockPosition(const std::string& stock, StockState& stockState
 
 bool IsWideBidAskSpread(const Snapshot& snapshot, const StockState& stockState)
 {
-    return (snapshot.ask - snapshot.bid) > stockState.intervalProfit;
+    return (snapshot.ask - snapshot.bid) >= stockState.spaceBetweenIntervals;
 }
 
 bool CheckCrossings(StockState& stockState, const Snapshot& snapshot)
@@ -370,7 +384,8 @@ void UpdateExitPnL(StockState& stockState)
     stockState.exitPnL = exitPnL;
 
     const auto percentage_denominator =
-        GetDecimal(stockState.targetPosition) * stockState.initialPrice;
+        GetDecimal(stockState.targetPosition + stockState.sharesPerInterval) *
+        stockState.initialPrice;
 
     Decimal exitPnLAsPercentage = (exitPnL / percentage_denominator) * 100;
 
@@ -384,6 +399,38 @@ void UpdateExitPnL(StockState& stockState)
     if (exitPnLAsPercentage < stockState.maxMovingLossAsPercentage)
     {
         stockState.maxMovingLossAsPercentage = exitPnLAsPercentage;
+    }
+
+    if (!stockState.reached_1_percentage_profit &&
+        exitPnLAsPercentage >= GetDecimal(1.0))
+    {
+        stockState.reached_1_percentage_profit = true;
+        stockState.max_loss_when_reached_1_percentage_profit =
+            stockState.maxMovingLossAsPercentage;
+    }
+
+    if (!stockState.reached_0_75_percentage_profit &&
+        exitPnLAsPercentage >= GetDecimal(0.75))
+    {
+        stockState.reached_0_75_percentage_profit = true;
+        stockState.max_loss_when_reached_0_75_percentage_profit =
+            stockState.maxMovingLossAsPercentage;
+    }
+
+    if (!stockState.reached_0_5_percentage_profit &&
+        exitPnLAsPercentage >= GetDecimal(0.5))
+    {
+        stockState.reached_0_5_percentage_profit = true;
+        stockState.max_loss_when_reached_0_5_percentage_profit =
+            stockState.maxMovingLossAsPercentage;
+    }
+
+    if (!stockState.reached_0_25_percentage_profit &&
+        exitPnLAsPercentage >= GetDecimal(0.25))
+    {
+        stockState.reached_0_25_percentage_profit = true;
+        stockState.max_loss_when_reached_0_25_percentage_profit =
+            stockState.maxMovingLossAsPercentage;
     }
 }
 
