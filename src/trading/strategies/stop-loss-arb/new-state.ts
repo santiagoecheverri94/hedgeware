@@ -32,7 +32,7 @@ export async function createNewStockStateFromExisting(stock: string): Promise<vo
     syncWriteJSONFile(getStockStateFilePath(`${stock}`), jsonPrettyPrint(newState));
 }
 
-function getFullStockState(partialStockState: StockState): StockState {
+export function getFullStockState(partialStockState: StockState): StockState {
     const {
         brokerageId,
         brokerageTradingCostPerShare,

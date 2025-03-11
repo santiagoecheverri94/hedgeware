@@ -6,35 +6,38 @@ import {
     isHistoricalSnapshotsExhausted,
     isRandomSnapshot,
     deleteHistoricalSnapshots,
+    isHistoricalCppSnapshot,
 } from '../../../utils/price-simulator';
 import {isMarketOpen} from '../../../utils/time';
 import {IBKRClient} from '../../brokerage-clients/IBKR/client';
 import {BrokerageClient} from '../../brokerage-clients/brokerage-client';
 import {reconcileStockPosition} from './algo';
 import {debugRandomPrices, printPnLValues} from './debug';
-import {getStocksFileNames, getStockStates, getStockStateFilePath} from './state';
+import {getStocksFileNames, getStockStates, getStockStateFilePath, getHistoricalCppStockStates} from './state';
 import {StockState} from './types';
 import {setTimeout} from 'node:timers/promises';
 
 const brokerageClient = new IBKRClient();
 
 export async function startStopLossArb(): Promise<void> {
-    // TODO: test this, and if it works, introduce the cpp version depending on env variable
+    if (!isHistoricalCppSnapshot()) {
+        const stocks = await getStocksFileNames();
+        const states = await getStockStates(stocks);
 
-    const stocks = await getStocksFileNames();
-    const states = await getStockStates(stocks);
-    await startStopLossArbNode(stocks, states);
+        await startStopLossArbNode(stocks, states);
+    } else {
+        const maxSpread = 0.05;
+        const minPercentageChange = 1.25;
+        const states = await getHistoricalCppStockStates(maxSpread, minPercentageChange);
+
+        return addon.JsStartStopLossArbCpp([], states);
+    }
 }
 
 async function startStopLossArbNode(
     stocks: string[],
     states: { [stock: string]: StockState },
 ): Promise<void> {
-    debugger;
-    if (process.env.CPP_NODE_ADDON) {
-        return addon.JsStartStopLossArbCpp(stocks, states);
-    }
-
     // let userHasInterrupted = false;
     // if (isLiveTrading()) {
     //   onUserInterrupt(() => {

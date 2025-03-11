@@ -15,6 +15,10 @@ export function isHistoricalSnapshot(): boolean {
     return Boolean(process.env.HISTORICAL_SNAPSHOT);
 }
 
+export function isHistoricalCppSnapshot(): boolean {
+    return isHistoricalSnapshot() && Boolean(process.env.CPP_NODE_ADDON);
+}
+
 export async function getSimulatedSnapshot(stock: string): Promise<Snapshot> {
     if (isRandomSnapshot()) {
         return getRandomSnapshot();
