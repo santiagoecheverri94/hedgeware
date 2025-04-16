@@ -11,8 +11,6 @@ const DATE_FORMAT = 'YYYY-MM-DD';
 const TIME_FORMAT = 'hh:mm:ssa';
 const MARKET_TIMEZONE = 'America/New_York';
 
-const NANO_SECONDS_FACTOR = 1_000_000_000;
-
 export async function isMarketOpen(stock = ''): Promise<boolean> {
     if (!isLiveTrading()) {
         return true;
@@ -60,68 +58,4 @@ export function getCurrentTimeStamp(): string {
     return `${getCurrentMomentInNewYork().format(
         DATE_FORMAT,
     )} at ${getCurrentMomentInNewYork().format(TIME_FORMAT)} ET`;
-}
-
-export function getNanoSecondsEpochTimestampForDateAndTimeInNewYork(
-    date: string,
-    time: string,
-): number {
-    const secondsTimestamp = getMomentForDateAndTimeInNewYork(date, time).unix();
-    return convertSecondsToNanoSeconds(secondsTimestamp);
-}
-
-function getMomentForDateAndTimeInNewYork(date: string, time: string): moment.Moment {
-    return moment.tz(
-        `${date} ${time}`,
-        `${DATE_FORMAT} ${TIME_FORMAT}`,
-        MARKET_TIMEZONE,
-    );
-}
-
-function convertSecondsToNanoSeconds(seconds: number): number {
-    return seconds * NANO_SECONDS_FACTOR;
-}
-
-export function getTimestampForDateAndTimeInNewYorkFromNanoSecondsEpochTimestamp(
-    nanoSecondsEpochTimestamp: number,
-): string {
-    return `${getMomentInNewYorkFromNanoSecondsEpochTimestamp(
-        nanoSecondsEpochTimestamp,
-    ).format(`${DATE_FORMAT} ${TIME_FORMAT}`)} ET`;
-}
-
-function getMomentInNewYorkFromNanoSecondsEpochTimestamp(
-    nanoSecondsEpochTimestamp: number,
-): moment.Moment {
-    return moment
-        .unix(convertNanoSecondsToSeconds(nanoSecondsEpochTimestamp))
-        .tz(MARKET_TIMEZONE);
-}
-
-function convertNanoSecondsToSeconds(nanoSeconds: number): number {
-    return nanoSeconds / NANO_SECONDS_FACTOR;
-}
-
-export function getSecondsFromNanoSecondsTimestamp(
-    nanoSecondsEpochTimestamp: number,
-): number {
-    return getMomentInNewYorkFromNanoSecondsEpochTimestamp(
-        nanoSecondsEpochTimestamp,
-    ).seconds();
-}
-
-function getWeekdaysInRange(startDate: string, endDate: string): string[] {
-    const result = [];
-    const current = moment(startDate, DATE_FORMAT);
-    const end = moment(endDate, DATE_FORMAT);
-
-    while (current.isSameOrBefore(end, 'day')) {
-        if (current.day() !== 0 && current.day() !== 6) {
-            result.push(current.format(DATE_FORMAT));
-        }
-
-        current.add(1, 'day');
-    }
-
-    return result;
 }

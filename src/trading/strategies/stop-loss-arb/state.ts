@@ -1,5 +1,5 @@
 import {getFileNamesWithinFolder, readJSONFile} from '../../../utils/file';
-import {isHistoricalCppSnapshot, isLiveTrading} from '../../../utils/price-simulator';
+import {getDirWithStocksDataOnDate, isLiveTrading} from '../../../utils/price-simulator';
 import {StockState} from './types';
 import path from 'node:path';
 import fs from 'node:fs/promises';
@@ -40,14 +40,10 @@ export async function getStockStates(
     return states;
 }
 
-export async function getHistoricalCppStockStates(
+export async function getHistoricalStockStates(
     date:string,
 ): Promise<{ [stock: string]: StockState }> {
-    const year = date.split('-')[0];
-    const month = date.split('-')[1];
-
-    const cwd = process.cwd();
-    const dir = path.join(cwd, '..', 'deephedge', 'historical-data-80', year, month, date);
+    const dir = getDirWithStocksDataOnDate(date);
 
     const files = await fs.readdir(dir);
     const jsonFiles = files.filter(file => file.endsWith('.json'));

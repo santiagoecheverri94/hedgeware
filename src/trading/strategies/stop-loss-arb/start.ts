@@ -13,29 +13,42 @@ import {IBKRClient} from '../../brokerage-clients/IBKR/client';
 import {BrokerageClient} from '../../brokerage-clients/brokerage-client';
 import {reconcileStockPosition} from './algo';
 import {debugRandomPrices, printPnLValues} from './debug';
-import {getStocksFileNames, getStockStates, getHistoricalCppStockStates} from './state';
+import {getStocksFileNames, getStockStates, getHistoricalStockStates} from './state';
 import {StockState} from './types';
 import {setTimeout} from 'node:timers/promises';
 
 const brokerageClient = new IBKRClient();
 
 export async function startStopLossArb(): Promise<void> {
-    if (!isHistoricalCppSnapshot()) {
+    if (isHistoricalSnapshot()) {
+        if (isHistoricalCppSnapshot()) {
+            const datesArrayCppPartitions = await getDatesArrayCppPartitions();
+            // const datesArrayCppPartitions = [['2025-03-21']];
+
+            for (const dates of datesArrayCppPartitions) {
+                // We pass the dates to C++ in buckets to be run in parallel
+                // TODO: make more efficient by passing less, but deeper buckets
+                await runHistoricalDatesOnCpp(dates);
+            }
+        } else {
+            const dates = ['2025-03-21'];
+
+            for (const date of dates) {
+                // We pass the dates sequentially when we stay in NodeJS
+                const states = await getHistoricalStockStates(date);
+                await startStopLossArbNode(states);
+            }
+        }
+    } else {
         const stocks = await getStocksFileNames();
         const states = await getStockStates(stocks);
 
-        await startStopLossArbNode(stocks, states);
-    } else {
-        const datesArrayCppPartitions = await getDatesArrayCppPartitions();
-
-        for (const dates of datesArrayCppPartitions) {
-            await runHistoricalDatesOnCpp(dates);
-        }
+        await startStopLossArbNode(states);
     }
 }
 
 async function getDatesArrayCppPartitions(): Promise<string[][]> {
-    const datesArray = await readJSONFile<string[][]>(`${process.cwd()}\\..\\deephedge\\historical-data-80\\cpp_historical_partitions.json`);
+    const datesArray = await readJSONFile<string[][]>(`${process.cwd()}\\..\\deephedge\\historical-data\\cpp_historical_partitions.json`);
 
     return datesArray;
 }
@@ -44,7 +57,7 @@ async function runHistoricalDatesOnCpp(dates: string[]): Promise<void> {
     const statesList: { [stock: string]: StockState }[] = [];
 
     for (const date of dates) {
-        const states = await getHistoricalCppStockStates(date);
+        const states = await getHistoricalStockStates(date);
         statesList.push(states);
     }
 
@@ -52,7 +65,6 @@ async function runHistoricalDatesOnCpp(dates: string[]): Promise<void> {
 }
 
 async function startStopLossArbNode(
-    stocks: string[],
     states: { [stock: string]: StockState },
 ): Promise<void> {
     // let userHasInterrupted = false;
@@ -69,6 +81,8 @@ async function startStopLossArbNode(
         startTime = performance.now();
     }
 
+    const stocks = Object.keys(states).sort();
+
     for (const stock of stocks) {
         waitingForStocksToBeHedged.push(
             hedgeStockWhileMarketIsOpen(stock, states, brokerageClient),
@@ -83,7 +97,7 @@ async function startStopLossArbNode(
         timeInSeconds = (endTime - startTime) / 1000;
     }
 
-    for (const stock of Object.keys(states).sort()) {
+    for (const stock of stocks) {
         printPnLValues(stock, states[stock]);
     }
 
@@ -113,10 +127,10 @@ async function hedgeStockWhileMarketIsOpen(
         if (isLiveTrading() || isHistoricalSnapshot()) {
             if (
                 isExitPnlBeyondThresholds(stockState) ||
-                isHistoricalSnapshotsExhausted(stock)
+                isHistoricalSnapshotsExhausted(stockState)
             ) {
                 if (isHistoricalSnapshot()) {
-                    deleteHistoricalSnapshots(stock);
+                    deleteHistoricalSnapshots(stockState);
                 }
 
                 // syncWriteJSONFile(
@@ -138,26 +152,16 @@ async function hedgeStockWhileMarketIsOpen(
     }
 }
 
-const LIVE_PROFIT_THRESHOLD = 0.005;
-const LIVE_LOSS_THRESHOLD = Number.NEGATIVE_INFINITY; // TODO: Tbd
-
-const HISTORICAL_PROFIT_THRESHOLD = Number.parseFloat(
-    process.env.HISTORICAL_PROFIT_THRESHOLD || '0.01',
-);
+const LIVE_PROFIT_THRESHOLD = 0.5;
+const LIVE_LOSS_THRESHOLD = -0.75;
 
 function isExitPnlBeyondThresholds(stockState: StockState): boolean {
-    const exitPnLAsPercent = stockState.exitPnLAsPercentage;
-
-    if (isHistoricalSnapshot()) {
-        if (fc.gte(exitPnLAsPercent, HISTORICAL_PROFIT_THRESHOLD)) {
-            return true;
-        }
-    } else if (isLiveTrading()) {
-        if (fc.gte(exitPnLAsPercent, LIVE_PROFIT_THRESHOLD)) {
+    if (isLiveTrading()) {
+        if (fc.gte(stockState.exitPnLAsPercentage, LIVE_PROFIT_THRESHOLD)) {
             return true;
         }
 
-        if (fc.lte(exitPnLAsPercent, LIVE_LOSS_THRESHOLD)) {
+        if (fc.lte(stockState.exitPnLAsPercentage, LIVE_LOSS_THRESHOLD)) {
             return true;
         }
     }
