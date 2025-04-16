@@ -20,7 +20,7 @@ export async function reconcileStockPosition(
     let snapshot: Snapshot;
     snapshot = await (isLiveTrading() ?
         brokerageClient.getSnapshot(stock, stockState.brokerageId) :
-        getSimulatedSnapshot(stock));
+        getSimulatedSnapshot(stockState));
 
     if (isWideBidAskSpread(snapshot, stockState) || !snapshot.bid || !snapshot.ask) {
         return snapshot;

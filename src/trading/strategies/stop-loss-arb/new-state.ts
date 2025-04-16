@@ -3,24 +3,9 @@ import {
     jsonPrettyPrint,
     readJSONFile,
     syncWriteJSONFile,
-    syncRenameFile,
 } from '../../../utils/file';
-import {IntervalType, ProfitTracker, SmoothingInterval, StockState} from './types';
-import {isHistoricalSnapshot} from '../../../utils/price-simulator';
-import {getStockStateFilePath, getStocksFileNames} from './state';
-
-export async function refreshHistoricalStates(): Promise<void> {
-    if (!isHistoricalSnapshot()) {
-        throw new Error(
-            'Must be in historical snapshot mode to refresh historical states',
-        );
-    }
-
-    const stocksFileNames = await getStocksFileNames();
-    for (const fileName of stocksFileNames) {
-        await createNewStockStateFromExisting(fileName);
-    }
-}
+import {IntervalType, SmoothingInterval, StockState} from './types';
+import {getStockStateFilePath} from './state';
 
 export async function createNewStockStateFromExisting(stock: string): Promise<void> {
     const filePath = getStockStateFilePath(`${stock}`);
@@ -57,10 +42,6 @@ export function getFullStockState(partial: StockState): StockState {
         exitPnLAsPercentage: 0,
         maxMovingProfitAsPercentage: 0,
         maxMovingLossAsPercentage: 0,
-        track1PercentageProfit: {} as ProfitTracker,
-        track075PercentageProfit: {} as ProfitTracker,
-        track05PercentageProfit: {} as ProfitTracker,
-        track025PercentageProfit: {} as ProfitTracker,
         intervals: [...longIntervals, ...shortIntervals],
         tradingLogs: [],
     };
