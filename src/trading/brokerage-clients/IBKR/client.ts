@@ -26,11 +26,11 @@ export class IBKRClient extends BrokerageClient {
 
     private account!: string;
 
-    async getSnapshot(stock: string, conid: string): Promise<Snapshot> {
+    async getSnapshot(stock: string): Promise<Snapshot> {
         const fields = Object.values(this.snapshotFields);
 
         const response: SnapshotResponse = await ibkrApiReq(IbkrApiEndpoint.stockSnapshot, {
-            ticker: conid,
+            ticker: stock,
         });
 
         if (response && isSnapshotResponseWithAllFields(response, fields)) {
@@ -39,7 +39,15 @@ export class IBKRClient extends BrokerageClient {
 
         log('Failed to obtain snapshot. Will try agagin. Debugger will be triggered.');
         debugger;
-        return this.getSnapshot(stock, conid);
+        return this.getSnapshot(stock);
+    }
+
+    async getSnapshots(stocks: string[]): Promise<Record<string, Snapshot>> {
+        return {};
+    }
+
+    async getShortableQuantities(stocks: string[]): Promise<Record<string, number>> {
+        return {};
     }
 
     async placeOrder(orderDetails: OrderDetails): Promise<number> {

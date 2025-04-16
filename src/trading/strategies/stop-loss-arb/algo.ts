@@ -2,7 +2,12 @@ import {syncWriteJSONFile, jsonPrettyPrint} from '../../../utils/file';
 import {FloatCalculator as fc} from '../../../utils/float-calculator';
 import {log} from '../../../utils/log';
 import {getSimulatedSnapshot, isLiveTrading} from '../../../utils/price-simulator';
-import {getCurrentTimeStamp} from '../../../utils/time';
+import {
+    getCurrentMomentInNewYork,
+    getCurrentTimeStamp,
+    getMomentForTime,
+    kTradingEndTime,
+} from '../../../utils/time';
 import {
     Snapshot,
     OrderAction,
@@ -14,38 +19,67 @@ import {IntervalType, StockState} from './types';
 export async function reconcileStockPosition(
     stock: string,
     stockState: StockState,
-    brokerageClient: BrokerageClient,
-): Promise<Snapshot> {
+    date: string,
+    brokerageClient?: BrokerageClient,
+): Promise<{
+    snapshot: Snapshot;
+    crossedThreshold: boolean;
+}> {
     // 0)
     let snapshot: Snapshot;
-    snapshot = await (isLiveTrading() ?
-        brokerageClient.getSnapshot(stock, stockState.brokerageId) :
+    snapshot = await (brokerageClient ?
+        brokerageClient.getSnapshot(stockState.brokerageId) :
         getSimulatedSnapshot(stockState));
 
-    if (isWideBidAskSpread(snapshot, stockState) || !snapshot.bid || !snapshot.ask) {
-        return snapshot;
-    }
-
-    // TODO: do I still need this afterwards?
     const isSnapshotChanged = isSnapshotChange(snapshot, stockState);
     if (isSnapshotChanged) {
         updateSnaphotOnState(stockState, snapshot);
 
         updateExitPnL(stockState);
 
-        if (isLiveTrading()) {
-            syncWriteJSONFile(
-                getStockStateFilePath(stock),
-                jsonPrettyPrint(stockState),
-            );
+        if (
+            isLiveTrading() &&
+            (isExitPnlBeyondThresholds(stockState) || isPastTradingTime())
+        ) {
+            if (stockState.position !== 0) {
+                const {orderSide, priceSetAt} = await setNewPosition({
+                    stock,
+                    brokerageClient,
+                    stockState,
+                    newPosition: 0,
+                    snapshot,
+                });
+
+                const intervalIndicesToExecute =
+                    getActiveIntervalIndexesBeforeExit(stockState);
+
+                updateRealizedPnL(
+                    stockState,
+                    intervalIndicesToExecute,
+                    orderSide,
+                    priceSetAt,
+                );
+            }
+
+            return {
+                snapshot,
+                crossedThreshold: true,
+            };
         }
+    }
+
+    if (isWideBidAskSpread(snapshot, stockState) || !snapshot.bid || !snapshot.ask) {
+        return {
+            snapshot,
+            crossedThreshold: false,
+        };
     }
 
     // 1)
     const crossingHappened = checkCrossings(stockState, snapshot);
 
     if (isLiveTrading() && crossingHappened) {
-        syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
+        syncWriteJSONFile(getStockStateFilePath(stock, date), jsonPrettyPrint(stockState));
     }
 
     // 2)
@@ -69,20 +103,13 @@ export async function reconcileStockPosition(
 
     // 5)
     if (newPosition !== undefined) {
-        const orderSide: OrderAction =
-            numToBuy > 0 ? OrderAction.BUY : OrderAction.SELL;
-
-        // TODO: refactor so price is returned from setNewPosition
-        let priceSetAt: number = (await setNewPosition({
+        const {priceSetAt, orderSide} = await setNewPosition({
             stock,
             brokerageClient,
             stockState,
             newPosition,
             snapshot,
-            orderSide,
-        })) as any;
-
-        priceSetAt = orderSide === OrderAction.BUY ? snapshot.ask : snapshot.bid;
+        });
 
         updateRealizedPnL(stockState, intervalIndicesToExecute, orderSide, priceSetAt);
 
@@ -90,20 +117,76 @@ export async function reconcileStockPosition(
     }
 
     // 6)
-    if (isSnapshotChanged) {
-        updateSnaphotOnState(stockState, snapshot);
-
+    if (isSnapshotChanged && stockState.position !== 0) {
         updateExitPnL(stockState);
 
         if (isLiveTrading()) {
             syncWriteJSONFile(
-                getStockStateFilePath(stock),
+                getStockStateFilePath(stock, date),
                 jsonPrettyPrint(stockState),
             );
+
+            // TODO: I don't like doing this twice, but keeping it
+            // to maintain parity with the version that went through
+            // deep learning analysis. For Iterations [2,), remove this
+            // and only check once in the beginning of the function.
+            if (isExitPnlBeyondThresholds(stockState)) {
+                const {orderSide, priceSetAt} = await setNewPosition({
+                    stock,
+                    brokerageClient,
+                    stockState,
+                    newPosition: 0,
+                    snapshot,
+                });
+
+                const intervalIndicesToExecute =
+                    getActiveIntervalIndexesBeforeExit(stockState);
+
+                updateRealizedPnL(
+                    stockState,
+                    intervalIndicesToExecute,
+                    orderSide,
+                    priceSetAt,
+                );
+
+                return {
+                    snapshot,
+                    crossedThreshold: true,
+                };
+            }
         }
     }
 
-    return snapshot;
+    return {
+        snapshot,
+        crossedThreshold: false,
+    };
+}
+
+const LIVE_PROFIT_THRESHOLD = 0.5;
+const LIVE_LOSS_THRESHOLD = -0.75;
+
+function isExitPnlBeyondThresholds(stockState: StockState): boolean {
+    if (isLiveTrading()) {
+        if (fc.gte(stockState.exitPnLAsPercentage, LIVE_PROFIT_THRESHOLD)) {
+            return true;
+        }
+
+        if (fc.lte(stockState.exitPnLAsPercentage, LIVE_LOSS_THRESHOLD)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function isPastTradingTime(): boolean {
+    const tradingEndTime = getMomentForTime(kTradingEndTime);
+    const currentMomentInNewYork = getCurrentMomentInNewYork();
+
+    const isPastTradingTimeBool = currentMomentInNewYork.isSameOrAfter(tradingEndTime);
+
+    return isPastTradingTimeBool;
 }
 
 function isWideBidAskSpread({bid, ask}: Snapshot, stockState: StockState): boolean {
@@ -238,45 +321,80 @@ async function setNewPosition({
     stockState,
     newPosition,
     snapshot,
-    orderSide,
 }: {
     stock: string;
-    brokerageClient: BrokerageClient;
+    brokerageClient?: BrokerageClient;
     stockState: StockState;
     newPosition: number;
     snapshot: Snapshot;
+}): Promise<{
+    priceSetAt: number;
     orderSide: OrderAction;
-}): Promise<void> {
+}> {
     const previousPosition = stockState.position;
     stockState.position = newPosition;
 
-    const tradingLog: (typeof stockState.tradingLogs)[number] = {
-        action: orderSide,
-        timeStamp: snapshot.timestamp || getCurrentTimeStamp(),
-        price: orderSide === OrderAction.BUY ? snapshot.ask : snapshot.bid,
-        previousPosition,
-        newPosition,
-    };
-    stockState.tradingLogs.push(tradingLog);
+    const orderSide: OrderAction =
+        newPosition > previousPosition ? OrderAction.BUY : OrderAction.SELL;
 
-    if (isLiveTrading()) {
-        await brokerageClient.setSecurityPosition({
-            brokerageIdOfSecurity: stockState.brokerageId,
-            currentPosition: stockState.position * stockState.numContracts,
-            newPosition: newPosition * stockState.numContracts,
-            snapshot,
-        });
+    const quotedPrice = orderSide === OrderAction.BUY ? snapshot.ask : snapshot.bid;
+    let priceSetAt: number = quotedPrice;
+
+    if (brokerageClient) {
+        // priceSetAt = await brokerageClient!.setSecurityPosition({
+        //     brokerageIdOfSecurity: stockState.brokerageId,
+        //     currentPosition: stockState.position * stockState.numContracts,
+        //     newPosition: newPosition * stockState.numContracts,
+        //     snapshot,
+        // });
+
+        const tradingLog: (typeof stockState.tradingLogs)[number] = {
+            action: orderSide,
+            timeStamp: snapshot.timestamp || getCurrentTimeStamp(),
+            quotedPrice,
+            realizedPrice: priceSetAt,
+            previousPosition,
+            newPosition,
+        };
+        stockState.tradingLogs.push(tradingLog);
 
         log(
             `Changed position for ${stock} (${
                 stockState.numContracts
             } constracts): ${jsonPrettyPrint({
-                price: tradingLog.price,
+                quotedPrice: tradingLog.quotedPrice,
+                realizedPrice: tradingLog.realizedPrice,
                 previousPosition: tradingLog.previousPosition,
                 newPosition: tradingLog.newPosition,
             })}`,
         );
+
+        syncWriteJSONFile(getStockStateFilePath(stock, stockState.date), jsonPrettyPrint(stockState));
     }
+
+    return {
+        priceSetAt,
+        orderSide,
+    };
+}
+
+export function reconcileRealizedPnlWhenHistoricalSnapshotsExhausted(
+    stockState: StockState,
+): void {
+    if (stockState.position === 0) {
+        return;
+    }
+
+    const orderSide: OrderAction =
+        stockState.position > 0 ? OrderAction.SELL : OrderAction.BUY;
+
+    const {lastAsk, lastBid} = stockState;
+
+    const priceSetAt = orderSide === OrderAction.BUY ? lastAsk : lastBid;
+
+    const intervalIndicesToExecute = getActiveIntervalIndexesBeforeExit(stockState);
+
+    updateRealizedPnL(stockState, intervalIndicesToExecute, orderSide, priceSetAt);
 }
 
 function updateRealizedPnL(
@@ -330,6 +448,18 @@ function updateRealizedPnL(
             );
         }
     }
+
+    const percentageDenominator = fc.multiply(
+        stockState.targetPosition + stockState.sharesPerInterval,
+        stockState.initialPrice,
+    );
+
+    const realizedPnLAsPercentage = fc.multiply(
+        fc.divide(stockState.realizedPnL, percentageDenominator),
+        100,
+    );
+
+    stockState.realizedPnLAsPercentage = realizedPnLAsPercentage;
 }
 
 function updateSnaphotOnState(stockState: StockState, snapshot: Snapshot): void {
@@ -353,7 +483,10 @@ function updateExitPnL(stockState: StockState): void {
 
     exitPnL = fc.subtract(exitPnL, commissionCosts);
 
-    for (const interval of stockState.intervals) {
+    const activeIntervalIndexes = getActiveIntervalIndexesBeforeExit(stockState);
+
+    for (const activeIntervalIndex of activeIntervalIndexes) {
+        const interval = stockState.intervals[activeIntervalIndex];
         let intervalPnL: number | undefined;
 
         if (interval.type === IntervalType.LONG && interval[OrderAction.SELL].active) {
@@ -379,12 +512,15 @@ function updateExitPnL(stockState: StockState): void {
 
     stockState.exitPnL = exitPnL;
 
-    const percentageDenominator = fc.multiply(stockState.targetPosition + stockState.sharesPerInterval, stockState.initialPrice);
+    const percentageDenominator = fc.multiply(
+        stockState.targetPosition + stockState.sharesPerInterval,
+        stockState.initialPrice,
+    );
 
-    const exitPnLAsPercentage = fc.multiply(fc.divide(
-        exitPnL,
-        percentageDenominator,
-    ), 100);
+    const exitPnLAsPercentage = fc.multiply(
+        fc.divide(exitPnL, percentageDenominator),
+        100,
+    );
 
     stockState.exitPnLAsPercentage = exitPnLAsPercentage;
 
@@ -397,6 +533,22 @@ function updateExitPnL(stockState: StockState): void {
     }
 
     // Here the cpp version is different, because it has the reched_when losses...
+}
+
+function getActiveIntervalIndexesBeforeExit(stockState: StockState): number[] {
+    const indexes: number[] = [];
+
+    for (const [index, interval] of stockState.intervals.entries()) {
+        if (interval.type === IntervalType.LONG && interval[OrderAction.SELL].active) {
+            indexes.push(index);
+        }
+
+        if (interval.type === IntervalType.SHORT && interval[OrderAction.BUY].active) {
+            indexes.push(index);
+        }
+    }
+
+    return indexes;
 }
 
 function correctBadBuyIfRequired(

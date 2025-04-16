@@ -4,26 +4,23 @@ import {setTimeout} from 'node:timers/promises';
 import {log} from './log';
 import {isLiveTrading} from './price-simulator';
 
-export const MARKET_OPENS = '9:40:00am';
-export const MARKET_CLOSES = '3:50:00pm';
+const kTradingStartTime = '10:57:00am';
+export const kTradingEndTime = '3:45:00pm';
+const kMarketCloseTime = '4:00:00pm';
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 const TIME_FORMAT = 'hh:mm:ssa';
 const MARKET_TIMEZONE = 'America/New_York';
 
-export async function isMarketOpen(stock = ''): Promise<boolean> {
-    if (!isLiveTrading()) {
-        return true;
-    }
-
-    const marketOpens = getMomentForTime(MARKET_OPENS);
-    const marketCloses = getMomentForTime(MARKET_CLOSES);
+export async function isTimeToTrade(stock = ''): Promise<boolean> {
+    const startTime = getMomentForTime(kTradingStartTime);
+    const marketCloses = getMomentForTime(kMarketCloseTime);
     const currentMomentInNewYork = getCurrentMomentInNewYork();
 
-    if (currentMomentInNewYork.isBefore(marketOpens)) {
-        const timeUntilMarketOpens = marketOpens.diff(currentMomentInNewYork);
+    if (currentMomentInNewYork.isBefore(startTime)) {
+        const timeUntilMarketOpens = startTime.diff(currentMomentInNewYork);
         log(
-            `Market is not open today yet. Will trade ${stock} in about ${moment
+            `Not yet time to trade. Will trade ${stock} in about ${moment
                 .duration(timeUntilMarketOpens)
                 .humanize()}.`,
         );
@@ -31,7 +28,7 @@ export async function isMarketOpen(stock = ''): Promise<boolean> {
         return true;
     }
 
-    if (currentMomentInNewYork.isBetween(marketOpens, marketCloses)) {
+    if (currentMomentInNewYork.isBetween(startTime, marketCloses)) {
         return true;
     }
 
@@ -46,11 +43,11 @@ export async function isMarketOpen(stock = ''): Promise<boolean> {
     return false;
 }
 
-function getMomentForTime(time: string): moment.Moment {
+export function getMomentForTime(time: string): moment.Moment {
     return moment(time, TIME_FORMAT);
 }
 
-function getCurrentMomentInNewYork(): moment.Moment {
+export function getCurrentMomentInNewYork(): moment.Moment {
     return moment(moment().tz(MARKET_TIMEZONE).format(TIME_FORMAT), TIME_FORMAT);
 }
 

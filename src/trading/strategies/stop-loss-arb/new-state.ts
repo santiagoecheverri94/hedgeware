@@ -1,19 +1,7 @@
 import {FloatCalculator as fc} from '../../../utils/float-calculator';
-import {
-    jsonPrettyPrint,
-    readJSONFile,
-    syncWriteJSONFile,
-} from '../../../utils/file';
+import {jsonPrettyPrint, readJSONFile, syncWriteJSONFile} from '../../../utils/file';
 import {IntervalType, SmoothingInterval, StockState} from './types';
 import {getStockStateFilePath} from './state';
-
-export async function createNewStockStateFromExisting(stock: string): Promise<void> {
-    const filePath = getStockStateFilePath(`${stock}`);
-    const partialStockState = await readJSONFile<StockState>(filePath);
-    const newState = getFullStockState(partialStockState);
-
-    syncWriteJSONFile(getStockStateFilePath(`${stock}`), jsonPrettyPrint(newState));
-}
 
 export function getFullStockState(partial: StockState): StockState {
     const longIntervals: SmoothingInterval[] =
@@ -24,6 +12,7 @@ export function getFullStockState(partial: StockState): StockState {
 
     const newState: StockState = {
         date: partial.date,
+        prediction: partial.prediction,
         brokerageId: partial.brokerageId,
         brokerageTradingCostPerShare: partial.brokerageTradingCostPerShare,
         targetPosition: partial.targetPosition,
@@ -38,6 +27,7 @@ export function getFullStockState(partial: StockState): StockState {
         lastAsk: 0,
         lastBid: 0,
         realizedPnL: 0,
+        realizedPnLAsPercentage: 0,
         exitPnL: 0,
         exitPnLAsPercentage: 0,
         maxMovingProfitAsPercentage: 0,

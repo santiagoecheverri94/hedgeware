@@ -3,13 +3,11 @@ import {getSimulatedSnapshot, isLiveTrading} from '../../utils/price-simulator';
 import {OrdersResponse} from './IBKR/types';
 
 export abstract class BrokerageClient {
-    protected abstract snapshotFields: { [field in SnapShotFields]: string };
-
-    abstract getSnapshot(stock: string, brokerageIdOfSecurity: string): Promise<Snapshot>;
+    abstract getSnapshot(stock: string): Promise<Snapshot>;
+    abstract getSnapshots(stocks: string[]): Promise<Record<string, Snapshot>>;
+    abstract getShortableQuantities(stocks: string[]): Promise<Record<string, number>>;
     abstract placeOrder(orderDetails: OrderDetails): Promise<number>;
-    abstract modifyOrder(orderId: string, orderDetails: OrderDetails): Promise<number>;
     abstract getOrderStatus(orderId: number): Promise<OrderStatus>;
-    abstract getPositionSize(brokerageIdOfSecurity: string): Promise<number>;
 
     async setSecurityPosition({
         brokerageIdOfSecurity,
@@ -21,7 +19,7 @@ export abstract class BrokerageClient {
         currentPosition: number;
         newPosition: number;
         snapshot: Snapshot;
-    }): Promise<void> {
+    }): Promise<number> {
         return setSecurityPosition({
             brokerageClient: this,
             brokerageIdOfSecurity,

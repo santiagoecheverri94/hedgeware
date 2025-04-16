@@ -24,6 +24,7 @@ export enum IntervalType {
 
 export interface StockState {
     date: string;
+    prediction?: number;
     isStaticIntervals: boolean;
     brokerageId: string;
     brokerageTradingCostPerShare: number;
@@ -36,6 +37,7 @@ export interface StockState {
     position: number;
     targetPosition: number;
     realizedPnL: number;
+    realizedPnLAsPercentage: number;
     exitPnL: number;
     exitPnLAsPercentage: number;
     maxMovingProfitAsPercentage: number;
@@ -46,12 +48,13 @@ export interface StockState {
     tradingLogs: {
         timeStamp: string;
         action: OrderAction;
-        price: number;
+        quotedPrice: number;
+        realizedPrice: number;
         previousPosition: number;
         newPosition: number;
     }[];
     historicalSnapshots?: {
-            data: Snapshot[];
-            index: number;
-        };
+        data: Snapshot[];
+        index: number;
+    };
 }
