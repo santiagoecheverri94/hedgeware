@@ -1,0 +1,329 @@
+{
+  "date": "2025-04-24",
+  "prediction": 0.7347444295883179,
+  "brokerageId": "RGTI",
+  "brokerageTradingCostPerShare": 0,
+  "targetPosition": 100,
+  "sharesPerInterval": 25,
+  "spaceBetweenIntervals": 0.04,
+  "intervalProfit": 0.02,
+  "numContracts": 4,
+  "initialPrice": 9.36,
+  "shiftIntervalsFromInitialPrice": 0,
+  "isStaticIntervals": false,
+  "position": 0,
+  "lastAsk": 9.3,
+  "lastBid": 9.29,
+  "realizedPnL": -4.25,
+  "realizedPnLAsPercentage": -0.36324786324786323,
+  "exitPnL": -9.75,
+  "exitPnLAsPercentage": -0.8333333333333333,
+  "maxMovingProfitAsPercentage": 0.4273504273504274,
+  "maxMovingLossAsPercentage": -0.8333333333333333,
+  "intervals": [
+    {
+      "type": "LONG",
+      "positionLimit": 125,
+      "SELL": {
+        "price": 9.4,
+        "active": false,
+        "crossed": false,
+        "boughtAtPrice": 9.42
+      },
+      "BUY": {
+        "price": 9.38,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 100,
+      "SELL": {
+        "price": 9.36,
+        "active": false,
+        "crossed": false,
+        "boughtAtPrice": 9.34
+      },
+      "BUY": {
+        "price": 9.34,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 75,
+      "SELL": {
+        "price": 9.32,
+        "active": false,
+        "crossed": false,
+        "boughtAtPrice": 9.39
+      },
+      "BUY": {
+        "price": 9.3,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 50,
+      "SELL": {
+        "price": 9.28,
+        "active": true,
+        "crossed": true,
+        "boughtAtPrice": 9.42
+      },
+      "BUY": {
+        "price": 9.26,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 25,
+      "SELL": {
+        "price": 9.24,
+        "active": true,
+        "crossed": true,
+        "boughtAtPrice": 9.38
+      },
+      "BUY": {
+        "price": 9.22,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -25,
+      "SELL": {
+        "price": 9.18,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 9.16,
+        "active": false,
+        "crossed": false,
+        "soldAtPrice": 9.34
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -50,
+      "SELL": {
+        "price": 9.14,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 9.12,
+        "active": false,
+        "crossed": false,
+        "soldAtPrice": null
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -75,
+      "SELL": {
+        "price": 9.1,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 9.08,
+        "active": false,
+        "crossed": false,
+        "soldAtPrice": null
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -100,
+      "SELL": {
+        "price": 9.06,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 9.04,
+        "active": false,
+        "crossed": false,
+        "soldAtPrice": null
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -125,
+      "SELL": {
+        "price": 9.02,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 9,
+        "active": false,
+        "crossed": false,
+        "soldAtPrice": null
+      }
+    }
+  ],
+  "tradingLogs": [
+    {
+      "action": "BUY",
+      "timeStamp": "2025-04-24 at 10:58:04am ET",
+      "quotedPrice": 9.38,
+      "realizedPrice": 9.38,
+      "previousPosition": 0,
+      "newPosition": 25
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-04-24 at 10:59:02am ET",
+      "quotedPrice": 9.34,
+      "realizedPrice": 9.34,
+      "previousPosition": 25,
+      "newPosition": 0
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-04-24 at 11:00:58am ET",
+      "quotedPrice": 9.38,
+      "realizedPrice": 9.38,
+      "previousPosition": 0,
+      "newPosition": 25
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-04-24 at 11:02:54am ET",
+      "quotedPrice": 9.42,
+      "realizedPrice": 9.42,
+      "previousPosition": 25,
+      "newPosition": 50
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-04-24 at 11:03:23am ET",
+      "quotedPrice": 9.4,
+      "realizedPrice": 9.4,
+      "previousPosition": 50,
+      "newPosition": 25
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-04-24 at 11:03:52am ET",
+      "quotedPrice": 9.42,
+      "realizedPrice": 9.42,
+      "previousPosition": 25,
+      "newPosition": 50
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-04-24 at 11:07:44am ET",
+      "quotedPrice": 9.46,
+      "realizedPrice": 9.46,
+      "previousPosition": 50,
+      "newPosition": 75
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-04-24 at 11:09:11am ET",
+      "quotedPrice": 9.44,
+      "realizedPrice": 9.44,
+      "previousPosition": 75,
+      "newPosition": 50
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-04-24 at 11:11:36am ET",
+      "quotedPrice": 9.42,
+      "realizedPrice": 9.42,
+      "previousPosition": 50,
+      "newPosition": 75
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-04-24 at 11:12:34am ET",
+      "quotedPrice": 9.4,
+      "realizedPrice": 9.4,
+      "previousPosition": 75,
+      "newPosition": 50
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-04-24 at 11:14:01am ET",
+      "quotedPrice": 9.39,
+      "realizedPrice": 9.39,
+      "previousPosition": 50,
+      "newPosition": 75
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-04-24 at 11:14:30am ET",
+      "quotedPrice": 9.43,
+      "realizedPrice": 9.43,
+      "previousPosition": 75,
+      "newPosition": 100
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-04-24 at 11:14:59am ET",
+      "quotedPrice": 9.4,
+      "realizedPrice": 9.4,
+      "previousPosition": 100,
+      "newPosition": 75
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-04-24 at 11:15:57am ET",
+      "quotedPrice": 9.42,
+      "realizedPrice": 9.42,
+      "previousPosition": 75,
+      "newPosition": 100
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-04-24 at 11:16:27am ET",
+      "quotedPrice": 9.39,
+      "realizedPrice": 9.39,
+      "previousPosition": 100,
+      "newPosition": 75
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-04-24 at 11:19:21am ET",
+      "quotedPrice": 9.32,
+      "realizedPrice": 9.32,
+      "previousPosition": 75,
+      "newPosition": 50
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-04-24 at 11:20:18am ET",
+      "quotedPrice": 9.34,
+      "realizedPrice": 9.34,
+      "previousPosition": 50,
+      "newPosition": 75
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-04-24 at 11:21:45am ET",
+      "quotedPrice": 9.32,
+      "realizedPrice": 9.32,
+      "previousPosition": 75,
+      "newPosition": 50
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-04-24 at 11:31:30am ET",
+      "quotedPrice": 9.29,
+      "realizedPrice": 9.29,
+      "previousPosition": 50,
+      "newPosition": 0
+    }
+  ]
+}

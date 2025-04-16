@@ -5,7 +5,14 @@ import {FloatCalculator as fc} from './float-calculator';
 import path from 'node:path';
 
 export function isLiveTrading(): boolean {
-    return !isRandomSnapshot() && !isHistoricalSnapshot();
+    const isSimulation = isRandomSnapshot() || isHistoricalSnapshot();
+    const isLiveTradingSet = Boolean(process.env.LIVE_TRADING);
+
+    if (!isSimulation && !isLiveTradingSet) {
+        throw new Error('Neither simulation nor live trading is set. Please set one of them.');
+    }
+
+    return !isSimulation && isLiveTradingSet;
 }
 
 export function isRandomSnapshot(): boolean {

@@ -1,5 +1,5 @@
-import {readJSONFile} from '../../../utils/file';
-import {FloatCalculator as fc} from '../../../utils/float-calculator';
+import { readJSONFile } from "../../../utils/file";
+import { FloatCalculator as fc } from "../../../utils/float-calculator";
 import {
     isLiveTrading,
     isHistoricalSnapshot,
@@ -7,23 +7,29 @@ import {
     isRandomSnapshot,
     deleteHistoricalSnapshots,
     isHistoricalCppSnapshot,
-} from '../../../utils/price-simulator';
-import {isMarketOpen} from '../../../utils/time';
-import {IBKRClient} from '../../brokerage-clients/IBKR/client';
-import {BrokerageClient} from '../../brokerage-clients/brokerage-client';
-import {reconcileStockPosition} from './algo';
-import {debugRandomPrices, printPnLValues} from './debug';
-import {getStocksFileNames, getStockStates, getHistoricalStockStates} from './state';
-import {StockState} from './types';
-import {setTimeout} from 'node:timers/promises';
-
-const brokerageClient = new IBKRClient();
+} from "../../../utils/price-simulator";
+import { isTimeToTrade } from "../../../utils/time";
+import { SchwabClient } from "../../brokerage-clients/Schwab/client";
+import { BrokerageClient } from "../../brokerage-clients/brokerage-client";
+import {
+    reconcileRealizedPnlWhenHistoricalSnapshotsExhausted,
+    reconcileStockPosition,
+} from "./algo";
+import { debugRandomPrices, printPnLValues } from "./debug";
+import {
+    getStocksFileNames,
+    getStockStates,
+    getHistoricalStockStates,
+    writeLiveStockStates,
+} from "./state";
+import { StockState } from "./types";
+import { setTimeout } from "node:timers/promises";
 
 export async function startStopLossArb(): Promise<void> {
     if (isHistoricalSnapshot()) {
         if (isHistoricalCppSnapshot()) {
-            const datesArrayCppPartitions = await getDatesArrayCppPartitions();
-            // const datesArrayCppPartitions = [['2025-03-21']];
+            // const datesArrayCppPartitions = await getDatesArrayCppPartitions();
+            const datesArrayCppPartitions = [["2025-03-21"]];
 
             for (const dates of datesArrayCppPartitions) {
                 // We pass the dates to C++ in buckets to be run in parallel
@@ -31,24 +37,47 @@ export async function startStopLossArb(): Promise<void> {
                 await runHistoricalDatesOnCpp(dates);
             }
         } else {
-            const dates = ['2025-03-21'];
+            const dates = ["2025-03-21"];
 
             for (const date of dates) {
                 // We pass the dates sequentially when we stay in NodeJS
                 const states = await getHistoricalStockStates(date);
-                await startStopLossArbNode(states);
+                await startStopLossArbNode(states, date);
             }
         }
     } else {
-        const stocks = await getStocksFileNames();
-        const states = await getStockStates(stocks);
+        const today = getTodayDate();
 
-        await startStopLossArbNode(states);
+        let brokerageClient: SchwabClient | undefined;
+        if (isLiveTrading()) {
+            await isTimeToTrade();
+
+            brokerageClient = new SchwabClient();
+            await brokerageClient.authenticate();
+            await writeLiveStockStates(today, brokerageClient);
+        }
+
+        const stocks = await getStocksFileNames(today);
+        const states = await getStockStates(stocks, today);
+
+        await startStopLossArbNode(states, today, brokerageClient);
     }
 }
 
+function getTodayDate(): string {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    const todaysDate = `${yyyy}-${mm}-${dd}`;
+
+    return todaysDate;
+}
+
 async function getDatesArrayCppPartitions(): Promise<string[][]> {
-    const datesArray = await readJSONFile<string[][]>(`${process.cwd()}\\..\\deephedge\\historical-data\\cpp_historical_partitions.json`);
+    const datesArray = await readJSONFile<string[][]>(
+        `${process.cwd()}\\..\\deephedge\\historical-data\\cpp_historical_partitions.json`
+    );
 
     return datesArray;
 }
@@ -65,15 +94,12 @@ async function runHistoricalDatesOnCpp(dates: string[]): Promise<void> {
 }
 
 async function startStopLossArbNode(
-    states: { [stock: string]: StockState },
-): Promise<void> {
-    // let userHasInterrupted = false;
-    // if (isLiveTrading()) {
-    //   onUserInterrupt(() => {
-    //     userHasInterrupted = true;
-    //   });
-    // }
-
+    states: {
+        [stock: string]: StockState;
+    },
+    date: string,
+    brokerageClient?: BrokerageClient
+): Promise<boolean> {
     const waitingForStocksToBeHedged: Promise<void>[] = [];
 
     let startTime = 0;
@@ -85,7 +111,7 @@ async function startStopLossArbNode(
 
     for (const stock of stocks) {
         waitingForStocksToBeHedged.push(
-            hedgeStockWhileMarketIsOpen(stock, states, brokerageClient),
+            hedgeStockWhileMarketIsOpen(stock, states, date, brokerageClient)
         );
     }
 
@@ -97,74 +123,62 @@ async function startStopLossArbNode(
         timeInSeconds = (endTime - startTime) / 1000;
     }
 
-    for (const stock of stocks) {
-        printPnLValues(stock, states[stock]);
-    }
-
     if (isHistoricalSnapshot()) {
+        for (const stock of stocks) {
+            printPnLValues(stock, states[stock]);
+        }
+
         console.log(`Hedging completed in ${timeInSeconds.toFixed(4)} seconds\n`);
     }
+
+    return true;
 }
 
-const addon = require('bindings')('deephedge');
+const addon = require("bindings")("deephedge");
+
+const kHedgingInterval = 29 * 1e3;
 
 async function hedgeStockWhileMarketIsOpen(
     stock: string,
     states: { [stock: string]: StockState },
-    brokerageClient: BrokerageClient,
+    date: string,
+    brokerageClient?: BrokerageClient
 ) {
     const originalStates = structuredClone(states);
 
-    while (await isMarketOpen(stock)) {
+    while (true) {
         const stockState = states[stock];
 
-        const snapshot = await reconcileStockPosition(
-            stock,
-            stockState,
-            brokerageClient,
-        );
-
-        if (isLiveTrading() || isHistoricalSnapshot()) {
-            if (
-                isExitPnlBeyondThresholds(stockState) ||
-                isHistoricalSnapshotsExhausted(stockState)
-            ) {
-                if (isHistoricalSnapshot()) {
-                    deleteHistoricalSnapshots(stockState);
-                }
-
-                // syncWriteJSONFile(
-                //     getStockStateFilePath(stock),
-                //     jsonPrettyPrint(stockState),
-                // );
-
-                break;
-            }
+        let hedingIntervalTimer: Promise<void>;
+        if (isLiveTrading()) {
+            hedingIntervalTimer = setTimeout(kHedgingInterval);
         }
 
+        // TODO: need to figure out how to deal with re-authentication issues
+        const { snapshot, crossedThreshold } = await reconcileStockPosition(
+            stock,
+            stockState,
+            date,
+            brokerageClient
+        );
+
         if (isLiveTrading()) {
-            await setTimeout(1000);
+            if (crossedThreshold) {
+                printPnLValues(stock, stockState);
+                break;
+            }
+
+            await hedingIntervalTimer!;
+        }
+
+        if (isHistoricalSnapshot() && isHistoricalSnapshotsExhausted(stockState)) {
+            reconcileRealizedPnlWhenHistoricalSnapshotsExhausted(stockState);
+            deleteHistoricalSnapshots(stockState);
+            break;
         }
 
         if (isRandomSnapshot()) {
             debugRandomPrices(snapshot, stock, states, originalStates);
         }
     }
-}
-
-const LIVE_PROFIT_THRESHOLD = 0.5;
-const LIVE_LOSS_THRESHOLD = -0.75;
-
-function isExitPnlBeyondThresholds(stockState: StockState): boolean {
-    if (isLiveTrading()) {
-        if (fc.gte(stockState.exitPnLAsPercentage, LIVE_PROFIT_THRESHOLD)) {
-            return true;
-        }
-
-        if (fc.lte(stockState.exitPnLAsPercentage, LIVE_LOSS_THRESHOLD)) {
-            return true;
-        }
-    }
-
-    return false;
 }
