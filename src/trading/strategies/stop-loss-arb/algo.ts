@@ -338,7 +338,7 @@ async function setNewPosition({
         newPosition > previousPosition ? OrderAction.BUY : OrderAction.SELL;
 
     const quotedPrice = orderSide === OrderAction.BUY ? snapshot.ask : snapshot.bid;
-    let priceSetAt: number = quotedPrice;
+    const priceSetAt: number = quotedPrice;
 
     if (brokerageClient) {
         // priceSetAt = await brokerageClient!.setSecurityPosition({

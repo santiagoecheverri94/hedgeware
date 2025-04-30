@@ -1,5 +1,5 @@
-import { readJSONFile } from "../../../utils/file";
-import { FloatCalculator as fc } from "../../../utils/float-calculator";
+import {readJSONFile} from '../../../utils/file';
+import {FloatCalculator as fc} from '../../../utils/float-calculator';
 import {
     isLiveTrading,
     isHistoricalSnapshot,
@@ -7,29 +7,29 @@ import {
     isRandomSnapshot,
     deleteHistoricalSnapshots,
     isHistoricalCppSnapshot,
-} from "../../../utils/price-simulator";
-import { isTimeToTrade } from "../../../utils/time";
-import { SchwabClient } from "../../brokerage-clients/Schwab/client";
-import { BrokerageClient } from "../../brokerage-clients/brokerage-client";
+} from '../../../utils/price-simulator';
+import {isTimeToTrade} from '../../../utils/time';
+import {SchwabClient} from '../../brokerage-clients/Schwab/client';
+import {BrokerageClient} from '../../brokerage-clients/brokerage-client';
 import {
     reconcileRealizedPnlWhenHistoricalSnapshotsExhausted,
     reconcileStockPosition,
-} from "./algo";
-import { debugRandomPrices, printPnLValues } from "./debug";
+} from './algo';
+import {debugRandomPrices, printPnLValues} from './debug';
 import {
     getStocksFileNames,
     getStockStates,
     getHistoricalStockStates,
     writeLiveStockStates,
-} from "./state";
-import { StockState } from "./types";
-import { setTimeout } from "node:timers/promises";
+} from './state';
+import {StockState} from './types';
+import {setTimeout} from 'node:timers/promises';
 
 export async function startStopLossArb(): Promise<void> {
     if (isHistoricalSnapshot()) {
         if (isHistoricalCppSnapshot()) {
             // const datesArrayCppPartitions = await getDatesArrayCppPartitions();
-            const datesArrayCppPartitions = [["2025-03-21"]];
+            const datesArrayCppPartitions = [['2025-03-21']];
 
             for (const dates of datesArrayCppPartitions) {
                 // We pass the dates to C++ in buckets to be run in parallel
@@ -37,7 +37,7 @@ export async function startStopLossArb(): Promise<void> {
                 await runHistoricalDatesOnCpp(dates);
             }
         } else {
-            const dates = ["2025-03-21"];
+            const dates = ['2025-03-21'];
 
             for (const date of dates) {
                 // We pass the dates sequentially when we stay in NodeJS
@@ -67,8 +67,8 @@ export async function startStopLossArb(): Promise<void> {
 function getTodayDate(): string {
     const today = new Date();
     const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const dd = String(today.getDate()).padStart(2, "0");
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
     const todaysDate = `${yyyy}-${mm}-${dd}`;
 
     return todaysDate;
@@ -76,7 +76,7 @@ function getTodayDate(): string {
 
 async function getDatesArrayCppPartitions(): Promise<string[][]> {
     const datesArray = await readJSONFile<string[][]>(
-        `${process.cwd()}\\..\\deephedge\\historical-data\\cpp_historical_partitions.json`
+        `${process.cwd()}\\..\\deephedge\\historical-data\\cpp_historical_partitions.json`,
     );
 
     return datesArray;
@@ -98,7 +98,7 @@ async function startStopLossArbNode(
         [stock: string]: StockState;
     },
     date: string,
-    brokerageClient?: BrokerageClient
+    brokerageClient?: BrokerageClient,
 ): Promise<boolean> {
     const waitingForStocksToBeHedged: Promise<void>[] = [];
 
@@ -111,7 +111,7 @@ async function startStopLossArbNode(
 
     for (const stock of stocks) {
         waitingForStocksToBeHedged.push(
-            hedgeStockWhileMarketIsOpen(stock, states, date, brokerageClient)
+            hedgeStockWhileMarketIsOpen(stock, states, date, brokerageClient),
         );
     }
 
@@ -134,7 +134,7 @@ async function startStopLossArbNode(
     return true;
 }
 
-const addon = require("bindings")("deephedge");
+const addon = require('bindings')('deephedge');
 
 const kHedgingInterval = 29 * 1e3;
 
@@ -142,7 +142,7 @@ async function hedgeStockWhileMarketIsOpen(
     stock: string,
     states: { [stock: string]: StockState },
     date: string,
-    brokerageClient?: BrokerageClient
+    brokerageClient?: BrokerageClient,
 ) {
     const originalStates = structuredClone(states);
 
@@ -155,11 +155,11 @@ async function hedgeStockWhileMarketIsOpen(
         }
 
         // TODO: need to figure out how to deal with re-authentication issues
-        const { snapshot, crossedThreshold } = await reconcileStockPosition(
+        const {snapshot, crossedThreshold} = await reconcileStockPosition(
             stock,
             stockState,
             date,
-            brokerageClient
+            brokerageClient,
         );
 
         if (isLiveTrading()) {
