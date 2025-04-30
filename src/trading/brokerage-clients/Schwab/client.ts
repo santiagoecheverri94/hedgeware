@@ -5,7 +5,7 @@ import {
     Snapshot,
 } from '../brokerage-client';
 import {getAccessToken} from './auth';
-import { setTimeout } from "node:timers/promises";
+import {setTimeout} from 'node:timers/promises';
 
 enum GetEndpoints {
     quotes = 'marketdata/v1/quotes',
@@ -61,7 +61,7 @@ export class SchwabClient extends BrokerageClient {
                 ask: item.quote.askPrice,
                 bid: item.quote.bidPrice,
                 timestamp: '',
-            }
+            };
 
             snapshots[symbol] = snapshot;
         }

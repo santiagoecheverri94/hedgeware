@@ -115,7 +115,7 @@ export async function writeLiveStockStates(
         await fs.access(targetFolder);
         return;
     } catch {
-        await fs.mkdir(targetFolder, { recursive: false });
+        await fs.mkdir(targetFolder, {recursive: false});
     }
 
     const potentialTickerProbs = await getPotentialTickerProbs(date);
@@ -133,7 +133,6 @@ export async function writeLiveStockStates(
         const shortableQuantity = shortableQuantities[ticker];
         const snapshot = snapshots[ticker];
 
-
         if (shortableQuantity >= 500_000) {
             const stockState = getIteration1State(
                 date,
@@ -143,7 +142,7 @@ export async function writeLiveStockStates(
             );
 
             syncWriteJSONFile(getStockStateFilePath(ticker, date), jsonPrettyPrint(stockState));
-            
+
             numLiveTickers++;
             if (numLiveTickers >= 8) {
                 break;
