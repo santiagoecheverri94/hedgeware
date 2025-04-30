@@ -1,28 +1,17 @@
-import {
-    getFileNamesWithinFolder,
-    jsonPrettyPrint,
-    readJSONFile,
-    syncWriteJSONFile,
-} from '../../../utils/file';
-import {FloatCalculator as fc} from '../../../utils/float-calculator';
-import {log} from '../../../utils/log';
-import {isLiveTrading} from '../../../utils/price-simulator';
-import {getCurrentTimeStamp} from '../../../utils/time';
-import {
-    BrokerageClient,
-    OrderAction,
-    Snapshot,
-} from '../../brokerage-clients/brokerage-client';
+import {getFileNamesWithinFolder, readJSONFile} from '../../../utils/file';
+import {isHistoricalCppSnapshot, isLiveTrading} from '../../../utils/price-simulator';
 import {StockState} from './types';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import {getFullStockState} from './new-state';
+import {FloatCalculator as fc} from '../../../utils/float-calculator';
 
 export async function getStocksFileNames(filterUnderscores = true): Promise<string[]> {
     let fileNames = await getFileNamesWithinFolder(getStockStatesFolderPath());
 
     fileNames = fileNames.filter(
         fileName =>
-            !['results', 'templates', 'historical'].some(excludedFileName =>
-                fileName.includes(excludedFileName),
-            ),
+            ![].some(excludedFileName => fileName.includes(excludedFileName)),
     );
 
     if (filterUnderscores) {
@@ -51,85 +40,49 @@ export async function getStockStates(
     return states;
 }
 
+export async function getHistoricalCppStockStates(
+    date:string,
+): Promise<{ [stock: string]: StockState }> {
+    const year = date.split('-')[0];
+    const month = date.split('-')[1];
+
+    const cwd = process.cwd();
+    const dir = path.join(cwd, '..', 'deephedge', 'historical-data-80', year, month, date);
+
+    const files = await fs.readdir(dir);
+    const jsonFiles = files.filter(file => file.endsWith('.json'));
+
+    const stockStates: { [stock: string]: StockState } = {};
+    for (const file of jsonFiles) {
+        const filePath = path.join(dir, file);
+
+        let stock_file_data: any;
+        try {
+            stock_file_data = await readJSONFile(filePath);
+        } catch (error) {
+            console.error(`\nError reading file ${filePath}\n`);
+            throw error;
+        }
+
+        const stockState = getFullStockState({
+            date,
+            brokerageId: stock_file_data.ticker,
+            brokerageTradingCostPerShare: 0, // 0.004,
+            numContracts: 1,
+            initialPrice: stock_file_data.snapshots[0].ask,
+            shiftIntervalsFromInitialPrice: 0,
+            targetPosition: 100,
+            sharesPerInterval: 25,
+            spaceBetweenIntervals: fc.multiply(0.02, 2),
+            intervalProfit: 0.02,
+        } as unknown as StockState);
+
+        stockStates[stock_file_data.ticker] = stockState;
+    }
+
+    return stockStates;
+}
+
 export function getStockStateFilePath(stock: string): string {
     return `${getStockStatesFolderPath()}\\${stock}.json`;
-}
-
-export async function setNewPosition({
-    stock,
-    brokerageClient,
-    stockState,
-    newPosition,
-    snapshot,
-    orderSide,
-}: {
-    stock: string;
-    brokerageClient: BrokerageClient;
-    stockState: StockState;
-    newPosition: number;
-    snapshot: Snapshot;
-    orderSide: OrderAction;
-}): Promise<void> {
-    await brokerageClient.setSecurityPosition({
-        brokerageIdOfSecurity: stockState.brokerageId,
-        currentPosition: stockState.position * stockState.numContracts,
-        newPosition: newPosition * stockState.numContracts,
-        snapshot,
-    });
-
-    const previousPosition = stockState.position;
-    stockState.position = newPosition;
-
-    doSnapShotChangeUpdates(stock, stockState, snapshot);
-
-    const tradingLog: (typeof stockState.tradingLogs)[number] = {
-        action: orderSide,
-        timeStamp: snapshot.timestamp || getCurrentTimeStamp(),
-        price: orderSide === OrderAction.BUY ? snapshot.ask : snapshot.bid,
-        previousPosition,
-        newPosition,
-        tradingCosts: stockState.tradingCosts,
-    };
-    stockState.tradingLogs.push(tradingLog);
-
-    log(
-        `Changed position for ${stock} (${
-            stockState.numContracts
-        } constracts): ${jsonPrettyPrint({
-            price: tradingLog.price,
-            previousPosition: tradingLog.previousPosition,
-            newPosition: tradingLog.newPosition,
-        })}`,
-    );
-}
-
-export function isSnapshotChange(snapshot: Snapshot, stockState: StockState): boolean {
-    if (!stockState.lastAsk || !stockState.lastBid) {
-        return true;
-    }
-
-    return (
-        !fc.eq(stockState.lastAsk, snapshot.ask) ||
-        !fc.eq(stockState.lastBid, snapshot.bid)
-    );
-}
-
-export function doSnapShotChangeUpdates(
-    stock: string,
-    stockState: StockState,
-    snapshot: Snapshot,
-): void {
-    stockState.lastAsk = snapshot.ask;
-    stockState.lastBid = snapshot.bid;
-
-    if (isLiveTrading()) {
-        syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
-    }
-}
-
-export function isWideBidAskSpread(
-    {bid, ask}: Snapshot,
-    stockState: StockState,
-): boolean {
-    return fc.gt(fc.subtract(ask, bid), stockState.intervalProfit) === 1;
 }

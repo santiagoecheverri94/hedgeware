@@ -1,20 +1,8 @@
 import {restClient, IQuotes} from '@polygon.io/client-js';
-import {getNanoSecondsEpochTimestampForDateAndTimeInNewYork, getSecondsFromNanoSecondsTimestamp, getTimestampForDateAndTimeInNewYorkFromNanoSecondsEpochTimestamp, getWeekdaysInRange, MARKET_CLOSES, MARKET_OPENS} from '../utils/time';
+import {getNanoSecondsEpochTimestampForDateAndTimeInNewYork, getSecondsFromNanoSecondsTimestamp, getTimestampForDateAndTimeInNewYorkFromNanoSecondsEpochTimestamp, MARKET_CLOSES, MARKET_OPENS} from '../utils/time';
 import {Snapshot} from '../trading/brokerage-clients/brokerage-client';
 import {syncWriteJSONFile} from '../utils/file';
 import {existsSync, mkdirSync} from 'node:fs';
-import {setTimeout} from 'node:timers/promises';
-
-export async function saveStockHistoricalDailyDataForStockFromStartToEndDate(stock: string, startDate: string, endDate: string): Promise<void> {
-    const requests: Promise<void>[] = [];
-    const dateRange = getWeekdaysInRange(startDate, endDate);
-    for (const date of dateRange) {
-        await setTimeout(500);
-        requests.push(saveStockHistoricalDataForStockOnDate(stock, date));
-    }
-
-    await Promise.all(requests);
-}
 
 export async function saveStockHistoricalDataForStockOnDate(stock: string, date: string): Promise<void> {
     const polygonQuotes = await getPolygonQuotesForDate(stock, date);
@@ -76,7 +64,7 @@ export function getFilePathForStockDataOnDate(stock: string, date: string): stri
 }
 
 function getFolderPathForStockData(stock: string): string {
-    const path = `${process.cwd()}\\src\\historical-data\\${stock}`;
+    const path = `${process.cwd()}\\..\\deephedge\\historical-data-80\\${stock}`;
 
     if (!existsSync(path)) {
         mkdirSync(path);

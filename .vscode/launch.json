@@ -1,15 +1,49 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-      {
-          "type": "node",
-          "request": "launch",
-          "name": "Execute Command",
-          "skipFiles": [
-              "<node_internals>/**"
-          ],
-          "program": "${workspaceFolder}/bin/dev",
-          "args": [],
-      }
-  ]
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "node cpp debug",
+            "type": "cppvsdbg",
+            "request": "launch",
+            // "preLaunchTask": "node-gyp rebuild",
+            "program": "C:\\Program Files\\nodejs\\node.exe",
+            "args": [
+                // "--inspect-brk",
+                "C:\\Users\\santi\\Documents\\trading\\hedgeware\\bin\\dev.js",
+                // "C:\\Users\\santi\\Documents\\trading\\hedgeware\\bin\\run.js",
+                "stop-loss-arb"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                // {
+                //     "name": "RANDOM_SNAPSHOT",
+                //     "value": "true"
+                // },
+                {
+                    "name": "HISTORICAL_SNAPSHOT",
+                    "value": "true"
+                },
+                {
+                    "name": "CPP_NODE_ADDON",
+                    "value": "true"
+                }
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "node attach debug",
+            "type": "node",
+            "request": "attach",
+            "port": 9229,
+            "address": "127.0.0.1",
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "${workspaceFolder}",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "continueOnAttach": true,
+            "restart": true
+        }
+    ]
 }
