@@ -1,8 +1,6 @@
 import {
     BrokerageClient,
     OrderDetails,
-    OrderAction,
-    OrderStatus,
     SnapShotFields,
     Snapshot,
 } from '../brokerage-client';
@@ -29,9 +27,12 @@ export class IBKRClient extends BrokerageClient {
     async getSnapshot(stock: string): Promise<Snapshot> {
         const fields = Object.values(this.snapshotFields);
 
-        const response: SnapshotResponse = await ibkrApiReq(IbkrApiEndpoint.stockSnapshot, {
-            ticker: stock,
-        });
+        const response: SnapshotResponse = await ibkrApiReq(
+            IbkrApiEndpoint.stockSnapshot,
+            {
+                ticker: stock,
+            },
+        );
 
         if (response && isSnapshotResponseWithAllFields(response, fields)) {
             return getSnapshotFromResponse(response, this.snapshotFields);
@@ -50,8 +51,11 @@ export class IBKRClient extends BrokerageClient {
         return {};
     }
 
-    async placeOrder(orderDetails: OrderDetails): Promise<number> {
-        const response: OrdersResponse = await ibkrApiReq(IbkrApiEndpoint.placeOrder, orderDetails);
+    async placeMarketOrder(orderDetails: OrderDetails): Promise<number> {
+        const response: OrdersResponse = await ibkrApiReq(
+            IbkrApiEndpoint.placeOrder,
+            orderDetails,
+        );
 
         log(`Placed Order with id "${response.order_id}"`);
         console.log(orderDetails);
@@ -83,14 +87,6 @@ export class IBKRClient extends BrokerageClient {
         // const ONE_SECOND = 1000;
         // await setTimeout(ONE_SECOND);
         // return this.modifyOrder(orderId, orderDetails);
-    }
-
-    async getOrderStatus(orderId: number): Promise<OrderStatus> {
-        const response: OrderStatusResponse = await ibkrApiReq(IbkrApiEndpoint.orderStatus, {
-            order_id: orderId,
-        });
-
-        return response.status as OrderStatus;
     }
 
     async getPositionSize(conid: string): Promise<number> {

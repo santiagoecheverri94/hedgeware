@@ -1,13 +1,10 @@
 import {setSecurityPosition} from './instructions/set-security-position';
-import {getSimulatedSnapshot, isLiveTrading} from '../../utils/price-simulator';
-import {OrdersResponse} from './IBKR/types';
 
 export abstract class BrokerageClient {
     abstract getSnapshot(stock: string): Promise<Snapshot>;
     abstract getSnapshots(stocks: string[]): Promise<Record<string, Snapshot>>;
     abstract getShortableQuantities(stocks: string[]): Promise<Record<string, number>>;
-    abstract placeOrder(orderDetails: OrderDetails): Promise<number>;
-    abstract getOrderStatus(orderId: number): Promise<OrderStatus>;
+    abstract placeMarketOrder(orderDetails: OrderDetails): Promise<number>;
 
     async setSecurityPosition({
         brokerageIdOfSecurity,
@@ -25,7 +22,6 @@ export abstract class BrokerageClient {
             brokerageIdOfSecurity,
             newPosition,
             currentPosition,
-            snapshot,
         });
     }
 }
@@ -45,17 +41,13 @@ export type Snapshot = {
 export enum OrderAction {
     BUY = 'BUY',
     SELL = 'SELL',
-}
-
-export enum OrderStatus {
-    FILLED = 'Filled',
-    // Pending???
+    BUY_COVER = 'BUY_COVER',
+    SELL_SHORT = 'SELL_SHORT',
 }
 
 export interface OrderDetails {
     ticker: string;
-    // exchange?
-    price: number;
     action: OrderAction;
     quantity: number;
+    // limitPrice?: number;
 }
