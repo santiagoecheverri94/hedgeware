@@ -1,9 +1,4 @@
-import {
-    BrokerageClient,
-    OrderDetails,
-    OrderStatus,
-    Snapshot,
-} from '../brokerage-client';
+import {BrokerageClient, OrderDetails, Snapshot} from '../brokerage-client';
 import {getAccessToken} from './auth';
 import {setTimeout} from 'node:timers/promises';
 
@@ -27,9 +22,12 @@ export class SchwabClient extends BrokerageClient {
     async getSnapshot(stock: string): Promise<Snapshot> {
         const ticker = stock.replace('.', '/');
 
-        const response: any[] = await this.doGetRequest(`marketdata/v1/${stock}/quotes`, {
-            fields: 'quote',
-        });
+        const response: any[] = await this.doGetRequest(
+            `marketdata/v1/${stock}/quotes`,
+            {
+                fields: 'quote',
+            },
+        );
 
         const quote = Object.values(response)[0].quote;
 
@@ -86,7 +84,9 @@ export class SchwabClient extends BrokerageClient {
 
             let quantity = 0;
             if (item.reference.isShortable) {
-                quantity = item.reference.isHardToBorrow ? item.reference.htbQuantity : 2 * 1e6;
+                quantity = item.reference.isHardToBorrow ?
+                    item.reference.htbQuantity :
+                    2 * 1e6;
             }
 
             quantities[symbol] = quantity;
@@ -95,11 +95,7 @@ export class SchwabClient extends BrokerageClient {
         return quantities;
     }
 
-    placeOrder(orderDetails: OrderDetails): Promise<number> {
-        throw new Error('Method not implemented.');
-    }
-
-    getOrderStatus(orderId: number): Promise<OrderStatus> {
+    placeMarketOrder(orderDetails: OrderDetails): Promise<number> {
         throw new Error('Method not implemented.');
     }
 

@@ -1,16 +1,3 @@
-export interface SsoValidateResponse {
-    RESULT: boolean;
-}
-
-export interface TickleResponse {
-    session: string;
-    iserver: {
-        authStatus: {
-            authenticated: boolean;
-        };
-    };
-}
-
 export interface AccountsResponse {
     accounts: string[];
 }
