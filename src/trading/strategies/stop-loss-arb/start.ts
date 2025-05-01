@@ -48,12 +48,11 @@ export async function startStopLossArb(): Promise<void> {
     } else {
         const today = getTodayDate();
 
-        let brokerageClient: SchwabClient | undefined;
+        let brokerageClient: BrokerageClient | undefined;
         if (isLiveTrading()) {
             await isTimeToTrade();
 
-            brokerageClient = new SchwabClient();
-            await brokerageClient.authenticate();
+            brokerageClient = await SchwabClient.getInstance();
             await writeLiveStockStates(today, brokerageClient);
         }
 

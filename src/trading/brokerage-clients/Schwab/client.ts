@@ -10,6 +10,17 @@ export class SchwabClient extends BrokerageClient {
     baseUrl = 'https://api.schwabapi.com';
     accessToken = '';
 
+    private constructor() {
+        super();
+    }
+
+    static async getInstance(): Promise<SchwabClient> {
+        const instance = new SchwabClient();
+        await instance.authenticate();
+
+        return instance;
+    }
+
     async authenticate(): Promise<void> {
         this.accessToken = await getAccessToken();
 
