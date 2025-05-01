@@ -1,14 +1,18 @@
+import {FloatCalculator as fc} from '../../../utils/float-calculator';
 import {BrokerageClient, OrderDetails, Snapshot} from '../brokerage-client';
+import {setSecurityPositionMultiStyleOrders} from '../instructions/set-security-position';
 import {getAccessToken} from './auth';
 import {setTimeout} from 'node:timers/promises';
 
-enum GetEndpoints {
+enum Endpoints {
     quotes = 'marketdata/v1/quotes',
+    accounts = 'trader/v1/accounts',
 }
 
 export class SchwabClient extends BrokerageClient {
-    baseUrl = 'https://api.schwabapi.com';
-    accessToken = '';
+    private accountNumber = '';
+    private baseUrl = 'https://api.schwabapi.com';
+    private accessToken = '';
 
     private constructor() {
         super();
@@ -17,6 +21,7 @@ export class SchwabClient extends BrokerageClient {
     static async getInstance(): Promise<SchwabClient> {
         const instance = new SchwabClient();
         await instance.authenticate();
+        await instance.setAccountId();
 
         return instance;
     }
@@ -25,9 +30,18 @@ export class SchwabClient extends BrokerageClient {
         this.accessToken = await getAccessToken();
 
         // 20 minutes
-        setTimeout(20 * 60 * 1000).then(() => {
+        setTimeout(20 * 60 * 1e3).then(() => {
             this.authenticate();
         });
+    }
+
+    private async setAccountId(): Promise<void> {
+        const response = await this.doGetRequest(
+            `${Endpoints.accounts}/accountNumbers`,
+            {},
+        );
+        const accountId = response[0].hashValue;
+        this.accountNumber = accountId;
     }
 
     async getSnapshot(stock: string): Promise<Snapshot> {
@@ -55,7 +69,7 @@ export class SchwabClient extends BrokerageClient {
         const tickers = stocks.map(stock => stock.replace('.', '/'));
         const symbols = tickers.join(',');
 
-        const response: any[] = await this.doGetRequest(GetEndpoints.quotes, {
+        const response: any[] = await this.doGetRequest(Endpoints.quotes, {
             symbols,
             fields: 'quote',
             indicative: false,
@@ -82,7 +96,7 @@ export class SchwabClient extends BrokerageClient {
         const tickers = stocks.map(stock => stock.replace('.', '/'));
         const symbols = tickers.join(',');
 
-        const response: any[] = await this.doGetRequest(GetEndpoints.quotes, {
+        const response: any[] = await this.doGetRequest(Endpoints.quotes, {
             symbols,
             fields: 'reference',
             indicative: false,
@@ -106,13 +120,94 @@ export class SchwabClient extends BrokerageClient {
         return quantities;
     }
 
-    placeMarketOrder(orderDetails: OrderDetails): Promise<number> {
-        throw new Error('Method not implemented.');
+    async placeMarketOrder(orderDetails: OrderDetails): Promise<number> {
+        const schwabOrderDetails = this.getSchwabOrderDetails(orderDetails);
+
+        const orderStatusUrl = await this.doPostRequest(
+            `${Endpoints.accounts}/${this.accountNumber}/orders`,
+            schwabOrderDetails,
+        );
+
+        const orderId = orderStatusUrl.split('/').pop() as string;
+
+        await setTimeout(5 * 1e3);
+
+        const orderStatus = await this.doGetRequest(
+            `${Endpoints.accounts}/${this.accountNumber}/orders/${orderId}`,
+            {},
+        );
+
+        if (orderStatus.status !== 'FILLED') {
+            debugger;
+            throw new Error('Market Order not filled within 5 seconds.');
+        }
+
+        let quantityValue = 0;
+        let quantityAccounted = 0;
+
+        for (const actvity of orderStatus.orderActivityCollection) {
+            for (const execution of actvity.executionLegs) {
+                quantityAccounted += execution.quantity;
+                quantityValue = fc.add(
+                    quantityValue,
+                    fc.multiply(execution.quantity, execution.price),
+                );
+            }
+        }
+
+        if (quantityAccounted !== orderDetails.quantity) {
+            debugger;
+            throw new Error('Order not executed on expected quantity.');
+        }
+
+        const pricePerShare = fc.divide(quantityValue, quantityAccounted);
+
+        return pricePerShare;
     }
 
-    async doGetRequest(path: string, params: any) {
-        const urlParams = new URLSearchParams(params).toString();
-        const requestUrl = `${this.baseUrl}/${path}?${urlParams}`;
+    private getSchwabOrderDetails(orderDetails: OrderDetails) {
+        return {
+            orderType: 'MARKET', // 'LIMIT',
+            // price: orderDetails.action.includes('BUY') ? 575 : 555,
+            session: 'NORMAL', // 'PM',
+            duration: 'DAY',
+            orderStrategyType: 'SINGLE',
+            orderLegCollection: [
+                {
+                    instruction: orderDetails.action,
+                    quantity: orderDetails.quantity,
+                    instrument: {
+                        symbol: orderDetails.brokerageIdOfSecurity, // 'SPY',
+                        assetType: 'EQUITY',
+                    },
+                },
+            ],
+        };
+    }
+
+    async setSecurityPosition({
+        brokerageIdOfSecurity,
+        currentPosition,
+        newPosition,
+    }: {
+        brokerageIdOfSecurity: string;
+        currentPosition: number;
+        newPosition: number;
+    }): Promise<number> {
+        return setSecurityPositionMultiStyleOrders({
+            brokerageClient: this,
+            brokerageIdOfSecurity,
+            newPosition,
+            currentPosition,
+        });
+    }
+
+    private async doGetRequest(path: string, params: any) {
+        const urlParams =
+            Object.values(params).length > 0 ?
+                `?${new URLSearchParams(params).toString()}` :
+                '';
+        const requestUrl = `${this.baseUrl}/${path}${urlParams}`;
 
         const data = await fetch(requestUrl, {
             method: 'GET',
@@ -126,6 +221,33 @@ export class SchwabClient extends BrokerageClient {
         if (data.status !== 200) {
             debugger;
             throw new Error(response.detail);
+        }
+
+        return response;
+    }
+
+    private async doPostRequest(path: string, body: any) {
+        const requestUrl = `${this.baseUrl}/${path}`;
+
+        const data = await fetch(requestUrl, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${this.accessToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+        });
+
+        if (data.status > 299 || data.status < 200) {
+            debugger;
+            throw new Error(data.statusText);
+        }
+
+        const response = data.headers.get('location');
+
+        if (!response) {
+            debugger;
+            throw new Error('No location header in response');
         }
 
         return response;

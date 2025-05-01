@@ -14,6 +14,7 @@ import {
 import {getSnapshotFromResponse, isSnapshotResponseWithAllFields} from './snapshot';
 import {setTimeout} from 'node:timers/promises';
 import {log} from '../../../utils/log';
+import {setSecurityPositionLongOrder} from '../instructions/set-security-position';
 
 export class IBKRClient extends BrokerageClient {
     protected snapshotFields = {
@@ -62,51 +63,20 @@ export class IBKRClient extends BrokerageClient {
         return response.order_id;
     }
 
-    async modifyOrder(orderId: string, orderDetails: OrderDetails): Promise<number> {
-        return 1;
-
-        // const response = await ibkrApi.post<OrdersResponse>(
-        //     `/iserver/account/${this.account}/order/${orderId}`,
-        //     {
-        //         ...this.getIBKROrderDetails(orderDetails),
-        //     }
-        // );
-
-        // if (response.data?.[0]?.order_id) {
-        //     log(`Modified Order with id "${response.data?.[0].order_id}"`);
-        //     console.log(orderDetails);
-        //     return response.data[0].order_id;
-        // }
-
-        // if (response.data?.[0]?.id) {
-        //     log(`Modifiying order '${orderId}' requires confirmation.`);
-        //     return this.confirmOrder(response.data?.[0].id, orderDetails);
-        // }
-
-        // log("Failed to modify order. Will try again in a second.");
-        // const ONE_SECOND = 1000;
-        // await setTimeout(ONE_SECOND);
-        // return this.modifyOrder(orderId, orderDetails);
-    }
-
-    async getPositionSize(conid: string): Promise<number> {
-        return 0;
-        // const FIVE_MINUTES = 5 * 60 * 1000;
-        // await setTimeout(FIVE_MINUTES); // TODO: check if beta ccp interface allows for faster polling
-
-        // const response = await ibkrApi.get<PositionResponse>(
-        //     `/portfolio/${this.account}/position/${conid}`
-        // );
-
-        // if (response.data?.[0]?.position) {
-        //     return response.data?.[0]?.position;
-        // }
-
-        // log(
-        //     `Failed to get position size for conid '${conid}'. Will try again in a second.`
-        // );
-        // const ONE_SECOND = 1000;
-        // await setTimeout(ONE_SECOND);
-        // return this.getPositionSize(conid);
+    async setSecurityPosition({
+        brokerageIdOfSecurity,
+        currentPosition,
+        newPosition,
+    }: {
+        brokerageIdOfSecurity: string;
+        currentPosition: number;
+        newPosition: number;
+    }): Promise<number> {
+        return setSecurityPositionLongOrder({
+            brokerageClient: this,
+            brokerageIdOfSecurity,
+            newPosition,
+            currentPosition,
+        });
     }
 }

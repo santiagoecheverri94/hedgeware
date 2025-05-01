@@ -1,12 +1,10 @@
-import {setSecurityPosition} from './instructions/set-security-position';
-
 export abstract class BrokerageClient {
     abstract getSnapshot(stock: string): Promise<Snapshot>;
     abstract getSnapshots(stocks: string[]): Promise<Record<string, Snapshot>>;
     abstract getShortableQuantities(stocks: string[]): Promise<Record<string, number>>;
     abstract placeMarketOrder(orderDetails: OrderDetails): Promise<number>;
 
-    async setSecurityPosition({
+    abstract setSecurityPosition({
         brokerageIdOfSecurity,
         currentPosition,
         newPosition,
@@ -14,15 +12,7 @@ export abstract class BrokerageClient {
         brokerageIdOfSecurity: string;
         currentPosition: number;
         newPosition: number;
-        snapshot: Snapshot;
-    }): Promise<number> {
-        return setSecurityPosition({
-            brokerageClient: this,
-            brokerageIdOfSecurity,
-            newPosition,
-            currentPosition,
-        });
-    }
+    }): Promise<number>;
 }
 
 export enum SnapShotFields {
@@ -40,12 +30,12 @@ export type Snapshot = {
 export enum OrderAction {
     BUY = 'BUY',
     SELL = 'SELL',
-    BUY_COVER = 'BUY_COVER',
+    BUY_TO_COVER = 'BUY_TO_COVER',
     SELL_SHORT = 'SELL_SHORT',
 }
 
 export interface OrderDetails {
-    ticker: string;
+    brokerageIdOfSecurity: string;
     action: OrderAction;
     quantity: number;
     // limitPrice?: number;
