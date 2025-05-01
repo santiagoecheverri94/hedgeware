@@ -10,7 +10,6 @@ export abstract class BrokerageClient {
         brokerageIdOfSecurity,
         currentPosition,
         newPosition,
-        snapshot,
     }: {
         brokerageIdOfSecurity: string;
         currentPosition: number;

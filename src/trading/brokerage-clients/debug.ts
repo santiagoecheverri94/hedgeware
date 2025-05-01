@@ -1,12 +1,15 @@
 import express, {Request, Response} from 'express';
 import cors from 'cors';
+import {SchwabClient} from './Schwab/client';
 
 interface SetPositionRequest {
     currentPostion: number;
     newPosition: number;
 }
 
-export function brokerageDebug(): void {
+export async function brokerageDebug(): Promise<void> {
+    const brokerageClient = await SchwabClient.getInstance();
+
     const app = express();
     app.use(cors());
     app.use(express.json());
