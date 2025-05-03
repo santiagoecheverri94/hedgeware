@@ -26,7 +26,7 @@ std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
     unordered_map<string, StockState> cpp_stock_states;
 
     JS::Array stocks = js_states.GetPropertyNames();
-    for (int i = 0; i < stocks.Length(); ++i)
+    for (int i = 0; i < static_cast<int>(stocks.Length()); ++i)
     {
         string stock = stocks.Get(i).As<JS::String>().Utf8Value();
         JS::Object js_stock_state = js_states.Get(stock).As<JS::Object>();
@@ -103,7 +103,7 @@ std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
             GetDecimal(js_stock_state.Get("lastBid").As<JS::Number>().DoubleValue());
 
         JS::Array js_intervals = js_stock_state.Get("intervals").As<JS::Array>();
-        for (int j = 0; j < js_intervals.Length(); ++j)
+        for (int j = 0; j < static_cast<int>(js_intervals.Length()); ++j)
         {
             JS::Object js_interval = js_intervals.Get(j).As<JS::Object>();
             SmoothingInterval cpp_interval;
@@ -146,7 +146,7 @@ std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
         }
 
         JS::Array js_tradingLogs = js_stock_state.Get("tradingLogs").As<JS::Array>();
-        for (int k = 0; k < js_tradingLogs.Length(); ++k)
+        for (int k = 0; k < static_cast<int>(js_tradingLogs.Length()); ++k)
         {
             JS::Object js_log = js_tradingLogs.Get(k).As<JS::Object>();
             TradingLog cpp_log;

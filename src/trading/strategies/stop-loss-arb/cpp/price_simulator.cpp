@@ -93,7 +93,9 @@ void WritePnLAsPercentagesToSnapshotsFile(const StockState& stock_state)
         std::ifstream file(file_path);
         if (!file.is_open())
         {
-            throw exception(format("Error: Unable to open file {}", file_path).c_str());
+            throw runtime_error(
+                format("Error: Unable to open file {}", file_path).c_str()
+            );
         }
 
         json json_data;
@@ -133,11 +135,13 @@ void WritePnLAsPercentagesToSnapshotsFile(const StockState& stock_state)
     }
     catch (const json::parse_error& e)
     {
-        throw exception(format("JSON parse error: {}", e.what()).c_str());
+        throw runtime_error(format("JSON parse error: {}", e.what()).c_str());
     }
     catch (const std::exception& e)
     {
-        throw exception(format("Error writing pnl to snapshots: {}", e.what()).c_str());
+        throw runtime_error(
+            format("Error writing pnl to snapshots: {}", e.what()).c_str()
+        );
     }
 }
 
@@ -151,7 +155,9 @@ vector<Snapshot>* GetSnapshotsForStockOnDate(const StockState& stock_state)
         std::ifstream file(file_path);
         if (!file.is_open())
         {
-            throw exception(format("Error: Unable to open file {}", file_path).c_str());
+            throw runtime_error(
+                format("Error: Unable to open file {}", file_path).c_str()
+            );
         }
 
         json json_data;
@@ -172,11 +178,11 @@ vector<Snapshot>* GetSnapshotsForStockOnDate(const StockState& stock_state)
     }
     catch (const json::parse_error& e)
     {
-        throw exception(format("JSON parse error: {}", e.what()).c_str());
+        throw runtime_error(format("JSON parse error: {}", e.what()).c_str());
     }
     catch (const std::exception& e)
     {
-        throw exception(format("Error reading snapshots: {}", e.what()).c_str());
+        throw runtime_error(format("Error reading snapshots: {}", e.what()).c_str());
     }
 
     return data;
@@ -187,24 +193,6 @@ struct StockAndDate
     string stock;
     string date;
 };
-
-StockAndDate GetStockAndDate(std::string file_name)
-{
-    vector<string> splitted = string_split(file_name, '__');
-
-    if (splitted.size() != 2)
-    {
-        throw exception(
-            format(
-                "Invalid historical snapshot file name: \"{}\" is missing date",
-                file_name
-            )
-                .c_str()
-        );
-    }
-
-    return StockAndDate{splitted[0], splitted[1]};
-}
 
 Snapshot GetHistoricalSnapshot(StockState& stock_state)
 {
@@ -233,13 +221,14 @@ Snapshot GetSimulatedSnapshot(StockState& stock_state)
         return GetHistoricalSnapshot(stock_state);
     }
 
-    throw exception("No snapshot type specified");
+    throw runtime_error("No snapshot type specified");
 }
 
 bool IsHistoricalSnapshotsExhausted(const StockState& stock_state)
 {
-    const bool isExhausted = stock_state.historicalSnapshots.index ==
-                             stock_state.historicalSnapshots.data->size();
+    const bool isExhausted =
+        stock_state.historicalSnapshots.index ==
+        static_cast<int>(stock_state.historicalSnapshots.data->size());
 
     return isExhausted;
 }

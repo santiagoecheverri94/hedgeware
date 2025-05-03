@@ -38,12 +38,12 @@ void DebugUpperOrLowerBound(
     if (upperOrLowerBound == "up" &&
         states[stock].position < states[stock].targetPosition)
     {
-        __debugbreak();
+        Print("Place breakpoint here. No cross platform breakpoints in C++");
     }
     else if (upperOrLowerBound == "down" &&
              states[stock].position > -states[stock].targetPosition)
     {
-        __debugbreak();
+        Print("Place breakpoint here. No cross platform breakpoints in C++");
     }
 
     RestartRandomPrice();

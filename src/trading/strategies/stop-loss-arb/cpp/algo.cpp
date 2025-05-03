@@ -36,7 +36,7 @@ Snapshot ReconcileStockPosition(const std::string& stock, StockState& stockState
     }
 
     // 1)
-    bool crossingHappened = CheckCrossings(stockState, snapshot);
+    // bool crossingHappened = CheckCrossings(stockState, snapshot);
 
     // if (isLiveTrading() && crossingHappened) {
     //     SyncWriteJSONFile(GetStockStateFilePath(stock), JsonPrettyPrint(stockState));
@@ -185,7 +185,7 @@ std::vector<int> GetNumToSell(StockState& stockState, const Snapshot& snapshot)
     int newPosition = position;
     vector<int> indicesToExecute;
 
-    for (int i = 0; i < intervals.size(); ++i)
+    for (int i = 0; i < static_cast<int>(intervals.size()); ++i)
     {
         const auto& interval = intervals[i];
 
@@ -437,7 +437,7 @@ void UpdateExitPnL(StockState& stockState)
 void CorrectBadBuyIfRequired(StockState& stockState, std::vector<int>& indexesToExecute)
 {
     int lowestIndexExecuted = indexesToExecute.back();
-    if (lowestIndexExecuted >= stockState.intervals.size() - 1)
+    if (lowestIndexExecuted >= static_cast<int>(stockState.intervals.size()) - 1)
     {
         return;
     }

@@ -14,8 +14,7 @@ void StartStopLossArbCpp(
     std::vector<std::unordered_map<std::string, StockState>>& states_list
 )
 {
-    chrono::steady_clock::time_point start_time;
-    start_time = chrono::high_resolution_clock::now();
+    const auto start_time = chrono::high_resolution_clock::now();
 
     vector<future<void>> waiting_for_dates_to_be_hedged;
     waiting_for_dates_to_be_hedged.reserve(states_list.size());
@@ -72,7 +71,11 @@ void StartStopLossArbCppHelper(std::unordered_map<std::string, StockState>& stat
     {
         const StockState& state = states[stock];
 
-        // PrintPnLValues(stock, state);
+        const char* printPnLValuesEnv = getenv("PRINT_PNL_VALUES");
+        if (printPnLValuesEnv != nullptr)
+        {
+            PrintPnLValues(stock, state);
+        }
     }
 }
 
@@ -133,7 +136,7 @@ Decimal GetHistoricalProfitThreshold()
         double value = stod(thresholdStr);
         return GetDecimal(value);
     }
-    catch (exception)
+    catch (exception&)
     {
         return default_historical_profit_threshold;
     }

@@ -13,6 +13,15 @@
             "options": {
                 "cwd": "${workspaceFolder}"
             },
+            "linux": {
+                "options": {
+                    "env": {
+                        "PATH": "/usr/local/nodejs/bin:${env:PATH}",
+                        "CC": "gcc-13",
+                        "CXX": "g++-13",
+                    }
+                }
+            },
             "problemMatcher": [],
             "group": {
                 "kind": "build",

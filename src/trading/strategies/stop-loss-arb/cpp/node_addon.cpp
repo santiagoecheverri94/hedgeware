@@ -16,8 +16,6 @@ void JsTestCallJSFunction(const JS::CallbackInfo& info)
 
 void JsStartStopLossArbCpp(const JS::CallbackInfo& info)
 {
-    JS::Env env = info.Env();
-
     const auto js_states_list = info[0].As<JS::Array>();
 
     auto cpp_states_list = BindJsStatesListToCppStatesList(js_states_list);
