@@ -15,5 +15,3 @@ void StartStopLossArbCppHelper(std::unordered_map<std::string, StockState>& stat
 void HedgeStockWhileMarketIsOpen(
     const std::string& stock, std::unordered_map<std::string, StockState>& states
 );
-
-bool IsExitPnlBeyondThresholds(const StockState& stockState);

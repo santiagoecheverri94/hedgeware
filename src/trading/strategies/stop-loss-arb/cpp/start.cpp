@@ -99,21 +99,6 @@ void HedgeStockWhileMarketIsOpen(
             break;
         }
 
-        if (IsLiveTrading())
-        {
-            // await setTimeout(1000);
-
-            if (IsExitPnlBeyondThresholds(stockState))
-            {
-                // syncWriteJSONFile(
-                //     getStockStateFilePath(stock),
-                //     jsonPrettyPrint(stockState),
-                // );
-
-                break;
-            }
-        }
-
         if (IsRandomSnapshot())
         {
             DebugRandomPrices(snapshot, stock, states, originalStates);
@@ -144,37 +129,4 @@ Decimal GetHistoricalProfitThreshold()
     {
         return default_historical_profit_threshold;
     }
-}
-
-const Decimal LIVE_PROFIT_THRESHOLD = GetDecimal(0.005);
-const Decimal LIVE_LOSS_THRESHOLD = -numeric_limits<double>::infinity();
-
-bool IsExitPnlBeyondThresholds(const StockState& stockState)
-{
-    return false;
-
-    const Decimal& exitPnLAsPercentage = stockState.exitPnLAsPercentage;
-
-    if (IsHistoricalSnapshot())
-    {
-        Decimal historicalProfitThreshold = GetHistoricalProfitThreshold();
-        if (exitPnLAsPercentage >= historicalProfitThreshold)
-        {
-            return true;
-        }
-    }
-    else if (IsLiveTrading())
-    {
-        if (exitPnLAsPercentage >= LIVE_PROFIT_THRESHOLD)
-        {
-            return true;
-        }
-
-        if (exitPnLAsPercentage <= LIVE_LOSS_THRESHOLD)
-        {
-            return true;
-        }
-    }
-
-    return false;
 }

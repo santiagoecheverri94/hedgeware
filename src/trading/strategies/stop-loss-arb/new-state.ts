@@ -1,7 +1,5 @@
 import {FloatCalculator as fc} from '../../../utils/float-calculator';
-import {jsonPrettyPrint, readJSONFile, syncWriteJSONFile} from '../../../utils/file';
 import {IntervalType, SmoothingInterval, StockState} from './types';
-import {getStockStateFilePath} from './state';
 
 export function getFullStockState(partial: StockState): StockState {
     const longIntervals: SmoothingInterval[] =
@@ -13,6 +11,8 @@ export function getFullStockState(partial: StockState): StockState {
     const newState: StockState = {
         date: partial.date,
         prediction: partial.prediction,
+        profitThreshold: partial.profitThreshold,
+        lossThreshold: partial.lossThreshold,
         brokerageId: partial.brokerageId,
         brokerageTradingCostPerShare: partial.brokerageTradingCostPerShare,
         targetPosition: partial.targetPosition,

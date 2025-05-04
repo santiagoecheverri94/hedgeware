@@ -20,7 +20,7 @@ import {
     getStocksFileNames,
     getStockStates,
     getHistoricalStockStates,
-    writeLiveStockStates,
+    writeLiveStockStatesBeforeTradingStart,
 } from './state';
 import {StockState} from './types';
 import {setTimeout} from 'node:timers/promises';
@@ -53,7 +53,7 @@ export async function startStopLossArb(): Promise<void> {
             await isTimeToTrade();
 
             brokerageClient = await SchwabClient.getInstance();
-            await writeLiveStockStates(today, brokerageClient);
+            await writeLiveStockStatesBeforeTradingStart(today, brokerageClient);
         }
 
         const stocks = await getStocksFileNames(today);
@@ -153,7 +153,6 @@ async function hedgeStockWhileMarketIsOpen(
             hedingIntervalTimer = setTimeout(kHedgingInterval);
         }
 
-        // TODO: need to figure out how to deal with re-authentication issues
         const {snapshot, crossedThreshold} = await reconcileStockPosition(
             stock,
             stockState,

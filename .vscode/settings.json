@@ -91,6 +91,14 @@
         "stdfloat": "cpp",
         "any": "cpp",
         "ranges": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "cwctype": "cpp",
+        "strstream": "cpp",
+        "memory_resource": "cpp",
+        "string_view": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "cfenv": "cpp",
+        "cinttypes": "cpp"
     }
 }

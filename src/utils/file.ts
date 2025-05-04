@@ -5,13 +5,6 @@ export async function readJSONFile<T>(filePath: string): Promise<T> {
     return JSON.parse(file);
 }
 
-export async function asyncWriteJSONFile(
-    filePath: string,
-    jsonString: string,
-): Promise<void> {
-    await fsPromises.writeFile(filePath, jsonString);
-}
-
 export function syncWriteJSONFile(filePath: string, jsonString: string): void {
     writeFileSync(filePath, jsonString);
 }

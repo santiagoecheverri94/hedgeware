@@ -29,8 +29,6 @@ bool IsRandomSnapshot() { return IsTruthyEnv("RANDOM_SNAPSHOT"); }
 
 bool IsHistoricalSnapshot() { return IsTruthyEnv("HISTORICAL_SNAPSHOT"); }
 
-bool IsLiveTrading() { return !IsRandomSnapshot() && !IsHistoricalSnapshot(); }
-
 const Decimal INITIAL_PRICE = GetDecimal(9.0);
 Decimal randomPrice = INITIAL_PRICE;
 

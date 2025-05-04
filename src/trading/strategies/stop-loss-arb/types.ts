@@ -25,6 +25,8 @@ export enum IntervalType {
 export interface StockState {
     date: string;
     prediction?: number;
+    profitThreshold?: number;
+    lossThreshold?: number;
     isStaticIntervals: boolean;
     brokerageId: string;
     brokerageTradingCostPerShare: number;

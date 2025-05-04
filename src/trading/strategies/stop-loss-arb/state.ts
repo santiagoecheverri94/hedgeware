@@ -66,7 +66,7 @@ export async function getHistoricalStockStates(
             throw error;
         }
 
-        const stockState = getIteration1State(
+        const stockState = getInitialStockState(
             date,
             stock_file_data.ticker,
             stock_file_data.snapshots[0].ask,
@@ -78,7 +78,7 @@ export async function getHistoricalStockStates(
     return stockStates;
 }
 
-function getIteration1State(
+function getInitialStockState(
     date: string,
     ticker: string,
     initialAskPrice: number,
@@ -86,9 +86,12 @@ function getIteration1State(
 ): StockState {
     const intervalProfit = 0.02;
 
+    // These are flawed hardcoded values. Need to move into a file.
     const partial: Partial<StockState> = {
         date,
         prediction,
+        profitThreshold: 0.5,
+        lossThreshold: -0.75,
         brokerageId: ticker,
         brokerageTradingCostPerShare: 0, // otherwise 0.004,
         numContracts: 4, // to achieve round lots
@@ -96,7 +99,7 @@ function getIteration1State(
         shiftIntervalsFromInitialPrice: 0,
         targetPosition: 100,
         sharesPerInterval: 25,
-        spaceBetweenIntervals: fc.multiply(intervalProfit, 2),
+        spaceBetweenIntervals: fc.multiply(intervalProfit, 2), // this also needs consideration
         intervalProfit,
     };
 
@@ -105,7 +108,7 @@ function getIteration1State(
     return stockState;
 }
 
-export async function writeLiveStockStates(
+export async function writeLiveStockStatesBeforeTradingStart(
     date: string,
     brokerageClient: BrokerageClient,
 ): Promise<void> {
@@ -134,7 +137,7 @@ export async function writeLiveStockStates(
         const snapshot = snapshots[ticker];
 
         if (shortableQuantity >= 500_000) {
-            const stockState = getIteration1State(
+            const stockState = getInitialStockState(
                 date,
                 ticker,
                 snapshot.ask,
