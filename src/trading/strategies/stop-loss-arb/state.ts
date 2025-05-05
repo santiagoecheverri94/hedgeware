@@ -96,7 +96,6 @@ function getInitialStockState(
         brokerageTradingCostPerShare: 0, // otherwise 0.004,
         numContracts: 4, // to achieve round lots
         initialPrice: initialAskPrice,
-        shiftIntervalsFromInitialPrice: 0,
         targetPosition: 100,
         sharesPerInterval: 25,
         spaceBetweenIntervals: fc.multiply(intervalProfit, 2), // this also needs consideration
