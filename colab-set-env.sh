@@ -12,6 +12,7 @@ sudo apt install -y software-properties-common
 sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
 sudo apt update
 sudo apt install -y gcc-13 g++-13
+sudo apt install -y gdb
 
 cat ~/hedgeware/env/my_bashrc.sh >> ~/.bashrc
 source ~/.bashrc

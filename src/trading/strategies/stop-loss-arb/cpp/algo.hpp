@@ -55,8 +55,6 @@ void UpdateRealizedPnL(
     const Decimal& price
 );
 
-void UpdateSnaphotOnState(
-    const std::string& stock, StockState& stockState, const Snapshot& snapshot
-);
-
 void UpdateExitPnL(StockState& stockState);
+
+void ReconcileRealizedPnLWhenHistoricalSnapshotsExhausted(StockState& stockState);

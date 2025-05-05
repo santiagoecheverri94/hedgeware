@@ -224,9 +224,6 @@ SetNewPositionReturnType SetNewPosition(
     return SetNewPositionReturnType{.priceSetAt = quotedPrice, .orderSide = orderSide};
 }
 
-// TODO: consider if should translate
-// reconcileRealizedPnlWhenHistoricalSnapshotsExhausted
-
 void UpdateRealizedPnL(
     StockState& stockState,
     const std::vector<int>& executedIndices,
@@ -282,6 +279,15 @@ void UpdateRealizedPnL(
             stockState.realizedPnL += pnLFromThisExecution.value();
         }
     }
+
+    const auto percentage_denominator =
+        GetDecimal(stockState.targetPosition + stockState.sharesPerInterval) *
+        stockState.initialPrice;
+
+    Decimal realizedPnLAsPercentage =
+        (stockState.realizedPnL / percentage_denominator) * 100;
+
+    stockState.realizedPnLAsPercentage = realizedPnLAsPercentage;
 }
 
 void UpdateSnaphotOnState(StockState& stockState, const Snapshot& snapshot)
@@ -385,8 +391,47 @@ void UpdateExitPnL(StockState& stockState)
     }
 }
 
-// Here the TS version is different, because it has the
-// getActiveIntervalIndexesBeforeExit for early live exit...
+std::vector<int> GetActiveIntervalIndexesBeforeExit(const StockState& stockState)
+{
+    std::vector<int> indexes{};
+
+    for (int index = 0; index < static_cast<int>(stockState.intervals.size()); ++index)
+    {
+        const auto& interval = stockState.intervals[index];
+
+        if (interval.type == IntervalType::LONG && interval.SELL.active)
+        {
+            indexes.push_back(static_cast<int>(index));
+        }
+
+        if (interval.type == IntervalType::SHORT && interval.BUY.active)
+        {
+            indexes.push_back(static_cast<int>(index));
+        }
+    }
+
+    return indexes;
+}
+
+void ReconcileRealizedPnLWhenHistoricalSnapshotsExhausted(StockState& stockState)
+{
+    if (stockState.position == 0)
+    {
+        return;
+    }
+
+    std::string orderSide = stockState.position > 0 ? "SELL" : "BUY";
+
+    const auto& lastAsk = stockState.lastAsk;
+    const auto& lastBid = stockState.lastBid;
+    const auto& priceSetAt = (orderSide == "BUY") ? lastAsk : lastBid;
+
+    std::vector<int> intervalIndicesToExecute =
+        GetActiveIntervalIndexesBeforeExit(stockState);
+
+    UpdateExitPnL(stockState);
+    UpdateRealizedPnL(stockState, intervalIndicesToExecute, orderSide, priceSetAt);
+}
 
 void CorrectBadBuyIfRequired(StockState& stockState, std::vector<int>& indexesToExecute)
 {

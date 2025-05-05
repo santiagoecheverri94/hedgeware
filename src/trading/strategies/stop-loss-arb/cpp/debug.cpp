@@ -9,6 +9,9 @@ using namespace std;
 void PrintPnLValues(const std::string stock, const StockState& stockState)
 {
     Print(format("stock: {}", stock));
+    Print(
+        format("realizedPnLAsPercentage: {}", stockState.realizedPnLAsPercentage.str())
+    );
     Print(format("exitPnLAsPercentage: {}", stockState.exitPnLAsPercentage.str()));
     Print(format(
         "maxMovingProfitAsPercentage: {}", stockState.maxMovingProfitAsPercentage.str()

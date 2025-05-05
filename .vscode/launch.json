@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "node cpp debug",
+            "name": "Windows node cpp debug",
             "type": "cppvsdbg",
             "request": "launch",
             // "preLaunchTask": "node-gyp rebuild",
@@ -10,7 +10,6 @@
             "args": [
                 // "--inspect-brk",
                 "C:\\Users\\santi\\Documents\\trading\\hedgeware\\bin\\dev.js",
-                // "C:\\Users\\santi\\Documents\\trading\\hedgeware\\bin\\run.js",
                 "stop-loss-arb"
             ],
             "stopAtEntry": false,
@@ -30,6 +29,40 @@
                 }
             ],
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Linux node cpp debug",
+            "type": "cppdbg",
+            "request": "launch",
+            // "preLaunchTask": "node-gyp rebuild",
+            "program": "/usr/local/nodejs/bin/node",
+            "args": [
+                // "--inspect-brk",
+                "/root/hedgeware/bin/dev.js",
+                "stop-loss-arb"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                // {
+                //     "name": "RANDOM_SNAPSHOT",
+                //     "value": "true"
+                // },
+                {
+                    "name": "PRINT_PNL_VALUES",
+                    "value": "true"
+                },
+                {
+                    "name": "HISTORICAL_SNAPSHOT",
+                    "value": "true"
+                },
+                {
+                    "name": "CPP_NODE_ADDON",
+                    "value": "true"
+                }
+            ],
+            "externalConsole": false,
+            "miDebuggerPath": "/usr/bin/gdb"
         },
         {
             "name": "node attach debug",

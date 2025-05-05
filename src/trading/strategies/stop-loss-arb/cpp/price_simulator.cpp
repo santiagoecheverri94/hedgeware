@@ -68,18 +68,14 @@ void DeleteHistoricalSnapshots(StockState& stock_state)
 
 string GetFilePathForStockDataOnDate(const StockState& stock_state)
 {
-    const string cwd = filesystem::current_path().string();
-    const string year = string_split(stock_state.date, '-')[0];
-    const string month = string_split(stock_state.date, '-')[1];
+    string year = string_split(stock_state.date, '-')[0];
+    string month = string_split(stock_state.date, '-')[1];
 
-    return format(
-        "{}\\..\\deephedge\\historical-data\\{}\\{}\\{}\\{}.json",
-        cwd,
-        year,
-        month,
-        stock_state.date,
-        stock_state.brokerageId
-    );
+    filesystem::path file_path = filesystem::current_path() / ".." / "deephedge" /
+                                 "historical-data" / year / month / stock_state.date /
+                                 (stock_state.brokerageId + ".json");
+
+    return file_path.lexically_normal().string();
 }
 
 void WritePnLAsPercentagesToSnapshotsFile(const StockState& stock_state)

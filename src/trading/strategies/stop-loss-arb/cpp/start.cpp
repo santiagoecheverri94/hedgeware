@@ -93,7 +93,11 @@ void HedgeStockWhileMarketIsOpen(
 
         if (IsHistoricalSnapshot() && IsHistoricalSnapshotsExhausted(stockState))
         {
+            ReconcileRealizedPnLWhenHistoricalSnapshotsExhausted(stockState);
             DeleteHistoricalSnapshots(stockState);
+
+            // The TS version does not have this function call because it's for writing
+            // the "if reached x profir, loss was y"
             WritePnLAsPercentagesToSnapshotsFile(stockState);
 
             break;

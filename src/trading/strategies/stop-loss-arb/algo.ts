@@ -336,26 +336,6 @@ async function setNewPosition({
     };
 }
 
-export function reconcileRealizedPnlWhenHistoricalSnapshotsExhausted(
-    stockState: StockState,
-): void {
-    if (stockState.position === 0) {
-        return;
-    }
-
-    const orderSide: OrderAction =
-        stockState.position > 0 ? OrderAction.SELL : OrderAction.BUY;
-
-    const {lastAsk, lastBid} = stockState;
-
-    const priceSetAt = orderSide === OrderAction.BUY ? lastAsk : lastBid;
-
-    const intervalIndicesToExecute = getActiveIntervalIndexesBeforeExit(stockState);
-
-    updateExitPnL(stockState);
-    updateRealizedPnL(stockState, intervalIndicesToExecute, orderSide, priceSetAt);
-}
-
 function updateRealizedPnL(
     stockState: StockState,
     executedIndices: number[],
@@ -508,6 +488,26 @@ function getActiveIntervalIndexesBeforeExit(stockState: StockState): number[] {
     }
 
     return indexes;
+}
+
+export function reconcileRealizedPnlWhenHistoricalSnapshotsExhausted(
+    stockState: StockState,
+): void {
+    if (stockState.position === 0) {
+        return;
+    }
+
+    const orderSide: OrderAction =
+        stockState.position > 0 ? OrderAction.SELL : OrderAction.BUY;
+
+    const {lastAsk, lastBid} = stockState;
+
+    const priceSetAt = orderSide === OrderAction.BUY ? lastAsk : lastBid;
+
+    const intervalIndicesToExecute = getActiveIntervalIndexesBeforeExit(stockState);
+
+    updateExitPnL(stockState);
+    updateRealizedPnL(stockState, intervalIndicesToExecute, orderSide, priceSetAt);
 }
 
 function correctBadBuyIfRequired(
