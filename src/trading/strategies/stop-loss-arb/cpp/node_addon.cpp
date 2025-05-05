@@ -1,3 +1,4 @@
+#include "data.hpp"
 #include "js_bindings.hpp"
 #include "start.hpp"
 
@@ -23,6 +24,8 @@ void JsStartStopLossArbCpp(const JS::CallbackInfo& info)
     StartStopLossArbCpp(cpp_states_list);
 }
 
+void JsFilterHistoricalData(const JS::CallbackInfo& info) { CopyFilteredJsonFiles(); }
+
 JS::Object Init(JS::Env env, JS::Object exports)
 {
     exports.Set(
@@ -33,6 +36,11 @@ JS::Object Init(JS::Env env, JS::Object exports)
     exports.Set(
         JS::String::New(env, GET_SYMBOL_NAME(JsStartStopLossArbCpp)),
         JS::Function::New(env, JsStartStopLossArbCpp)
+    );
+
+    exports.Set(
+        JS::String::New(env, GET_SYMBOL_NAME(JsFilterHistoricalData)),
+        JS::Function::New(env, JsFilterHistoricalData)
     );
 
     return exports;

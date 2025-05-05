@@ -11,28 +11,28 @@
 using namespace std;
 
 void StartStopLossArbCpp(
-    std::vector<std::unordered_map<std::string, StockState>>& states_list
+    std::vector<std::unordered_map<std::string, StockState>>& list_of_daily_map_of_states
 )
 {
     const auto start_time = chrono::high_resolution_clock::now();
 
-    vector<future<void>> waiting_for_dates_to_be_hedged;
-    waiting_for_dates_to_be_hedged.reserve(states_list.size());
+    // vector<future<void>> waiting_for_dates_to_be_hedged{};
 
-    const string start_date = states_list[0].begin()->second.date;
-    const string end_date = states_list[states_list.size() - 1].begin()->second.date;
+    const string start_date = list_of_daily_map_of_states[0].begin()->second.date;
+    const string end_date = list_of_daily_map_of_states[list_of_daily_map_of_states.size() - 1].begin()->second.date;
 
-    for (auto& states : states_list)
+    for (auto& daily_map_of_states : list_of_daily_map_of_states)
     {
-        waiting_for_dates_to_be_hedged.push_back(
-            async(launch::async, StartStopLossArbCppHelper, ref(states))
-        );
+        // waiting_for_dates_to_be_hedged.push_back(
+        //     async(launch::async, StartStopLossArbCppHelper, ref(daily_map_of_states))
+        // );
+        StartStopLossArbCppHelper(daily_map_of_states);
     }
 
-    for (const auto& future : waiting_for_dates_to_be_hedged)
-    {
-        future.wait();
-    }
+    // for (const auto& future : waiting_for_dates_to_be_hedged)
+    // {
+    //     future.wait();
+    // }
 
     double elapsed_seconds;
     const auto end_time = chrono::high_resolution_clock::now();
@@ -43,7 +43,7 @@ void StartStopLossArbCpp(
     Print(format(
         "Hedging backtest of {} dates (start:'{}', end:'{}') completed in {:.4f} "
         "seconds",
-        states_list.size(),
+        list_of_daily_map_of_states.size(),
         start_date,
         end_date,
         elapsed_seconds

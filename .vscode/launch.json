@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Windows node cpp debug",
+            "name": "Windows stop-loss-arb debug",
             "type": "cppvsdbg",
             "request": "launch",
             // "preLaunchTask": "node-gyp rebuild",
@@ -31,7 +31,7 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "Linux node cpp debug",
+            "name": "Linux stop-loss-arb cpp",
             "type": "cppdbg",
             "request": "launch",
             // "preLaunchTask": "node-gyp rebuild",
@@ -62,10 +62,49 @@
                 }
             ],
             "externalConsole": false,
-            "miDebuggerPath": "/usr/bin/gdb"
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
         },
         {
-            "name": "node attach debug",
+            "name": "Linux filter-historical-data cpp",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/usr/local/nodejs/bin/node",
+            "args": [
+                "/root/hedgeware/bin/dev.js",
+                "filter-historical-data"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "attach node",
             "type": "node",
             "request": "attach",
             "port": 9229,

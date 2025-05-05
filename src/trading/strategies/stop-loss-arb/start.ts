@@ -1,3 +1,4 @@
+import path from 'node:path';
 import {readJSONFile} from '../../../utils/file';
 import {FloatCalculator as fc} from '../../../utils/float-calculator';
 import {
@@ -28,8 +29,8 @@ import {setTimeout} from 'node:timers/promises';
 export async function startStopLossArb(): Promise<void> {
     if (isHistoricalSnapshot()) {
         if (isHistoricalCppSnapshot()) {
-            // const datesArrayCppPartitions = await getDatesArrayCppPartitions();
-            const datesArrayCppPartitions = [['2025-03-21']];
+            const datesArrayCppPartitions = await getDatesArrayCppPartitions();
+            // const datesArrayCppPartitions = [['2025-03-21']];
 
             for (const dates of datesArrayCppPartitions) {
                 // We pass the dates to C++ in buckets to be run in parallel
@@ -74,10 +75,14 @@ function getTodayDate(): string {
 }
 
 async function getDatesArrayCppPartitions(): Promise<string[][]> {
-    const datesArray = await readJSONFile<string[][]>(
-        `${process.cwd()}\\..\\deephedge\\historical-data\\cpp_historical_partitions.json`,
+    const partitionsPath = path.join(
+        process.cwd(),
+        '..',
+        'deephedge',
+        'historical-data',
+        'cpp_historical_partitions.json',
     );
-
+    const datesArray = await readJSONFile<string[][]>(partitionsPath);
     return datesArray;
 }
 
