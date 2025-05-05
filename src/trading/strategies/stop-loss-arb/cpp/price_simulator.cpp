@@ -75,7 +75,7 @@ string GetFilePathForStockDataOnDate(const StockState& stock_state)
     const string month = string_split(stock_state.date, '-')[1];
 
     return format(
-        "{}\\..\\deephedge\\historical-data-80\\{}\\{}\\{}\\{}.json",
+        "{}\\..\\deephedge\\historical-data\\{}\\{}\\{}\\{}.json",
         cwd,
         year,
         month,

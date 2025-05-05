@@ -99,7 +99,7 @@ export function getDirWithStocksDataOnDate(date: string): string {
     const month = date.split('-')[1];
 
     const cwd = process.cwd();
-    const dir = path.join(cwd, '..', 'deephedge', 'historical-data-80', year, month, date);
+    const dir = path.join(cwd, '..', 'deephedge', 'historical-data', year, month, date);
 
     return dir;
 }
@@ -122,6 +122,6 @@ export function deleteHistoricalSnapshots(stockState: StockState): void {
 
 function getFilePathForStockDataOnDate(stock: string, date: string): string {
     const dir = getDirWithStocksDataOnDate(date);
-    const path = `${dir}\\${stock}.json`;
-    return path;
+    const filePath = path.join(dir, `${stock}.json`);
+    return filePath;
 }

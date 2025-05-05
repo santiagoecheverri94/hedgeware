@@ -48,7 +48,7 @@ export async function startStopLossArb(): Promise<void> {
 }
 
 async function getDatesArrayCppPartitions(): Promise<string[][]> {
-    const datesArray = await readJSONFile<string[][]>(`${process.cwd()}\\..\\deephedge\\historical-data-80\\cpp_historical_partitions.json`);
+    const datesArray = await readJSONFile<string[][]>(`${process.cwd()}\\..\\deephedge\\historical-data\\cpp_historical_partitions.json`);
 
     return datesArray;
 }
