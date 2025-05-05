@@ -26,15 +26,6 @@ void DebugUpperOrLowerBound(
     const std::unordered_map<std::string, StockState>& originalStates
 )
 {
-    if (states[stock].tradingLogs.empty())
-    {
-        RestartRandomPrice();
-        states[stock] = originalStates.at(stock);
-        return;
-    }
-
-    // PrintPnLValues(stock, states);
-
     if (upperOrLowerBound == "up" &&
         states[stock].position < states[stock].targetPosition)
     {

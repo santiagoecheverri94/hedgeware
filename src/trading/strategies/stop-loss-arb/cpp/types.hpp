@@ -52,18 +52,21 @@ struct HistoricalSnapshots
 struct StockState
 {
     std::string date;
+    // prediction?: number;
+    // profitThreshold?: number;
+    // lossThreshold?: number;
     bool isStaticIntervals;
     std::string brokerageId;
     Decimal brokerageTradingCostPerShare;
     int sharesPerInterval;
     Decimal intervalProfit;
     Decimal initialPrice;
-    int shiftIntervalsFromInitialPrice;
     Decimal spaceBetweenIntervals;
     int numContracts;
     int position;
     int targetPosition;
     Decimal realizedPnL;
+    Decimal realizedPnLAsPercentage;
     Decimal exitPnL;
     Decimal exitPnLAsPercentage;
     Decimal maxMovingProfitAsPercentage;
@@ -79,6 +82,6 @@ struct StockState
     Decimal lastAsk;
     Decimal lastBid;
     std::vector<SmoothingInterval> intervals;
-    std::vector<TradingLog> tradingLogs;
+    // std::vector<TradingLog> tradingLogs;
     HistoricalSnapshots historicalSnapshots;
 };

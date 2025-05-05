@@ -28,10 +28,11 @@ Snapshot ReconcileStockPosition(const std::string& stock, StockState& stockState
     // 1)
     CheckCrossings(stockState, snapshot);
 
+    // 2)
     vector<int> intervalIndicesToExecute = GetNumToBuy(stockState, snapshot);
     const int numToBuy = intervalIndicesToExecute.size();
 
-    // 2)
+    // 3)
     int numToSell = 0;
     if (numToBuy == 0)
     {
@@ -39,7 +40,7 @@ Snapshot ReconcileStockPosition(const std::string& stock, StockState& stockState
         numToSell = intervalIndicesToExecute.size();
     }
 
-    // 3)
+    // 4)
     optional<int> newPosition;
     if (numToBuy > 0)
     {
@@ -50,7 +51,7 @@ Snapshot ReconcileStockPosition(const std::string& stock, StockState& stockState
         newPosition = stockState.position - stockState.sharesPerInterval * numToSell;
     }
 
-    // 4)
+    // 5)
     if (newPosition.has_value())
     {
         const auto setNewPositionRVal =
@@ -66,8 +67,8 @@ Snapshot ReconcileStockPosition(const std::string& stock, StockState& stockState
         CheckCrossings(stockState, snapshot);
     }
 
-    // 5)
-    // No Step 5 on cpp because we've decided not to add Live Trading logic
+    // 6)
+    // No Step 6 on cpp because we've decided not to add Live Trading logic
 
     return snapshot;
 }
@@ -222,6 +223,9 @@ SetNewPositionReturnType SetNewPosition(
 
     return SetNewPositionReturnType{.priceSetAt = quotedPrice, .orderSide = orderSide};
 }
+
+// TODO: consider if should translate
+// reconcileRealizedPnlWhenHistoricalSnapshotsExhausted
 
 void UpdateRealizedPnL(
     StockState& stockState,
@@ -380,6 +384,9 @@ void UpdateExitPnL(StockState& stockState)
             stockState.maxMovingLossAsPercentage;
     }
 }
+
+// Here the TS version is different, because it has the
+// getActiveIntervalIndexesBeforeExit for early live exit...
 
 void CorrectBadBuyIfRequired(StockState& stockState, std::vector<int>& indexesToExecute)
 {

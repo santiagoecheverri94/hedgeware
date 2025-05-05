@@ -77,17 +77,18 @@ export async function reconcileStockPosition(
     // 1)
     checkCrossings(stockState, snapshot);
 
+    // 2)
     let intervalIndicesToExecute = getNumToBuy(stockState, snapshot);
     const numToBuy = intervalIndicesToExecute.length;
 
-    // 2)
+    // 3)
     let numToSell = 0;
     if (numToBuy === 0) {
         intervalIndicesToExecute = getNumToSell(stockState, snapshot);
         numToSell = intervalIndicesToExecute.length;
     }
 
-    // 3)
+    // 4)
     let newPosition: number | undefined;
     if (numToBuy > 0) {
         newPosition = stockState.position + stockState.sharesPerInterval * numToBuy;
@@ -95,7 +96,7 @@ export async function reconcileStockPosition(
         newPosition = stockState.position - stockState.sharesPerInterval * numToSell;
     }
 
-    // 4)
+    // 5)
     if (newPosition !== undefined) {
         const setNewPositionRVal = await setNewPosition({
             stock,
@@ -115,7 +116,7 @@ export async function reconcileStockPosition(
         checkCrossings(stockState, snapshot);
     }
 
-    // 5)
+    // 6)
     if (isSnapshotChanged) {
         if (isLiveTrading()) {
             syncWriteJSONFile(

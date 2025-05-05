@@ -21,7 +21,6 @@ export function getFullStockState(partial: StockState): StockState {
         intervalProfit: partial.intervalProfit,
         numContracts: partial.numContracts,
         initialPrice: partial.initialPrice,
-        shiftIntervalsFromInitialPrice: partial.shiftIntervalsFromInitialPrice,
         isStaticIntervals: Boolean(partial.isStaticIntervals),
         position: 0,
         lastAsk: 0,
@@ -44,10 +43,7 @@ function getLongIntervalsAboveInitialPrice(partial: StockState): SmoothingInterv
     const numIntervals = partial.targetPosition / partial.sharesPerInterval;
 
     for (let index = 1; index <= numIntervals + 1; index++) {
-        const spaceFromBaseInterval = fc.multiply(
-            index + partial.shiftIntervalsFromInitialPrice,
-            partial.spaceBetweenIntervals,
-        );
+        const spaceFromBaseInterval = fc.multiply(index, partial.spaceBetweenIntervals);
         const sellPrice = fc.add(partial.initialPrice, spaceFromBaseInterval);
 
         intervals.unshift({
@@ -75,10 +71,7 @@ function getShortIntervalsBelowInitialPrice(partial: StockState): SmoothingInter
     const numIntervals = partial.targetPosition / partial.sharesPerInterval;
 
     for (let index = 1; index <= numIntervals + 1; index++) {
-        const spaceFromBaseInterval = fc.multiply(
-            index + partial.shiftIntervalsFromInitialPrice,
-            partial.spaceBetweenIntervals,
-        );
+        const spaceFromBaseInterval = fc.multiply(index, partial.spaceBetweenIntervals);
         const buyPrice = fc.subtract(partial.initialPrice, spaceFromBaseInterval);
 
         intervals.push({
