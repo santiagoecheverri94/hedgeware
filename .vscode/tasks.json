@@ -6,9 +6,7 @@
             "label": "node-gyp rebuild",
             "command": "yarn",
             "args": [
-                "node-gyp",
-                "rebuild",
-                "--debug"
+                "cpp-debug"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"

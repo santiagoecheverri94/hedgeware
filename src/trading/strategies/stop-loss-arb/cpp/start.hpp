@@ -7,10 +7,16 @@
 #include "types.hpp"
 
 void StartStopLossArbCpp(
-    std::vector<std::unordered_map<std::string, StockState>>& states_list
+    std::vector<std::vector<std::unordered_map<std::string, StockState>>>&
+        lists_of_list_of_daily_map_of_states
 );
 
-void StartStopLossArbCppHelper(std::unordered_map<std::string, StockState>& states);
+void StartMultiDayStopLossArb(
+    std::vector<std::unordered_map<std::string, StockState>>&
+        list_of_daily_map_of_states
+);
+
+void StartDailyStopLossArb(std::unordered_map<std::string, StockState>& states);
 
 void HedgeStockWhileMarketIsOpen(
     const std::string& stock, std::unordered_map<std::string, StockState>& states

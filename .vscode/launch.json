@@ -20,6 +20,10 @@
                 //     "value": "true"
                 // },
                 {
+                    "name": "PRINT_PNL_VALUES",
+                    "value": "true"
+                },
+                {
                     "name": "HISTORICAL_SNAPSHOT",
                     "value": "true"
                 },

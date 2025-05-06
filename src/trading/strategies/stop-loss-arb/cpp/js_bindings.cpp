@@ -2,6 +2,27 @@
 
 using namespace std;
 
+std::vector<std::vector<std::unordered_map<std::string, StockState>>>
+BindJsListOfStatesListToCppListOfStatesList(const JS::Array& js_states_list)
+{
+    int length = js_states_list.Length();
+
+    std::vector<std::vector<std::unordered_map<std::string, StockState>>> result;
+    result.reserve(length);
+
+    for (int i = 0; i < length; ++i)
+    {
+        JS::Array js_states = js_states_list[i].As<JS::Array>();
+
+        std::vector<std::unordered_map<std::string, StockState>> cpp_states_list =
+            BindJsStatesListToCppStatesList(js_states);
+
+        result.push_back(cpp_states_list);
+    }
+
+    return result;
+}
+
 std::vector<std::unordered_map<std::string, StockState>>
 BindJsStatesListToCppStatesList(const JS::Array& js_states_list)
 {

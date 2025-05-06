@@ -8,6 +8,9 @@
 
 namespace JS = Napi;
 
+std::vector<std::vector<std::unordered_map<std::string, StockState>>>
+BindJsListOfStatesListToCppListOfStatesList(const JS::Array& js_states_list);
+
 std::vector<std::unordered_map<std::string, StockState>>
 BindJsStatesListToCppStatesList(const JS::Array& js_states_list);
 

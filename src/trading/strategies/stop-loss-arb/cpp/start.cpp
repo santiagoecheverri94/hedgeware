@@ -11,56 +11,76 @@
 using namespace std;
 
 void StartStopLossArbCpp(
-    std::vector<std::unordered_map<std::string, StockState>>& list_of_daily_map_of_states
+    std::vector<std::vector<std::unordered_map<std::string, StockState>>>&
+        lists_of_list_of_daily_map_of_states
 )
 {
     const auto start_time = chrono::high_resolution_clock::now();
 
-    // vector<future<void>> waiting_for_dates_to_be_hedged{};
+    vector<future<void>> waiting_for_dates_to_be_hedged{};
 
-    const string start_date = list_of_daily_map_of_states[0].begin()->second.date;
-    const string end_date = list_of_daily_map_of_states[list_of_daily_map_of_states.size() - 1].begin()->second.date;
-
-    for (auto& daily_map_of_states : list_of_daily_map_of_states)
+    for (auto& list_of_daily_map_of_states : lists_of_list_of_daily_map_of_states)
     {
-        // waiting_for_dates_to_be_hedged.push_back(
-        //     async(launch::async, StartStopLossArbCppHelper, ref(daily_map_of_states))
-        // );
-        StartStopLossArbCppHelper(daily_map_of_states);
+        waiting_for_dates_to_be_hedged.push_back(async(
+            launch::async, StartMultiDayStopLossArb, ref(list_of_daily_map_of_states)
+        ));
     }
 
-    // for (const auto& future : waiting_for_dates_to_be_hedged)
-    // {
-    //     future.wait();
-    // }
+    for (const auto& future : waiting_for_dates_to_be_hedged)
+    {
+        future.wait();
+    }
 
-    double elapsed_seconds;
+    double elapsed_minutes;
     const auto end_time = chrono::high_resolution_clock::now();
-    elapsed_seconds =
-        chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count() /
-        1000.0;
+    elapsed_minutes =
+        (chrono::duration_cast<chrono::milliseconds>(end_time - start_time).count() /
+         1000.0) /
+        60;
 
-    Print(format(
-        "Hedging backtest of {} dates (start:'{}', end:'{}') completed in {:.4f} "
-        "seconds",
-        list_of_daily_map_of_states.size(),
-        start_date,
-        end_date,
-        elapsed_seconds
-    ));
+    // const string start_date =
+    //     lists_of_list_of_daily_map_of_states[0].begin()->second.date;
+    // const string end_date = lists_of_list_of_daily_map_of_states
+    //                             [lists_of_list_of_daily_map_of_states.size() - 1]
+    //                                 .begin()
+    //                                 ->second.date;
+
+    // Print(format(
+    //     "Hedging backtest of {} dates (start:'{}', end:'{}') completed in {:.4f} "
+    //     "seconds",
+    //     lists_of_list_of_daily_map_of_states.size(),
+    //     start_date,
+    //     end_date,
+    //     elapsed_minutes
+    // ));
+
+    Print(format("Hedging backtest done in {:.4f} minutes", elapsed_minutes));
 }
 
-void StartStopLossArbCppHelper(std::unordered_map<std::string, StockState>& states)
+void StartMultiDayStopLossArb(
+    std::vector<std::unordered_map<std::string, StockState>>&
+        list_of_daily_map_of_states
+)
 {
-    for (const auto& stock_to_state_pair : states)
+    for (auto& daily_map_of_states : list_of_daily_map_of_states)
+    {
+        StartDailyStopLossArb(daily_map_of_states);
+    }
+}
+
+void StartDailyStopLossArb(
+    std::unordered_map<std::string, StockState>& daily_map_of_states
+)
+{
+    for (const auto& stock_to_state_pair : daily_map_of_states)
     {
         const auto& stock = stock_to_state_pair.first;
-        HedgeStockWhileMarketIsOpen(stock, states);
+        HedgeStockWhileMarketIsOpen(stock, daily_map_of_states);
     }
 
     // Get a sorted list of stock keys
     vector<string> sortedStocks;
-    for (const auto& [stock, _] : states)
+    for (const auto& [stock, _] : daily_map_of_states)
     {
         sortedStocks.push_back(stock);
     }
@@ -69,7 +89,7 @@ void StartStopLossArbCppHelper(std::unordered_map<std::string, StockState>& stat
     // Print results for each stock
     for (const auto& stock : sortedStocks)
     {
-        const StockState& state = states[stock];
+        const StockState& state = daily_map_of_states[stock];
 
         const char* printPnLValuesEnv = getenv("PRINT_PNL_VALUES");
         if (printPnLValuesEnv != nullptr)

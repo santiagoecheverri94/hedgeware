@@ -17,11 +17,12 @@ void JsTestCallJSFunction(const JS::CallbackInfo& info)
 
 void JsStartStopLossArbCpp(const JS::CallbackInfo& info)
 {
-    const auto js_states_list = info[0].As<JS::Array>();
+    const auto js_list_of_states_list = info[0].As<JS::Array>();
 
-    auto cpp_states_list = BindJsStatesListToCppStatesList(js_states_list);
+    auto list_of_cpp_states_list =
+        BindJsListOfStatesListToCppListOfStatesList(js_list_of_states_list);
 
-    StartStopLossArbCpp(cpp_states_list);
+    StartStopLossArbCpp(list_of_cpp_states_list);
 }
 
 void JsFilterHistoricalData(const JS::CallbackInfo& info) { CopyFilteredJsonFiles(); }
