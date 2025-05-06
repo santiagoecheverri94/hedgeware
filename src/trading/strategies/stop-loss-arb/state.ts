@@ -1,13 +1,14 @@
-import {getFileNamesWithinFolder, jsonPrettyPrint, readJSONFile, syncWriteJSONFile} from '../../../utils/file';
 import {
-    getDirWithStocksDataOnDate,
-    isLiveTrading,
-} from '../../../utils/price-simulator';
+    getFileNamesWithinFolder,
+    jsonPrettyPrint,
+    readJSONFile,
+    syncWriteJSONFile,
+} from '../../../utils/file';
+import {getDirWithStocksDataOnDate} from '../../../utils/price-simulator';
 import {StockState} from './types';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import {getFullStockState} from './new-state';
-import {FloatCalculator as fc} from '../../../utils/float-calculator';
 import {BrokerageClient} from '../../brokerage-clients/brokerage-client';
 
 export async function getStocksFileNames(
@@ -46,8 +47,9 @@ export async function getStockStates(
     return states;
 }
 
-export async function getHistoricalStockStates(
+export async function getHistoricalStockStatesForDate(
     date: string,
+    partialStockState: Partial<StockState>,
 ): Promise<{ [stock: string]: StockState }> {
     const dir = getDirWithStocksDataOnDate(date);
 
@@ -58,9 +60,9 @@ export async function getHistoricalStockStates(
     for (const file of jsonFiles) {
         const filePath = path.join(dir, file);
 
-        let stock_file_data: any;
+        let stockFileData: any;
         try {
-            stock_file_data = await readJSONFile(filePath);
+            stockFileData = await readJSONFile(filePath);
         } catch (error) {
             console.error(`\nError reading file ${filePath}\n`);
             throw error;
@@ -68,11 +70,12 @@ export async function getHistoricalStockStates(
 
         const stockState = getInitialStockState(
             date,
-            stock_file_data.ticker,
-            stock_file_data.snapshots[0].ask,
+            stockFileData.ticker,
+            stockFileData.snapshots[0].ask,
+            partialStockState,
         );
 
-        stockStates[stock_file_data.ticker] = stockState;
+        stockStates[stockFileData.ticker] = stockState;
     }
 
     return stockStates;
@@ -82,27 +85,18 @@ function getInitialStockState(
     date: string,
     ticker: string,
     initialAskPrice: number,
+    partialStockState: Partial<StockState>,
     prediction?: number,
 ): StockState {
-    const intervalProfit = 0.02;
-
-    // These are flawed hardcoded values. Need to move into a file.
-    const partial: Partial<StockState> = {
+    const completedPartial: Partial<StockState> = {
         date,
         prediction,
-        profitThreshold: 0.5,
-        lossThreshold: -0.75,
         brokerageId: ticker,
-        brokerageTradingCostPerShare: 0, // otherwise 0.004,
-        numContracts: 4, // to achieve round lots
         initialPrice: initialAskPrice,
-        targetPosition: 100,
-        sharesPerInterval: 25,
-        spaceBetweenIntervals: fc.multiply(intervalProfit, 2), // this also needs consideration
-        intervalProfit,
+        ...partialStockState,
     };
 
-    const stockState = getFullStockState(partial as StockState);
+    const stockState = getFullStockState(completedPartial as StockState);
 
     return stockState;
 }
@@ -110,6 +104,7 @@ function getInitialStockState(
 export async function writeLiveStockStatesBeforeTradingStart(
     date: string,
     brokerageClient: BrokerageClient,
+    partialStockState: Partial<StockState>,
 ): Promise<void> {
     const targetFolder = getStockStatesFolderPath(date);
 
@@ -124,7 +119,9 @@ export async function writeLiveStockStatesBeforeTradingStart(
 
     const potentialTickers = potentialTickerProbs.map(ticker => ticker.ticker);
 
-    const shortableQuantities = await brokerageClient.getShortableQuantities(potentialTickers);
+    const shortableQuantities = await brokerageClient.getShortableQuantities(
+        potentialTickers,
+    );
     const snapshots = await brokerageClient.getSnapshots(potentialTickers);
 
     let numLiveTickers = 0;
@@ -140,10 +137,14 @@ export async function writeLiveStockStatesBeforeTradingStart(
                 date,
                 ticker,
                 snapshot.ask,
+                partialStockState,
                 prediction,
             );
 
-            syncWriteJSONFile(getStockStateFilePath(ticker, date), jsonPrettyPrint(stockState));
+            syncWriteJSONFile(
+                getStockStateFilePath(ticker, date),
+                jsonPrettyPrint(stockState),
+            );
 
             numLiveTickers++;
             if (numLiveTickers >= 8) {

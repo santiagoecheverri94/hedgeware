@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/multiprecision/cpp_dec_float.hpp>
+#include <format>
 #include <functional>
 #include <iostream>
 #include <variant>

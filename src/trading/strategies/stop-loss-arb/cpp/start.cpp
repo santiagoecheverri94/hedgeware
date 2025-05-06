@@ -7,22 +7,25 @@
 #include "algo.hpp"
 #include "debug.hpp"
 #include "price_simulator.hpp"
+#include "state.hpp"
 
 using namespace std;
 
 void StartStopLossArbCpp(
-    std::vector<std::vector<std::unordered_map<std::string, StockState>>>&
-        lists_of_list_of_daily_map_of_states
+    const std::vector<std::vector<std::string>>& lists_of_list_of_dates,
+    const PartialStockState& partial_stock_state
 )
 {
     const auto start_time = chrono::high_resolution_clock::now();
 
     vector<future<void>> waiting_for_dates_to_be_hedged{};
 
-    for (auto& list_of_daily_map_of_states : lists_of_list_of_daily_map_of_states)
+    for (auto& list_of_dates : lists_of_list_of_dates)
     {
         waiting_for_dates_to_be_hedged.push_back(async(
-            launch::async, StartMultiDayStopLossArb, ref(list_of_daily_map_of_states)
+            launch::async,
+            [&list_of_dates, &partial_stock_state]()
+            { StartMultiDayStopLossArb(list_of_dates, partial_stock_state); }
         ));
     }
 
@@ -38,39 +41,31 @@ void StartStopLossArbCpp(
          1000.0) /
         60;
 
-    // const string start_date =
-    //     lists_of_list_of_daily_map_of_states[0].begin()->second.date;
-    // const string end_date = lists_of_list_of_daily_map_of_states
-    //                             [lists_of_list_of_daily_map_of_states.size() - 1]
-    //                                 .begin()
-    //                                 ->second.date;
-
-    // Print(format(
-    //     "Hedging backtest of {} dates (start:'{}', end:'{}') completed in {:.4f} "
-    //     "seconds",
-    //     lists_of_list_of_daily_map_of_states.size(),
-    //     start_date,
-    //     end_date,
-    //     elapsed_minutes
-    // ));
-
     Print(format("Hedging backtest done in {:.4f} minutes", elapsed_minutes));
 }
 
 void StartMultiDayStopLossArb(
-    std::vector<std::unordered_map<std::string, StockState>>&
-        list_of_daily_map_of_states
+    const std::vector<std::string>& list_of_dates,
+    const PartialStockState& partial_stock_state
 )
 {
-    for (auto& daily_map_of_states : list_of_daily_map_of_states)
+    for (auto& date : list_of_dates)
     {
-        StartDailyStopLossArb(daily_map_of_states);
+        StartDailyStopLossArb(date, partial_stock_state);
     }
 }
 
 void StartDailyStopLossArb(
-    std::unordered_map<std::string, StockState>& daily_map_of_states
+    const std::string date, const PartialStockState& partial_stock_state
 )
+{
+    auto daily_map_of_states =
+        GetHistoricalStockStatesForDate(date, partial_stock_state);
+
+    StartStopLossArb(daily_map_of_states);
+}
+
+void StartStopLossArb(std::unordered_map<std::string, StockState>& daily_map_of_states)
 {
     for (const auto& stock_to_state_pair : daily_map_of_states)
     {

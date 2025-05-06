@@ -52,19 +52,22 @@ struct HistoricalSnapshots
 struct StockState
 {
     std::string date;
+    std::string brokerageId;
+    Decimal brokerageTradingCostPerShare;
+    int targetPosition;
+    int sharesPerInterval;
+    Decimal spaceBetweenIntervals;
+    Decimal intervalProfit;
+    int numContracts;
+    Decimal initialPrice;
+    std::vector<SmoothingInterval> intervals;
     // prediction?: number;
     // profitThreshold?: number;
     // lossThreshold?: number;
     bool isStaticIntervals;
-    std::string brokerageId;
-    Decimal brokerageTradingCostPerShare;
-    int sharesPerInterval;
-    Decimal intervalProfit;
-    Decimal initialPrice;
-    Decimal spaceBetweenIntervals;
-    int numContracts;
     int position;
-    int targetPosition;
+    Decimal lastAsk;
+    Decimal lastBid;
     Decimal realizedPnL;
     Decimal realizedPnLAsPercentage;
     Decimal exitPnL;
@@ -79,9 +82,9 @@ struct StockState
     Decimal max_loss_when_reached_0_5_percentage_profit;
     bool reached_0_25_percentage_profit;
     Decimal max_loss_when_reached_0_25_percentage_profit;
-    Decimal lastAsk;
-    Decimal lastBid;
-    std::vector<SmoothingInterval> intervals;
     // std::vector<TradingLog> tradingLogs;
     HistoricalSnapshots historicalSnapshots;
 };
+
+using PartialStockState =
+    std::unordered_map<std::string, std::variant<std::string, bool, Decimal>>;

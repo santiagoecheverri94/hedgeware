@@ -1,6 +1,5 @@
 #include "price_simulator.hpp"
 
-#include <filesystem>
 #include <format>
 #include <fstream>
 #include <nlohmann/json.hpp>
@@ -66,21 +65,31 @@ void DeleteHistoricalSnapshots(StockState& stock_state)
     delete stock_state.historicalSnapshots.data;
 }
 
-string GetFilePathForStockDataOnDate(const StockState& stock_state)
+std::string GetFilePathForStockDataOnDate(
+    const std::string& ticker, const std::string& date
+)
 {
-    string year = string_split(stock_state.date, '-')[0];
-    string month = string_split(stock_state.date, '-')[1];
-
-    filesystem::path file_path = filesystem::current_path() / ".." / "deephedge" /
-                                 "historical-data" / year / month / stock_state.date /
-                                 (stock_state.brokerageId + ".json");
+    const auto dir = GetDirWithStocksDataOnDate(date);
+    filesystem::path file_path = dir / (ticker + ".json");
 
     return file_path.lexically_normal().string();
 }
 
+std::filesystem::path GetDirWithStocksDataOnDate(const std::string& date)
+{
+    string year = string_split(date, '-')[0];
+    string month = string_split(date, '-')[1];
+
+    filesystem::path folder_path = filesystem::current_path() / ".." / "deephedge" /
+                                   "historical-data" / year / month / date;
+
+    return folder_path.lexically_normal();
+}
+
 void WritePnLAsPercentagesToSnapshotsFile(const StockState& stock_state)
 {
-    string file_path = GetFilePathForStockDataOnDate(stock_state);
+    string file_path =
+        GetFilePathForStockDataOnDate(stock_state.brokerageId, stock_state.date);
 
     try
     {
@@ -141,7 +150,8 @@ void WritePnLAsPercentagesToSnapshotsFile(const StockState& stock_state)
 
 vector<Snapshot>* GetSnapshotsForStockOnDate(const StockState& stock_state)
 {
-    string file_path = GetFilePathForStockDataOnDate(stock_state);
+    string file_path =
+        GetFilePathForStockDataOnDate(stock_state.brokerageId, stock_state.date);
     vector<Snapshot>* data = new vector<Snapshot>();
 
     try

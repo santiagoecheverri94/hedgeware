@@ -1,6 +1,66 @@
 #include "js_bindings.hpp"
 
+#include "utils.hpp"
+
 using namespace std;
+
+std::vector<std::vector<std::string>> BindJsListOfListOfDatesToCppListOfListOfDates(
+    const JS::Array& js_list_of_list_of_dates
+)
+{
+    int outer_length = js_list_of_list_of_dates.Length();
+    std::vector<std::vector<std::string>> result;
+    result.reserve(outer_length);
+
+    for (int i = 0; i < outer_length; ++i)
+    {
+        JS::Array js_inner_list = js_list_of_list_of_dates[i].As<JS::Array>();
+        int inner_length = js_inner_list.Length();
+        std::vector<std::string> inner_result;
+        inner_result.reserve(inner_length);
+
+        for (int j = 0; j < inner_length; ++j)
+        {
+            std::string date = js_inner_list.Get(j).As<JS::String>().Utf8Value();
+            inner_result.push_back(date);
+        }
+
+        result.push_back(inner_result);
+    }
+
+    return result;
+}
+
+PartialStockState BindJsPartialStockStateToCppMap(
+    const JS::Object& js_partial_stock_argument
+)
+{
+    PartialStockState result;
+
+    JS::Array keys = js_partial_stock_argument.GetPropertyNames();
+    for (size_t i = 0; i < keys.Length(); ++i)
+    {
+        const string key = keys.Get(i).As<JS::String>().Utf8Value();
+        JS::Value value = js_partial_stock_argument.Get(key);
+
+        if (value.IsString())
+        {
+            result[key] = value.As<JS::String>().Utf8Value();
+        }
+        else if (value.IsBoolean())
+        {
+            result[key] = value.As<JS::Boolean>().Value();
+        }
+        else if (value.IsNumber())
+        {
+            const string number_as_string =
+                value.As<JS::Number>().ToString().Utf8Value();
+            result[key] = Decimal(number_as_string);
+        }
+    }
+
+    return result;
+}
 
 std::vector<std::vector<std::unordered_map<std::string, StockState>>>
 BindJsListOfStatesListToCppListOfStatesList(const JS::Array& js_states_list)

@@ -10,9 +10,6 @@ export function getFullStockState(partial: StockState): StockState {
 
     const newState: StockState = {
         date: partial.date,
-        prediction: partial.prediction,
-        profitThreshold: partial.profitThreshold,
-        lossThreshold: partial.lossThreshold,
         brokerageId: partial.brokerageId,
         brokerageTradingCostPerShare: partial.brokerageTradingCostPerShare,
         targetPosition: partial.targetPosition,
@@ -21,7 +18,11 @@ export function getFullStockState(partial: StockState): StockState {
         intervalProfit: partial.intervalProfit,
         numContracts: partial.numContracts,
         initialPrice: partial.initialPrice,
-        isStaticIntervals: Boolean(partial.isStaticIntervals),
+        intervals: [...longIntervals, ...shortIntervals],
+        prediction: partial.prediction,
+        profitThreshold: partial.profitThreshold,
+        lossThreshold: partial.lossThreshold,
+        isStaticIntervals: false,
         position: 0,
         lastAsk: 0,
         lastBid: 0,
@@ -31,24 +32,28 @@ export function getFullStockState(partial: StockState): StockState {
         exitPnLAsPercentage: 0,
         maxMovingProfitAsPercentage: 0,
         maxMovingLossAsPercentage: 0,
-        intervals: [...longIntervals, ...shortIntervals],
         tradingLogs: [],
     };
 
     return newState;
 }
 
-function getLongIntervalsAboveInitialPrice(partial: StockState): SmoothingInterval[] {
+function getLongIntervalsAboveInitialPrice(
+    stockState: StockState,
+): SmoothingInterval[] {
     const intervals: SmoothingInterval[] = [];
-    const numIntervals = partial.targetPosition / partial.sharesPerInterval;
+    const numIntervals = stockState.targetPosition / stockState.sharesPerInterval;
 
     for (let index = 1; index <= numIntervals + 1; index++) {
-        const spaceFromBaseInterval = fc.multiply(index, partial.spaceBetweenIntervals);
-        const sellPrice = fc.add(partial.initialPrice, spaceFromBaseInterval);
+        const spaceFromBaseInterval = fc.multiply(
+            index,
+            stockState.spaceBetweenIntervals,
+        );
+        const sellPrice = fc.add(stockState.initialPrice, spaceFromBaseInterval);
 
         intervals.unshift({
             type: IntervalType.LONG,
-            positionLimit: partial.sharesPerInterval * index,
+            positionLimit: stockState.sharesPerInterval * index,
             SELL: {
                 price: sellPrice,
                 active: false,
@@ -56,7 +61,7 @@ function getLongIntervalsAboveInitialPrice(partial: StockState): SmoothingInterv
                 boughtAtPrice: Number.NaN,
             },
             BUY: {
-                price: fc.subtract(sellPrice, partial.intervalProfit),
+                price: fc.subtract(sellPrice, stockState.intervalProfit),
                 active: true,
                 crossed: true,
             },
@@ -66,19 +71,24 @@ function getLongIntervalsAboveInitialPrice(partial: StockState): SmoothingInterv
     return intervals;
 }
 
-function getShortIntervalsBelowInitialPrice(partial: StockState): SmoothingInterval[] {
+function getShortIntervalsBelowInitialPrice(
+    stockState: StockState,
+): SmoothingInterval[] {
     const intervals: SmoothingInterval[] = [];
-    const numIntervals = partial.targetPosition / partial.sharesPerInterval;
+    const numIntervals = stockState.targetPosition / stockState.sharesPerInterval;
 
     for (let index = 1; index <= numIntervals + 1; index++) {
-        const spaceFromBaseInterval = fc.multiply(index, partial.spaceBetweenIntervals);
-        const buyPrice = fc.subtract(partial.initialPrice, spaceFromBaseInterval);
+        const spaceFromBaseInterval = fc.multiply(
+            index,
+            stockState.spaceBetweenIntervals,
+        );
+        const buyPrice = fc.subtract(stockState.initialPrice, spaceFromBaseInterval);
 
         intervals.push({
             type: IntervalType.SHORT,
-            positionLimit: -(partial.sharesPerInterval * index),
+            positionLimit: -(stockState.sharesPerInterval * index),
             SELL: {
-                price: fc.add(buyPrice, partial.intervalProfit),
+                price: fc.add(buyPrice, stockState.intervalProfit),
                 active: true,
                 crossed: true,
             },
