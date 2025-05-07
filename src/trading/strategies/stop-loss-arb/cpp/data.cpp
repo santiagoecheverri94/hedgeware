@@ -26,7 +26,7 @@ void CopyFilteredJsonFiles()
 
     for (auto& fut : futures)
     {
-        fut.wait();
+        fut.get();
     }
 }
 
@@ -65,7 +65,7 @@ void CopyFilteredJsonFilesForYear(const string& year)
 
                     filesystem::path dstBase =
                         filesystem::current_path() / ".." / "deephedge" /
-                        format("historical-data-{}-100M", folderSuffix) / year;
+                        format("historical-data-{}", folderSuffix) / year;
 
                     filesystem::path dstPath = dstBase / relativePath;
 
@@ -106,19 +106,19 @@ std::string GetHistoricalDataFolderSuffix(const filesystem::path& filePath)
 
     if (GetDecimal(1) <= price && price < GetDecimal(2))
     {
-        return "[1-2)";
+        return "[1,2)";
     }
     else if (GetDecimal(2) <= price && price < GetDecimal(3.5))
     {
-        return "[2-3p5)";
+        return "[2,3p5)";
     }
     else if (GetDecimal(3.5) <= price && price < GetDecimal(7))
     {
-        return "[3p5-7)";
+        return "[3p5,7)";
     }
     else if (GetDecimal(7) <= price && price < GetDecimal(10))
     {
-        return "[7-10)";
+        return "[7,10)";
     }
     else
     {

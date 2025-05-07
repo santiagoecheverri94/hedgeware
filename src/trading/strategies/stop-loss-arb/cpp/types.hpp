@@ -62,8 +62,8 @@ struct StockState
     Decimal initialPrice;
     std::vector<SmoothingInterval> intervals;
     // prediction?: number;
-    // profitThreshold?: number;
-    // lossThreshold?: number;
+    Decimal profitThreshold;
+    Decimal lossThreshold;
     bool isStaticIntervals;
     int position;
     Decimal lastAsk;

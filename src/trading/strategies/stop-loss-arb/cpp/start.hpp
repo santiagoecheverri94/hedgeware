@@ -11,12 +11,18 @@ void StartStopLossArbCpp(
     const PartialStockState& partial_stock_state
 );
 
-void StartMultiDayStopLossArb(
+struct AggResults
+{
+    int num_stocks;
+    int num_stocks_profitable;
+};
+
+AggResults StartMultiDayStopLossArb(
     const std::vector<std::string>& list_of_dates,
     const PartialStockState& partial_stock_state
 );
 
-void StartDailyStopLossArb(
+AggResults StartDailyStopLossArb(
     const std::string date, const PartialStockState& partial_stock_state
 );
 
@@ -25,3 +31,9 @@ void StartStopLossArb(std::unordered_map<std::string, StockState>& states);
 void HedgeStockWhileMarketIsOpen(
     const std::string& stock, std::unordered_map<std::string, StockState>& states
 );
+
+AggResults GetAggregateResults(
+    const std::unordered_map<std::string, StockState>& states
+);
+
+bool IsStockProfitable(const StockState& stockState);

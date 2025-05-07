@@ -18,20 +18,28 @@ void StartStopLossArbCpp(
 {
     const auto start_time = chrono::high_resolution_clock::now();
 
-    vector<future<void>> waiting_for_dates_to_be_hedged{};
+    vector<future<AggResults>> waiting_for_dates_to_be_hedged{};
 
     for (auto& list_of_dates : lists_of_list_of_dates)
     {
         waiting_for_dates_to_be_hedged.push_back(async(
             launch::async,
-            [&list_of_dates, &partial_stock_state]()
-            { StartMultiDayStopLossArb(list_of_dates, partial_stock_state); }
+            [&list_of_dates, &partial_stock_state]() -> AggResults
+            { return StartMultiDayStopLossArb(list_of_dates, partial_stock_state); }
         ));
     }
 
-    for (const auto& future : waiting_for_dates_to_be_hedged)
+    AggResults results{
+        .num_stocks = 0,
+        .num_stocks_profitable = 0,
+    };
+
+    for (auto& future : waiting_for_dates_to_be_hedged)
     {
-        future.wait();
+        const auto result = future.get();
+
+        results.num_stocks += result.num_stocks;
+        results.num_stocks_profitable += result.num_stocks_profitable;
     }
 
     double elapsed_minutes;
@@ -41,21 +49,42 @@ void StartStopLossArbCpp(
          1000.0) /
         60;
 
-    Print(format("Hedging backtest done in {:.4f} minutes", elapsed_minutes));
+    Print(format("Hedging backtest done in {:.4f} minutes\n", elapsed_minutes));
+
+    Print(format("Number of stocks: {}", results.num_stocks));
+    Print(format("Number of profitable stocks: {}", results.num_stocks_profitable));
+
+    const Decimal percentage_profitable =
+        (GetDecimal(results.num_stocks_profitable) / GetDecimal(results.num_stocks)) *
+        100.0;
+    Print(format(
+        "Percentage of profitable stocks: {:.2f}%",
+        percentage_profitable.convert_to<double>()
+    ));
 }
 
-void StartMultiDayStopLossArb(
+AggResults StartMultiDayStopLossArb(
     const std::vector<std::string>& list_of_dates,
     const PartialStockState& partial_stock_state
 )
 {
+    AggResults results{
+        .num_stocks = 0,
+        .num_stocks_profitable = 0,
+    };
+
     for (auto& date : list_of_dates)
     {
-        StartDailyStopLossArb(date, partial_stock_state);
+        const auto result = StartDailyStopLossArb(date, partial_stock_state);
+
+        results.num_stocks += result.num_stocks;
+        results.num_stocks_profitable += result.num_stocks_profitable;
     }
+
+    return results;
 }
 
-void StartDailyStopLossArb(
+AggResults StartDailyStopLossArb(
     const std::string date, const PartialStockState& partial_stock_state
 )
 {
@@ -63,6 +92,10 @@ void StartDailyStopLossArb(
         GetHistoricalStockStatesForDate(date, partial_stock_state);
 
     StartStopLossArb(daily_map_of_states);
+
+    const auto agg_results = GetAggregateResults(daily_map_of_states);
+
+    return agg_results;
 }
 
 void StartStopLossArb(std::unordered_map<std::string, StockState>& daily_map_of_states)
@@ -112,7 +145,7 @@ void HedgeStockWhileMarketIsOpen(
             DeleteHistoricalSnapshots(stockState);
 
             // The TS version does not have this function call because it's for writing
-            // the "if reached x profir, loss was y"
+            // the "if reached x profit, loss was y"
             WritePnLAsPercentagesToSnapshotsFile(stockState);
 
             break;
@@ -125,27 +158,73 @@ void HedgeStockWhileMarketIsOpen(
     }
 }
 
-Decimal GetHistoricalProfitThreshold()
+AggResults GetAggregateResults(
+    const std::unordered_map<std::string, StockState>& states
+)
 {
-    const auto default_historical_profit_threshold = GetDecimal(0.01);
+    AggResults agg_results{
+        .num_stocks = 0,
+        .num_stocks_profitable = 0,
+    };
 
-    const char* thresholdStr = getenv("HISTORICAL_PROFIT_THRESHOLD");
-    if (thresholdStr == nullptr)
+    for (const auto& [_, stockState] : states)
     {
-        return default_historical_profit_threshold;
+        agg_results.num_stocks++;
+
+        if (IsStockProfitable(stockState))
+        {
+            agg_results.num_stocks_profitable++;
+        }
     }
 
-    try
+    return agg_results;
+}
+
+bool IsStockProfitable(const StockState& stockState)
+{
+    if (stockState.profitThreshold == Decimal("1.0"))
     {
-        double value = stod(thresholdStr);
-        return GetDecimal(value);
+        if (!stockState.reached_1_percentage_profit)
+        {
+            return false;
+        }
+
+        return stockState.max_loss_when_reached_1_percentage_profit >
+               stockState.lossThreshold;
     }
-    catch (exception&)
+
+    if (stockState.profitThreshold == Decimal("0.75"))
     {
-        return default_historical_profit_threshold;
+        if (!stockState.reached_0_75_percentage_profit)
+        {
+            return false;
+        }
+
+        return stockState.max_loss_when_reached_0_75_percentage_profit >
+               stockState.lossThreshold;
     }
-    catch (...)
+
+    if (stockState.profitThreshold == Decimal("0.5"))
     {
-        return default_historical_profit_threshold;
+        if (!stockState.reached_0_5_percentage_profit)
+        {
+            return false;
+        }
+
+        return stockState.max_loss_when_reached_0_5_percentage_profit >
+               stockState.lossThreshold;
     }
+
+    if (stockState.profitThreshold == Decimal("0.25"))
+    {
+        if (!stockState.reached_0_25_percentage_profit)
+        {
+            return false;
+        }
+
+        return stockState.max_loss_when_reached_0_25_percentage_profit >
+               stockState.lossThreshold;
+    }
+
+    return false;
 }

@@ -20,7 +20,16 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
     std::unordered_map<std::string, StockState> stock_states{};
     for (const auto& file : json_files)
     {
-        const auto stock_file_data = ReadJSONFile(file);
+        json stock_file_data{};
+        try
+        {
+            stock_file_data = ReadJSONFile(file);
+        }
+        catch (const std::exception& e)
+        {
+            Print("\nError reading JSON file: " + file.string() + "\n");
+            continue;
+        }
 
         const auto ticker = stock_file_data["ticker"].get<string>();
 
@@ -92,6 +101,10 @@ StockState GetInitialStockState(
     new_stock_state.numContracts =
         get<Decimal>(partial_stock_state.at("numContracts")).convert_to<int>();
     new_stock_state.initialPrice = initial_ask_price;
+    new_stock_state.profitThreshold =
+        get<Decimal>(partial_stock_state.at("profitThreshold"));
+    new_stock_state.lossThreshold =
+        get<Decimal>(partial_stock_state.at("lossThreshold"));
 
     std::vector<SmoothingInterval> intervals{};
     auto long_intervals = GetLongIntervalsAboveInitialPrice(new_stock_state);

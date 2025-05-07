@@ -24,19 +24,17 @@ import {
 } from './state';
 import {StockState} from './types';
 import {setTimeout} from 'node:timers/promises';
-import {FloatCalculator as fc} from '../../../utils/float-calculator';
 
 export async function startStopLossArb(): Promise<void> {
-    const intervalProfit = 0.02;
     const partialStockState: Partial<StockState> = {
-        profitThreshold: 0.5,
+        profitThreshold: 0.75,
         lossThreshold: -0.75,
         brokerageTradingCostPerShare: 0, // otherwise 0.004,
         numContracts: 4, // to achieve round lots
-        targetPosition: 100,
+        targetPosition: 50,
         sharesPerInterval: 25,
-        spaceBetweenIntervals: fc.multiply(intervalProfit, 2), // this also needs consideration
-        intervalProfit,
+        intervalProfit: 0.03,
+        spaceBetweenIntervals: 0.04,
     };
 
     if (isHistoricalSnapshot()) {
@@ -56,6 +54,8 @@ export async function startStopLossArb(): Promise<void> {
                 }
             }
         }
+
+        console.log('\nPartial Stock State:', partialStockState);
     } else {
         const today = getTodayDate();
 
@@ -124,10 +124,10 @@ async function startStopLossArbNode(
 
     await Promise.all(waitingForStocksToBeHedged);
 
-    let timeInSeconds = 0;
+    let timeInMinutes = 0;
     if (isHistoricalSnapshot()) {
         const endTime = performance.now();
-        timeInSeconds = (endTime - startTime) / 1000;
+        timeInMinutes = (endTime - startTime) / 1000 / 60;
     }
 
     if (isHistoricalSnapshot()) {
@@ -135,7 +135,7 @@ async function startStopLossArbNode(
             printPnLValues(stock, states[stock]);
         }
 
-        console.log(`Hedging completed in ${timeInSeconds.toFixed(4)} seconds\n`);
+        console.log(`Hedging completed in ${timeInMinutes.toFixed(4)} minutes\n`);
     }
 
     return true;
