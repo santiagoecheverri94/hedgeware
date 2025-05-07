@@ -30,32 +30,48 @@ export async function startStopLossArb(): Promise<void> {
         profitThreshold: 0.75,
         lossThreshold: -0.75,
         brokerageTradingCostPerShare: 0, // otherwise 0.004,
-        numContracts: 4, // to achieve round lots
-        targetPosition: 50,
-        sharesPerInterval: 25,
+        targetPosition: 200,
+        sharesPerInterval: 100,
         intervalProfit: 0.03,
         spaceBetweenIntervals: 0.04,
+    };
+
+    const historicalPartialStockState: Partial<StockState> = {
+        ...partialStockState,
+        numContracts: 1,
     };
 
     if (isHistoricalSnapshot()) {
         const arrayOfDatesArrays = await getDatesArrayCppPartitions();
 
+        const startDate = arrayOfDatesArrays[0][0];
+        const lastDatesArray = arrayOfDatesArrays[arrayOfDatesArrays.length - 1];
+        const endDate =
+            arrayOfDatesArrays[arrayOfDatesArrays.length - 1][
+                lastDatesArray.length - 1
+            ];
+
+        console.log(`Start date: ${startDate}, End date: ${endDate}`);
+
         if (isHistoricalCppSnapshot()) {
-            addon.JsStartStopLossArbCpp(arrayOfDatesArrays, partialStockState);
+            addon.JsStartStopLossArbCpp(
+                arrayOfDatesArrays,
+                historicalPartialStockState,
+            );
         } else {
             for (const arrayOfDates of arrayOfDatesArrays) {
                 for (const date of arrayOfDates) {
                     // We pass the dates sequentially when we stay in NodeJS
                     const states = await getHistoricalStockStatesForDate(
                         date,
-                        partialStockState,
+                        historicalPartialStockState,
                     );
                     await startStopLossArbNode(states, date);
                 }
             }
         }
 
-        console.log('\nPartial Stock State:', partialStockState);
+        console.log('Partial Stock State:', historicalPartialStockState);
     } else {
         const today = getTodayDate();
 

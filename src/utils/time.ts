@@ -2,9 +2,8 @@ import moment from 'moment-timezone';
 import {setTimeout} from 'node:timers/promises';
 
 import {log} from './log';
-import {isLiveTrading} from './price-simulator';
 
-const kTradingStartTime = '10:57:00am';
+const kTradingStartTime = '10:29:00am';
 export const kTradingEndTime = '3:45:00pm';
 const kMarketCloseTime = '4:00:00pm';
 
@@ -13,6 +12,8 @@ const TIME_FORMAT = 'hh:mm:ssa';
 const MARKET_TIMEZONE = 'America/New_York';
 
 export async function isTimeToTrade(stock = ''): Promise<boolean> {
+    // return true;
+
     const startTime = getMomentForTime(kTradingStartTime);
     const marketCloses = getMomentForTime(kMarketCloseTime);
     const currentMomentInNewYork = getCurrentMomentInNewYork();

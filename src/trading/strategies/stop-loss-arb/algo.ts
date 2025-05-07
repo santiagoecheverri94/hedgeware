@@ -147,6 +147,8 @@ function isExitPnlBeyondThresholds(stockState: StockState): boolean {
 }
 
 function isPastTradingTime(): boolean {
+    // return false;
+
     const tradingEndTime = getMomentForTime(kTradingEndTime);
     const currentMomentInNewYork = getCurrentMomentInNewYork();
 
@@ -156,6 +158,7 @@ function isPastTradingTime(): boolean {
 }
 
 function isWideBidAskSpread({bid, ask}: Snapshot, stockState: StockState): boolean {
+    // return false;
     return fc.gt(fc.subtract(ask, bid), stockState.spaceBetweenIntervals) === 1;
 }
 
@@ -304,7 +307,7 @@ async function setNewPosition({
     if (brokerageClient) {
         priceSetAt = await brokerageClient.setSecurityPosition({
             brokerageIdOfSecurity: stockState.brokerageId,
-            currentPosition: stockState.position * stockState.numContracts,
+            currentPosition: previousPosition * stockState.numContracts,
             newPosition: newPosition * stockState.numContracts,
         });
 
@@ -322,10 +325,12 @@ async function setNewPosition({
             `Changed position for ${stock} (${
                 stockState.numContracts
             } constracts): ${jsonPrettyPrint({
+                action: orderSide,
                 quotedPrice: tradingLog.quotedPrice,
                 realizedPrice: tradingLog.realizedPrice,
                 previousPosition: tradingLog.previousPosition,
                 newPosition: tradingLog.newPosition,
+                effectiveNewPosition: newPosition * stockState.numContracts,
             })}`,
         );
     }

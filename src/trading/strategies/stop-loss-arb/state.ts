@@ -10,6 +10,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import {getFullStockState} from './new-state';
 import {BrokerageClient} from '../../brokerage-clients/brokerage-client';
+import {FloatCalculator as fc} from '../../../utils/float-calculator';
 
 export async function getStocksFileNames(
     date: string,
@@ -101,6 +102,11 @@ function getInitialStockState(
     return stockState;
 }
 
+const kTargetInvestment = 30_000;
+const kTargetNumLiveTickers = 10;
+
+const kMinShortableQuantity = 100_000;
+
 export async function writeLiveStockStatesBeforeTradingStart(
     date: string,
     brokerageClient: BrokerageClient,
@@ -125,19 +131,26 @@ export async function writeLiveStockStatesBeforeTradingStart(
     const snapshots = await brokerageClient.getSnapshots(potentialTickers);
 
     let numLiveTickers = 0;
-
     for (const tickerProb of potentialTickerProbs) {
         const ticker = tickerProb.ticker;
         const prediction = tickerProb.prediction;
         const shortableQuantity = shortableQuantities[ticker];
         const snapshot = snapshots[ticker];
 
-        if (shortableQuantity >= 500_000) {
+        if (shortableQuantity >= kMinShortableQuantity) {
+            const numContracts = getNumContracts(
+                snapshot.ask,
+                partialStockState as StockState,
+            );
+
             const stockState = getInitialStockState(
                 date,
                 ticker,
                 snapshot.ask,
-                partialStockState,
+                {
+                    ...partialStockState,
+                    numContracts,
+                },
                 prediction,
             );
 
@@ -147,7 +160,7 @@ export async function writeLiveStockStatesBeforeTradingStart(
             );
 
             numLiveTickers++;
-            if (numLiveTickers >= 8) {
+            if (numLiveTickers >= kTargetNumLiveTickers) {
                 break;
             }
         }
@@ -158,10 +171,7 @@ async function getPotentialTickerProbs(
     date: string,
 ): Promise<{ ticker: string; prediction: number }[]> {
     // return [
-    //     {ticker: 'NG', prediction: 0.843_050_956_726_074_2},
-    //     {ticker: 'WULF', prediction: 0.829_906_582_832_336_4},
-    //     {ticker: 'SLDB', prediction: 0.812_642_097_473_144_5},
-    //     {ticker: 'APLD', prediction: 0.810_300_946_235_656_7},
+    //     {ticker: 'SPY', prediction: 0.743_050_956_726_074_2},
     // ];
 
     const potentialTickersData = await getPotentialTickersData(date);
@@ -221,6 +231,27 @@ async function getPotentialTickersData(date: string): Promise<any[]> {
     }
 
     return json_files_array;
+}
+
+function getNumContracts(
+    initialAskPrice: number,
+    partialStockState: StockState,
+): number {
+    const maxPositionSize =
+        partialStockState.targetPosition + partialStockState.sharesPerInterval;
+
+    const maxPositionSizeValue = fc.multiply(maxPositionSize, initialAskPrice);
+
+    const targetInvestmentPerStock = fc.divide(
+        kTargetInvestment,
+        kTargetNumLiveTickers,
+    );
+
+    const numContracts = Math.ceil(
+        fc.divide(targetInvestmentPerStock, maxPositionSizeValue),
+    );
+
+    return numContracts;
 }
 
 export function getStockStateFilePath(stock: string, date: string): string {

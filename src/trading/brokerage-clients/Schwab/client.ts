@@ -167,9 +167,11 @@ export class SchwabClient extends BrokerageClient {
 
     private getSchwabOrderDetails(orderDetails: OrderDetails) {
         return {
-            orderType: 'MARKET', // 'LIMIT',
+            orderType: 'MARKET',
+            // orderType: 'LIMIT',
             // price: orderDetails.action.includes('BUY') ? 575 : 555,
-            session: 'NORMAL', // 'PM',
+            session: 'NORMAL',
+            // session: 'PM',
             duration: 'DAY',
             orderStrategyType: 'SINGLE',
             orderLegCollection: [
@@ -177,7 +179,8 @@ export class SchwabClient extends BrokerageClient {
                     instruction: orderDetails.action,
                     quantity: orderDetails.quantity,
                     instrument: {
-                        symbol: orderDetails.brokerageIdOfSecurity, // 'SPY',
+                        symbol: orderDetails.brokerageIdOfSecurity,
+                        // symbol: 'SPY',
                         assetType: 'EQUITY',
                     },
                 },
