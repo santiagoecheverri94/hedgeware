@@ -2,7 +2,7 @@ import {
     getFileNamesWithinFolder,
     jsonPrettyPrint,
     readJSONFile,
-    syncWriteJSONFile,
+    writeJSONFile,
 } from '../../../utils/file';
 import {getDirWithStocksDataOnDate} from '../../../utils/price-simulator';
 import {StockState} from './types';
@@ -154,7 +154,7 @@ export async function writeLiveStockStatesBeforeTradingStart(
                 prediction,
             );
 
-            syncWriteJSONFile(
+            await writeJSONFile(
                 getStockStateFilePath(ticker, date),
                 jsonPrettyPrint(stockState),
             );

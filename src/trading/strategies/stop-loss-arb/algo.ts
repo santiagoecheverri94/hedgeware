@@ -1,4 +1,4 @@
-import {syncWriteJSONFile, jsonPrettyPrint} from '../../../utils/file';
+import {writeJSONFile, jsonPrettyPrint, renameFile} from '../../../utils/file';
 import {FloatCalculator as fc} from '../../../utils/float-calculator';
 import {log} from '../../../utils/log';
 import {getSimulatedSnapshot, isLiveTrading} from '../../../utils/price-simulator';
@@ -32,13 +32,15 @@ export async function reconcileStockPosition(
         getSimulatedSnapshot(stockState));
 
     const isSnapshotChanged = isSnapshotChange(snapshot, stockState);
-    if (isSnapshotChanged) {
+    const isPastTradingTimeBool = isPastTradingTime();
+    if (isSnapshotChanged || isPastTradingTimeBool) {
         updateSnaphotOnState(stockState, snapshot);
         updateExitPnL(stockState);
 
+        const isExitPnlBeyondThresholdsStr = isExitPnlBeyondThresholds(stockState);
         if (
             isLiveTrading() &&
-            (isExitPnlBeyondThresholds(stockState) || isPastTradingTime())
+            (isExitPnlBeyondThresholdsStr || isPastTradingTimeBool)
         ) {
             if (stockState.position !== 0) {
                 const {orderSide, priceSetAt} = await setNewPosition({
@@ -59,6 +61,19 @@ export async function reconcileStockPosition(
                     priceSetAt,
                 );
             }
+
+            await writeJSONFile(
+                getStockStateFilePath(stock, date),
+                jsonPrettyPrint(stockState),
+            );
+
+            const oldPath = getStockStateFilePath(stock, date);
+
+            const suffix = isExitPnlBeyondThresholdsStr || 'N';
+            const newFileName = `_${stock}_${suffix}`;
+            const newPath = getStockStateFilePath(newFileName, date);
+
+            await renameFile(oldPath, newPath);
 
             return {
                 snapshot,
@@ -119,7 +134,7 @@ export async function reconcileStockPosition(
     // 6)
     if (isSnapshotChanged) {
         if (isLiveTrading()) {
-            syncWriteJSONFile(
+            await writeJSONFile(
                 getStockStateFilePath(stock, date),
                 jsonPrettyPrint(stockState),
             );
@@ -132,18 +147,18 @@ export async function reconcileStockPosition(
     };
 }
 
-function isExitPnlBeyondThresholds(stockState: StockState): boolean {
+function isExitPnlBeyondThresholds(stockState: StockState): string {
     if (isLiveTrading() && stockState.profitThreshold && stockState.lossThreshold) {
         if (fc.gte(stockState.exitPnLAsPercentage, stockState.profitThreshold)) {
-            return true;
+            return 'W';
         }
 
         if (fc.lte(stockState.exitPnLAsPercentage, stockState.lossThreshold)) {
-            return true;
+            return 'L';
         }
     }
 
-    return false;
+    return '';
 }
 
 function isPastTradingTime(): boolean {
@@ -322,16 +337,16 @@ async function setNewPosition({
         stockState.tradingLogs.push(tradingLog);
 
         log(
-            `Changed position for ${stock} (${
-                stockState.numContracts
-            } constracts): ${jsonPrettyPrint({
-                action: orderSide,
-                quotedPrice: tradingLog.quotedPrice,
-                realizedPrice: tradingLog.realizedPrice,
-                previousPosition: tradingLog.previousPosition,
-                newPosition: tradingLog.newPosition,
-                effectiveNewPosition: newPosition * stockState.numContracts,
-            })}`,
+            `Changed position for ${stock}, action: ${orderSide}, fullNewPosition: ${
+                newPosition * stockState.numContracts
+            }, quotedPrice: ${tradingLog.quotedPrice}, realizedPrice: ${
+                tradingLog.realizedPrice
+            }`,
+        );
+
+        await writeJSONFile(
+            getStockStateFilePath(stock, stockState.date),
+            jsonPrettyPrint(stockState),
         );
     }
 

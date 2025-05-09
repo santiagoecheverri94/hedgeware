@@ -1,0 +1,142 @@
+{
+  "date": "2025-05-09",
+  "brokerageId": "EVGO",
+  "brokerageTradingCostPerShare": 0,
+  "targetPosition": 200,
+  "sharesPerInterval": 100,
+  "spaceBetweenIntervals": 0.04,
+  "intervalProfit": 0.03,
+  "numContracts": 3,
+  "initialPrice": 3.76,
+  "profitThreshold": 0.75,
+  "lossThreshold": -0.75,
+  "intervals": [
+    {
+      "type": "LONG",
+      "positionLimit": 300,
+      "SELL": {
+        "price": 3.92,
+        "active": false,
+        "crossed": false,
+        "boughtAtPrice": null
+      },
+      "BUY": {
+        "price": 3.89,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 200,
+      "SELL": {
+        "price": 3.88,
+        "active": false,
+        "crossed": false,
+        "boughtAtPrice": null
+      },
+      "BUY": {
+        "price": 3.85,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 100,
+      "SELL": {
+        "price": 3.84,
+        "active": false,
+        "crossed": false,
+        "boughtAtPrice": 3.765
+      },
+      "BUY": {
+        "price": 3.81,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -100,
+      "SELL": {
+        "price": 3.79,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 3.76,
+        "active": false,
+        "crossed": false,
+        "soldAtPrice": 3.7548
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -200,
+      "SELL": {
+        "price": 3.75,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 3.72,
+        "active": true,
+        "crossed": false,
+        "soldAtPrice": 3.715
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -300,
+      "SELL": {
+        "price": 3.71,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 3.68,
+        "active": false,
+        "crossed": false,
+        "soldAtPrice": null
+      }
+    }
+  ],
+  "prediction": 0.7531070709228516,
+  "isStaticIntervals": false,
+  "position": -100,
+  "lastAsk": 3.79,
+  "lastBid": 3.78,
+  "realizedPnL": 0,
+  "realizedPnLAsPercentage": -0.6649,
+  "exitPnL": -7.5,
+  "exitPnLAsPercentage": -0.6648936170212766,
+  "maxMovingProfitAsPercentage": 0.30851063829787234,
+  "maxMovingLossAsPercentage": -0.6648936170212766,
+  "tradingLogs": [
+    {
+      "action": "SELL",
+      "timeStamp": "2025-05-09 at 10:40:45am ET",
+      "quotedPrice": 3.75,
+      "realizedPrice": 3.7548,
+      "previousPosition": 0,
+      "newPosition": -100
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-05-09 at 10:41:14am ET",
+      "quotedPrice": 3.71,
+      "realizedPrice": 3.715,
+      "previousPosition": -100,
+      "newPosition": -200
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-05-09 at 10:46:04am ET",
+      "quotedPrice": 3.77,
+      "realizedPrice": 3.765,
+      "previousPosition": -200,
+      "newPosition": -100
+    }
+  ]
+}

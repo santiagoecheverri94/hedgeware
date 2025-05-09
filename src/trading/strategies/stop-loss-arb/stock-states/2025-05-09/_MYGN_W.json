@@ -1,0 +1,222 @@
+{
+  "date": "2025-05-09",
+  "brokerageId": "MYGN",
+  "brokerageTradingCostPerShare": 0,
+  "targetPosition": 200,
+  "sharesPerInterval": 100,
+  "spaceBetweenIntervals": 0.04,
+  "intervalProfit": 0.03,
+  "numContracts": 3,
+  "initialPrice": 3.96,
+  "profitThreshold": 0.75,
+  "lossThreshold": -0.75,
+  "intervals": [
+    {
+      "type": "LONG",
+      "positionLimit": 300,
+      "SELL": {
+        "price": 4.12,
+        "active": false,
+        "crossed": false,
+        "boughtAtPrice": null
+      },
+      "BUY": {
+        "price": 4.09,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 200,
+      "SELL": {
+        "price": 4.08,
+        "active": false,
+        "crossed": false,
+        "boughtAtPrice": null
+      },
+      "BUY": {
+        "price": 4.05,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 100,
+      "SELL": {
+        "price": 4.04,
+        "active": false,
+        "crossed": false,
+        "boughtAtPrice": 3.9693
+      },
+      "BUY": {
+        "price": 4.01,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -100,
+      "SELL": {
+        "price": 3.99,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 3.96,
+        "active": true,
+        "crossed": true,
+        "soldAtPrice": 3.95
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -200,
+      "SELL": {
+        "price": 3.95,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 3.92,
+        "active": false,
+        "crossed": false,
+        "soldAtPrice": 3.905
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -300,
+      "SELL": {
+        "price": 3.91,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 3.88,
+        "active": false,
+        "crossed": false,
+        "soldAtPrice": 3.915
+      }
+    }
+  ],
+  "prediction": 0.7575517892837524,
+  "isStaticIntervals": false,
+  "position": -100,
+  "lastAsk": 3.92,
+  "lastBid": 3.91,
+  "realizedPnL": 7,
+  "realizedPnLAsPercentage": 0.9680,
+  "exitPnL": 5,
+  "exitPnLAsPercentage": 0.4208754208754209,
+  "maxMovingProfitAsPercentage": 0.5892255892255892,
+  "maxMovingLossAsPercentage": -0.16835016835016833,
+  "tradingLogs": [
+    {
+      "action": "SELL",
+      "timeStamp": "2025-05-09 at 10:40:46am ET",
+      "quotedPrice": 3.94,
+      "realizedPrice": 3.95,
+      "previousPosition": 0,
+      "newPosition": -100
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-05-09 at 10:45:06am ET",
+      "quotedPrice": 3.97,
+      "realizedPrice": 3.965,
+      "previousPosition": -100,
+      "newPosition": 0
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-05-09 at 10:45:35am ET",
+      "quotedPrice": 3.95,
+      "realizedPrice": 3.96,
+      "previousPosition": 0,
+      "newPosition": -100
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-05-09 at 10:46:04am ET",
+      "quotedPrice": 3.97,
+      "realizedPrice": 3.9683,
+      "previousPosition": -100,
+      "newPosition": 0
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-05-09 at 10:46:33am ET",
+      "quotedPrice": 3.95,
+      "realizedPrice": 3.96,
+      "previousPosition": 0,
+      "newPosition": -100
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-05-09 at 10:47:02am ET",
+      "quotedPrice": 3.97,
+      "realizedPrice": 3.9602,
+      "previousPosition": -100,
+      "newPosition": 0
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-05-09 at 10:47:31am ET",
+      "quotedPrice": 3.95,
+      "realizedPrice": 3.96,
+      "previousPosition": 0,
+      "newPosition": -100
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-05-09 at 10:49:27am ET",
+      "quotedPrice": 3.97,
+      "realizedPrice": 3.9693,
+      "previousPosition": -100,
+      "newPosition": 0
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-05-09 at 10:52:50am ET",
+      "quotedPrice": 3.95,
+      "realizedPrice": 3.9501,
+      "previousPosition": 0,
+      "newPosition": -100
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-05-09 at 11:01:03am ET",
+      "quotedPrice": 3.9,
+      "realizedPrice": 3.905,
+      "previousPosition": -100,
+      "newPosition": -200
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-05-09 at 11:01:32am ET",
+      "quotedPrice": 3.92,
+      "realizedPrice": 3.915,
+      "previousPosition": -200,
+      "newPosition": -100
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-05-09 at 11:02:02am ET",
+      "quotedPrice": 3.91,
+      "realizedPrice": 3.915,
+      "previousPosition": -100,
+      "newPosition": -200
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-05-09 at 11:03:00am ET",
+      "quotedPrice": 3.92,
+      "realizedPrice": 3.915,
+      "previousPosition": -200,
+      "newPosition": -100
+    }
+  ]
+}

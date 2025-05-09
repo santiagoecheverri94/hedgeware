@@ -1,0 +1,174 @@
+{
+  "date": "2025-05-09",
+  "brokerageId": "BZUN",
+  "brokerageTradingCostPerShare": 0,
+  "targetPosition": 200,
+  "sharesPerInterval": 100,
+  "spaceBetweenIntervals": 0.04,
+  "intervalProfit": 0.03,
+  "numContracts": 3,
+  "initialPrice": 3.74,
+  "profitThreshold": 0.75,
+  "lossThreshold": -0.75,
+  "intervals": [
+    {
+      "type": "LONG",
+      "positionLimit": 300,
+      "SELL": {
+        "price": 3.86,
+        "active": false,
+        "crossed": false,
+        "boughtAtPrice": null
+      },
+      "BUY": {
+        "price": 3.83,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 200,
+      "SELL": {
+        "price": 3.82,
+        "active": true,
+        "crossed": false,
+        "boughtAtPrice": 3.8299
+      },
+      "BUY": {
+        "price": 3.79,
+        "active": false,
+        "crossed": false
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 100,
+      "SELL": {
+        "price": 3.78,
+        "active": false,
+        "crossed": false,
+        "boughtAtPrice": 3.7851
+      },
+      "BUY": {
+        "price": 3.75,
+        "active": true,
+        "crossed": false
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -100,
+      "SELL": {
+        "price": 3.73,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 3.7,
+        "active": false,
+        "crossed": false,
+        "soldAtPrice": 3.7749
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -200,
+      "SELL": {
+        "price": 3.69,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 3.66,
+        "active": false,
+        "crossed": false,
+        "soldAtPrice": null
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -300,
+      "SELL": {
+        "price": 3.65,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 3.62,
+        "active": false,
+        "crossed": false,
+        "soldAtPrice": null
+      }
+    }
+  ],
+  "prediction": 0.744936466217041,
+  "isStaticIntervals": false,
+  "position": 100,
+  "lastAsk": 3.76,
+  "lastBid": 3.75,
+  "realizedPnL": 0,
+  "realizedPnLAsPercentage": -0.7567,
+  "exitPnL": -7.99,
+  "exitPnLAsPercentage": -0.7121212121212122,
+  "maxMovingProfitAsPercentage": 0.31105169340463457,
+  "maxMovingLossAsPercentage": -0.7121212121212122,
+  "tradingLogs": [
+    {
+      "action": "SELL",
+      "timeStamp": "2025-05-09 at 10:40:45am ET",
+      "quotedPrice": 3.73,
+      "realizedPrice": 3.7349,
+      "previousPosition": 0,
+      "newPosition": -100
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-05-09 at 10:41:43am ET",
+      "quotedPrice": 3.76,
+      "realizedPrice": 3.755,
+      "previousPosition": -100,
+      "newPosition": 0
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-05-09 at 10:49:27am ET",
+      "quotedPrice": 3.79,
+      "realizedPrice": 3.7851,
+      "previousPosition": 0,
+      "newPosition": 100
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-05-09 at 10:54:46am ET",
+      "quotedPrice": 3.77,
+      "realizedPrice": 3.775,
+      "previousPosition": 100,
+      "newPosition": 0
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-05-09 at 10:56:42am ET",
+      "quotedPrice": 3.79,
+      "realizedPrice": 3.7891,
+      "previousPosition": 0,
+      "newPosition": 100
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-05-09 at 11:08:48am ET",
+      "quotedPrice": 3.83,
+      "realizedPrice": 3.8299,
+      "previousPosition": 100,
+      "newPosition": 200
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-05-09 at 11:17:30am ET",
+      "quotedPrice": 3.77,
+      "realizedPrice": 3.7749,
+      "previousPosition": 200,
+      "newPosition": 100
+    }
+  ]
+}
