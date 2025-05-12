@@ -7,13 +7,11 @@ export interface SmoothingInterval {
         active: boolean;
         crossed: boolean;
         price: number;
-        boughtAtPrice?: number;
     };
     [OrderAction.BUY]: {
         active: boolean;
         crossed: boolean;
         price: number;
-        soldAtPrice?: number;
     };
 }
 
@@ -37,9 +35,8 @@ export interface StockState {
     numContracts: number;
     position: number;
     targetPosition: number;
-    realizedPnL: number;
+    netPositionValue: number;
     realizedPnLAsPercentage: number;
-    exitPnL: number;
     exitPnLAsPercentage: number;
     maxMovingProfitAsPercentage: number;
     maxMovingLossAsPercentage: number;

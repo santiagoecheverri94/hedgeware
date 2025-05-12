@@ -43,7 +43,7 @@ export async function reconcileStockPosition(
             (isExitPnlBeyondThresholdsStr || isPastTradingTimeBool)
         ) {
             if (stockState.position !== 0) {
-                const {orderSide, priceSetAt} = await setNewPosition({
+                await setNewPosition({
                     stock,
                     brokerageClient,
                     stockState,
@@ -51,15 +51,7 @@ export async function reconcileStockPosition(
                     snapshot,
                 });
 
-                const intervalIndicesToExecute =
-                    getActiveIntervalIndexesBeforeExit(stockState);
-
-                updateRealizedPnL(
-                    stockState,
-                    intervalIndicesToExecute,
-                    orderSide,
-                    priceSetAt,
-                );
+                setRealizedPnL(stockState);
             }
 
             await writeJSONFile(
@@ -113,20 +105,13 @@ export async function reconcileStockPosition(
 
     // 5)
     if (newPosition !== undefined) {
-        const setNewPositionRVal = await setNewPosition({
+        await setNewPosition({
             stock,
             brokerageClient,
             stockState,
             newPosition,
             snapshot,
         });
-
-        updateRealizedPnL(
-            stockState,
-            intervalIndicesToExecute,
-            setNewPositionRVal.orderSide,
-            setNewPositionRVal.priceSetAt,
-        );
 
         checkCrossings(stockState, snapshot);
     }
@@ -306,10 +291,7 @@ async function setNewPosition({
     stockState: StockState;
     newPosition: number;
     snapshot: Snapshot;
-}): Promise<{
-    priceSetAt: number;
-    orderSide: OrderAction;
-}> {
+}): Promise<void> {
     const previousPosition = stockState.position;
     stockState.position = newPosition;
 
@@ -350,62 +332,55 @@ async function setNewPosition({
         );
     }
 
-    return {
-        priceSetAt,
+    const newNetPositionValue = getNewNetPositionValue({
+        currentPositionValue: stockState.netPositionValue,
+        commissionPerShare: stockState.brokerageTradingCostPerShare,
         orderSide,
-    };
+        newPosition,
+        previousPosition,
+        priceSetAt,
+    });
+
+    stockState.netPositionValue = newNetPositionValue;
 }
 
-function updateRealizedPnL(
-    stockState: StockState,
-    executedIndices: number[],
-    orderSide: OrderAction,
-    price: number,
-): void {
-    if (executedIndices.length === 0) {
-        return;
+function getNewNetPositionValue({
+    currentPositionValue,
+    commissionPerShare,
+    orderSide,
+    newPosition,
+    previousPosition,
+    priceSetAt,
+}: {
+    currentPositionValue: number;
+    commissionPerShare: number;
+    orderSide: OrderAction;
+    newPosition: number;
+    previousPosition: number;
+    priceSetAt: number;
+}): number {
+    const quantity = Math.abs(newPosition - previousPosition);
+
+    const commissionCosts = fc.multiply(quantity, commissionPerShare);
+
+    let change = -commissionCosts;
+
+    const orderValue = fc.multiply(quantity, priceSetAt);
+
+    if (orderSide === OrderAction.BUY) {
+        change = fc.subtract(change, orderValue);
+    } else if (orderSide === OrderAction.SELL) {
+        change = fc.add(change, orderValue);
     }
 
-    const commissionCosts = fc.multiply(
-        executedIndices.length * stockState.sharesPerInterval,
-        stockState.brokerageTradingCostPerShare,
-    );
+    const newPositionValue = fc.add(currentPositionValue, change);
 
-    stockState.realizedPnL = fc.subtract(stockState.realizedPnL, commissionCosts);
+    return newPositionValue;
+}
 
-    for (const index of executedIndices) {
-        const interval = stockState.intervals[index];
-
-        let pnLFromThisExecution: number | undefined;
-
-        if (interval.type === IntervalType.LONG) {
-            if (orderSide === OrderAction.BUY) {
-                interval[OrderAction.SELL].boughtAtPrice = price;
-            } else if (orderSide === OrderAction.SELL) {
-                pnLFromThisExecution = fc.multiply(
-                    stockState.sharesPerInterval,
-                    fc.subtract(price, interval[OrderAction.SELL].boughtAtPrice!),
-                );
-            }
-        }
-
-        if (interval.type === IntervalType.SHORT) {
-            if (orderSide === OrderAction.SELL) {
-                interval[OrderAction.BUY].soldAtPrice = price;
-            } else if (orderSide === OrderAction.BUY) {
-                pnLFromThisExecution = fc.multiply(
-                    stockState.sharesPerInterval,
-                    fc.subtract(interval[OrderAction.BUY].soldAtPrice!, price),
-                );
-            }
-        }
-
-        if (pnLFromThisExecution !== undefined) {
-            stockState.realizedPnL = fc.add(
-                stockState.realizedPnL,
-                pnLFromThisExecution,
-            );
-        }
+function setRealizedPnL(stockState: StockState): void {
+    if (stockState.position !== 0) {
+        throw new Error('Cannot set realized PnL because Position is not zero');
     }
 
     const percentageDenominator = fc.multiply(
@@ -414,7 +389,7 @@ function updateRealizedPnL(
     );
 
     const realizedPnLAsPercentage = fc.multiply(
-        fc.divide(stockState.realizedPnL, percentageDenominator),
+        fc.divide(stockState.netPositionValue, percentageDenominator),
         100,
     );
 
@@ -433,43 +408,18 @@ function updateExitPnL(stockState: StockState): void {
         return;
     }
 
-    let exitPnL = stockState.realizedPnL;
+    const orderSide: OrderAction = position > 0 ? OrderAction.SELL : OrderAction.BUY;
 
-    const commissionCosts = fc.multiply(
-        position,
-        stockState.brokerageTradingCostPerShare,
-    );
+    const priceSetAt = orderSide === OrderAction.BUY ? lastAsk : lastBid;
 
-    exitPnL = fc.subtract(exitPnL, commissionCosts);
-
-    const activeIntervalIndexes = getActiveIntervalIndexesBeforeExit(stockState);
-
-    for (const activeIntervalIndex of activeIntervalIndexes) {
-        const interval = stockState.intervals[activeIntervalIndex];
-        let intervalPnL: number | undefined;
-
-        if (interval.type === IntervalType.LONG && interval[OrderAction.SELL].active) {
-            const boughtAtPrice = interval[OrderAction.SELL].boughtAtPrice!;
-            intervalPnL = fc.multiply(
-                stockState.sharesPerInterval,
-                fc.subtract(lastBid, boughtAtPrice),
-            );
-        }
-
-        if (interval.type === IntervalType.SHORT && interval[OrderAction.BUY].active) {
-            const soldAtPrice = interval[OrderAction.BUY].soldAtPrice!;
-            intervalPnL = fc.multiply(
-                stockState.sharesPerInterval,
-                fc.subtract(soldAtPrice, lastAsk),
-            );
-        }
-
-        if (intervalPnL !== undefined) {
-            exitPnL = fc.add(exitPnL, intervalPnL);
-        }
-    }
-
-    stockState.exitPnL = exitPnL;
+    const ifClosingPositionValue = getNewNetPositionValue({
+        currentPositionValue: stockState.netPositionValue,
+        commissionPerShare: stockState.brokerageTradingCostPerShare,
+        orderSide,
+        newPosition: 0,
+        previousPosition: position,
+        priceSetAt,
+    });
 
     const percentageDenominator = fc.multiply(
         stockState.targetPosition + stockState.sharesPerInterval,
@@ -477,7 +427,7 @@ function updateExitPnL(stockState: StockState): void {
     );
 
     const exitPnLAsPercentage = fc.multiply(
-        fc.divide(exitPnL, percentageDenominator),
+        fc.divide(ifClosingPositionValue, percentageDenominator),
         100,
     );
 
@@ -494,40 +444,24 @@ function updateExitPnL(stockState: StockState): void {
     // Here the cpp version is different, because it has the reched_when losses...
 }
 
-function getActiveIntervalIndexesBeforeExit(stockState: StockState): number[] {
-    const indexes: number[] = [];
-
-    for (const [index, interval] of stockState.intervals.entries()) {
-        if (interval.type === IntervalType.LONG && interval[OrderAction.SELL].active) {
-            indexes.push(index);
-        }
-
-        if (interval.type === IntervalType.SHORT && interval[OrderAction.BUY].active) {
-            indexes.push(index);
-        }
-    }
-
-    return indexes;
-}
-
 export function reconcileRealizedPnlWhenHistoricalSnapshotsExhausted(
     stockState: StockState,
 ): void {
-    if (stockState.position === 0) {
-        return;
-    }
-
-    const orderSide: OrderAction =
-        stockState.position > 0 ? OrderAction.SELL : OrderAction.BUY;
-
-    const {lastAsk, lastBid} = stockState;
-
-    const priceSetAt = orderSide === OrderAction.BUY ? lastAsk : lastBid;
-
-    const intervalIndicesToExecute = getActiveIntervalIndexesBeforeExit(stockState);
-
     updateExitPnL(stockState);
-    updateRealizedPnL(stockState, intervalIndicesToExecute, orderSide, priceSetAt);
+
+    setNewPosition({
+        stock: stockState.brokerageId,
+        brokerageClient: undefined,
+        stockState,
+        newPosition: 0,
+        snapshot: {
+            ask: stockState.lastAsk,
+            bid: stockState.lastBid,
+            timestamp: getCurrentTimeStamp(),
+        },
+    });
+
+    setRealizedPnL(stockState);
 }
 
 function correctBadBuyIfRequired(

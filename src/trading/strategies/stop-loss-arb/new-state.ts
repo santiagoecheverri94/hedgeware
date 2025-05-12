@@ -26,9 +26,8 @@ export function getFullStockState(partial: StockState): StockState {
         position: 0,
         lastAsk: 0,
         lastBid: 0,
-        realizedPnL: 0,
+        netPositionValue: 0,
         realizedPnLAsPercentage: 0,
-        exitPnL: 0,
         exitPnLAsPercentage: 0,
         maxMovingProfitAsPercentage: 0,
         maxMovingLossAsPercentage: 0,
@@ -58,7 +57,6 @@ function getLongIntervalsAboveInitialPrice(
                 price: sellPrice,
                 active: false,
                 crossed: false,
-                boughtAtPrice: Number.NaN,
             },
             BUY: {
                 price: fc.subtract(sellPrice, stockState.intervalProfit),
@@ -96,7 +94,6 @@ function getShortIntervalsBelowInitialPrice(
                 price: buyPrice,
                 active: false,
                 crossed: false,
-                soldAtPrice: Number.NaN,
             },
         });
     }

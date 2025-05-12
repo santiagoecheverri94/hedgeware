@@ -102,7 +102,7 @@ function getInitialStockState(
     return stockState;
 }
 
-const kTargetInvestment = 30_000;
+const kTargetInvestment = 15_000;
 const kTargetNumLiveTickers = 10;
 
 const kMinShortableQuantity = 100_000;
