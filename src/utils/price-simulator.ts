@@ -51,7 +51,7 @@ function getRandomSnapshot(): Snapshot {
     };
 }
 
-export const INITIAL_RANDOM_PRICE = 9;
+export const INITIAL_RANDOM_PRICE = 10.10;
 let randomPrice: number = INITIAL_RANDOM_PRICE;
 
 function getRandomPrice(): number {

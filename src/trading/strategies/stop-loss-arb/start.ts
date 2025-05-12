@@ -30,14 +30,12 @@ import {setTimeout} from 'node:timers/promises';
 export async function startStopLossArb(): Promise<void> {
     const partialStockState: Partial<StockState> = {
         profitThreshold: 0.5,
-        lossThreshold: -0.5,
+        lossThreshold: -0.25,
         brokerageTradingCostPerShare: 0, // otherwise 0.004,
         targetPosition: 100,
         sharesPerInterval: 100,
-
-        // best: {0.03, 0.06}
         intervalProfit: 0.03,
-        spaceBetweenIntervals: 0.04, // 0.05 for 0.01 above
+        spaceBetweenIntervals: 0.07,
     };
 
     const historicalPartialStockState: Partial<StockState> = {
@@ -103,9 +101,9 @@ export async function startStopLossArb(): Promise<void> {
         const states: { [stock: string]: StockState } = {
             RNDM: getInitialStockState(datePlaceholder, 'RNDM', INITIAL_RANDOM_PRICE, {
                 brokerageTradingCostPerShare: 0,
-                targetPosition: 100,
+                targetPosition: 20,
                 sharesPerInterval: 10,
-                intervalProfit: 0.01,
+                intervalProfit: 0.02,
                 spaceBetweenIntervals: 0.04,
             }),
         };

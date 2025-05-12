@@ -22,7 +22,7 @@ export function getFullStockState(partial: StockState): StockState {
         lossThreshold: partial.lossThreshold,
         intervals: [...longIntervals, ...shortIntervals],
         prediction: partial.prediction,
-        isStaticIntervals: false,
+        isStaticIntervals: partial.isStaticIntervals,
         position: 0,
         lastAsk: 0,
         lastBid: 0,
