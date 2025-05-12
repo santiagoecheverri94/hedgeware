@@ -197,7 +197,7 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number[] {
             interval[OrderAction.BUY].active &&
             interval[OrderAction.BUY].crossed
         ) {
-            if (newPosition <= interval.positionLimit) {
+            if (newPosition < interval.positionLimit) {
                 indicesToExecute.unshift(i);
                 newPosition += stockState.sharesPerInterval;
             }
@@ -238,7 +238,7 @@ function getNumToSell(stockState: StockState, {bid}: Snapshot): number[] {
             interval[OrderAction.SELL].active &&
             interval[OrderAction.SELL].crossed
         ) {
-            if (newPosition >= interval.positionLimit) {
+            if (newPosition > interval.positionLimit) {
                 indicesToExecute.push(i);
                 newPosition -= stockState.sharesPerInterval;
             }
