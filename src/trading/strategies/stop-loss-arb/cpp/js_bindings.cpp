@@ -151,16 +151,13 @@ std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
         cpp_stock_state.targetPosition =
             js_stock_state.Get("targetPosition").As<JS::Number>().Int32Value();
 
-        cpp_stock_state.realizedPnL =
-            GetDecimal(js_stock_state.Get("realizedPnL").As<JS::Number>().DoubleValue()
-            );
+        cpp_stock_state.netPositionValue = GetDecimal(
+            js_stock_state.Get("netPositionValue").As<JS::Number>().DoubleValue()
+        );
 
         cpp_stock_state.realizedPnLAsPercentage = GetDecimal(
             js_stock_state.Get("realizedPnLAsPercentage").As<JS::Number>().DoubleValue()
         );
-
-        cpp_stock_state.exitPnL =
-            GetDecimal(js_stock_state.Get("exitPnL").As<JS::Number>().DoubleValue());
 
         cpp_stock_state.exitPnLAsPercentage = GetDecimal(
             js_stock_state.Get("exitPnLAsPercentage").As<JS::Number>().DoubleValue()
@@ -202,25 +199,11 @@ std::unordered_map<std::string, StockState> BindJsStatesToCppStates(
             cpp_interval.SELL.price =
                 GetDecimal(js_sell.Get("price").As<JS::Number>().DoubleValue());
 
-            if (js_sell.Has("boughtAtPrice") && !js_sell.Get("boughtAtPrice").IsNull())
-            {
-                cpp_interval.SELL.boughtAtPrice = GetDecimal(
-                    js_sell.Get("boughtAtPrice").As<JS::Number>().DoubleValue()
-                );
-            }
-
             JS::Object js_buy = js_interval.Get("BUY").As<JS::Object>();
             cpp_interval.BUY.active = js_buy.Get("active").As<JS::Boolean>().Value();
             cpp_interval.BUY.crossed = js_buy.Get("crossed").As<JS::Boolean>().Value();
             cpp_interval.BUY.price =
                 GetDecimal(js_buy.Get("price").As<JS::Number>().DoubleValue());
-
-            if (js_buy.Has("soldAtPrice") && !js_buy.Get("soldAtPrice").IsNull())
-            {
-                cpp_interval.BUY.soldAtPrice =
-                    GetDecimal(js_buy.Get("soldAtPrice").As<JS::Number>().DoubleValue()
-                    );
-            }
 
             cpp_stock_state.intervals.push_back(cpp_interval);
         }
@@ -282,17 +265,13 @@ JS::Object BindCppStatesToJsStates(
         js_state.Set("targetPosition", JS::Number::New(env, cpp_state.targetPosition));
 
         js_state.Set(
-            "realizedPnL",
-            JS::Number::New(env, cpp_state.realizedPnL.convert_to<double>())
+            "netPositionValue",
+            JS::Number::New(env, cpp_state.netPositionValue.convert_to<double>())
         );
 
         js_state.Set(
             "realizedPnLAsPercentage",
             JS::Number::New(env, cpp_state.realizedPnLAsPercentage.convert_to<double>())
-        );
-
-        js_state.Set(
-            "exitPnL", JS::Number::New(env, cpp_state.exitPnL.convert_to<double>())
         );
 
         js_state.Set(
@@ -344,21 +323,6 @@ JS::Object BindCppStatesToJsStates(
                 JS::Number::New(env, cpp_interval.SELL.price.convert_to<double>())
             );
 
-            if (cpp_interval.SELL.boughtAtPrice.has_value())
-            {
-                js_sell.Set(
-                    "boughtAtPrice",
-                    JS::Number::New(
-                        env,
-                        cpp_interval.SELL.boughtAtPrice.value().convert_to<double>()
-                    )
-                );
-            }
-            else
-            {
-                js_sell.Set("boughtAtPrice", env.Null());
-            }
-
             js_interval.Set("SELL", js_sell);
 
             JS::Object js_buy = JS::Object::New(env);
@@ -368,20 +332,6 @@ JS::Object BindCppStatesToJsStates(
                 "price",
                 JS::Number::New(env, cpp_interval.BUY.price.convert_to<double>())
             );
-
-            if (cpp_interval.BUY.soldAtPrice.has_value())
-            {
-                js_buy.Set(
-                    "soldAtPrice",
-                    JS::Number::New(
-                        env, cpp_interval.BUY.soldAtPrice.value().convert_to<double>()
-                    )
-                );
-            }
-            else
-            {
-                js_buy.Set("soldAtPrice", env.Null());
-            }
 
             js_interval.Set("BUY", js_buy);
 

@@ -159,7 +159,7 @@ function isPastTradingTime(): boolean {
 
 function isWideBidAskSpread({bid, ask}: Snapshot, stockState: StockState): boolean {
     // return false;
-    return fc.gt(fc.subtract(ask, bid), stockState.spaceBetweenIntervals) === 1;
+    return fc.gte(fc.subtract(ask, bid), stockState.spaceBetweenIntervals) === 1;
 }
 
 function checkCrossings(stockState: StockState, {bid, ask}: Snapshot): void {

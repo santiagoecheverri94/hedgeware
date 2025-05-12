@@ -17,17 +17,20 @@ std::vector<int> GetNumToSell(StockState& stockState, const Snapshot& snapshot);
 
 bool IsSnapshotChange(const Snapshot& snapshot, const StockState& stockState);
 
-struct SetNewPositionReturnType
-{
-    Decimal priceSetAt;
-    std::string orderSide;
-};
-
-SetNewPositionReturnType SetNewPosition(
+void SetNewPosition(
     const std::string& stock,
     StockState& stockState,
     const int& newPosition,
     const Snapshot& snapshot
+);
+
+Decimal GetNewNetPositionValue(
+    const Decimal& currentPositionValue,
+    const Decimal& commissionPerShare,
+    const std::string& orderSide,
+    const int& newPosition,
+    const int& previousPosition,
+    const Decimal& priceSetAt
 );
 
 void UpdateSnaphotOnState(StockState& stockState, const Snapshot& snapshot);
@@ -48,12 +51,7 @@ void AddSkippedSellsIfRequired(
     StockState& stockState, std::vector<int>& indexesToExecute
 );
 
-void UpdateRealizedPnL(
-    StockState& stockState,
-    const std::vector<int>& executedIndices,
-    const std::string& orderSide,
-    const Decimal& price
-);
+void SetRealizedPnL(StockState& stockState);
 
 void UpdateExitPnL(StockState& stockState);
 

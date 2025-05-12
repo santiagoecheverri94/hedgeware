@@ -8,7 +8,7 @@ struct Snapshot
 {
     Decimal ask;
     Decimal bid;
-    std::string timestamp;
+    std::string timestamp = "";
 };
 
 enum class IntervalType
@@ -24,8 +24,6 @@ struct SmoothingInterval
         bool active;
         bool crossed;
         Decimal price;
-        std::optional<Decimal> boughtAtPrice;
-        std::optional<Decimal> soldAtPrice;
     };
 
     IntervalType type;
@@ -68,9 +66,8 @@ struct StockState
     int position;
     Decimal lastAsk;
     Decimal lastBid;
-    Decimal realizedPnL;
+    Decimal netPositionValue;
     Decimal realizedPnLAsPercentage;
-    Decimal exitPnL;
     Decimal exitPnLAsPercentage;
     Decimal maxMovingProfitAsPercentage;
     Decimal maxMovingLossAsPercentage;

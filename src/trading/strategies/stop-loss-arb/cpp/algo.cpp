@@ -54,15 +54,7 @@ Snapshot ReconcileStockPosition(const std::string& stock, StockState& stockState
     // 5)
     if (newPosition.has_value())
     {
-        const auto setNewPositionRVal =
-            SetNewPosition(stock, stockState, newPosition.value(), snapshot);
-
-        UpdateRealizedPnL(
-            stockState,
-            intervalIndicesToExecute,
-            setNewPositionRVal.orderSide,
-            setNewPositionRVal.priceSetAt
-        );
+        SetNewPosition(stock, stockState, newPosition.value(), snapshot);
 
         CheckCrossings(stockState, snapshot);
     }
@@ -208,7 +200,7 @@ bool IsSnapshotChange(const Snapshot& snapshot, const StockState& stockState)
     return stockState.lastAsk != snapshot.ask || stockState.lastBid != snapshot.bid;
 }
 
-SetNewPositionReturnType SetNewPosition(
+void SetNewPosition(
     const std::string& stock,
     StockState& stockState,
     const int& newPosition,
@@ -218,66 +210,58 @@ SetNewPositionReturnType SetNewPosition(
     const auto previousPosition = stockState.position;
     stockState.position = newPosition;
 
-    const std::string orderSide = newPosition > previousPosition ? "BUY" : "SELL";
-    const Decimal quotedPrice = orderSide == "BUY" ? snapshot.ask : snapshot.bid;
+    const string orderSide = newPosition > previousPosition ? "BUY" : "SELL";
+    const Decimal quotedPrice =
+        orderSide == static_cast<string>("BUY") ? snapshot.ask : snapshot.bid;
 
-    return SetNewPositionReturnType{.priceSetAt = quotedPrice, .orderSide = orderSide};
+    const auto newNetPositionValue = GetNewNetPositionValue(
+        stockState.netPositionValue,
+        stockState.brokerageTradingCostPerShare,
+        orderSide,
+        newPosition,
+        previousPosition,
+        quotedPrice
+    );
+
+    stockState.netPositionValue = newNetPositionValue;
 }
 
-void UpdateRealizedPnL(
-    StockState& stockState,
-    const std::vector<int>& executedIndices,
+Decimal GetNewNetPositionValue(
+    const Decimal& currentPositionValue,
+    const Decimal& commissionPerShare,
     const std::string& orderSide,
-    const Decimal& price
+    const int& newPosition,
+    const int& previousPosition,
+    const Decimal& priceSetAt
 )
 {
-    if (executedIndices.empty())
+    int quantity = abs(newPosition - previousPosition);
+
+    Decimal commissionCosts = Decimal(quantity) * commissionPerShare;
+
+    Decimal change = -commissionCosts;
+
+    Decimal orderValue = Decimal(quantity) * priceSetAt;
+
+    if (orderSide == "BUY")
     {
-        return;
+        change -= orderValue;
+    }
+    else if (orderSide == "SELL")
+    {
+        change += orderValue;
     }
 
-    Decimal commissionCosts =
-        GetDecimal(executedIndices.size() * stockState.sharesPerInterval) *
-        stockState.brokerageTradingCostPerShare;
+    Decimal newPositionValue = currentPositionValue + change;
 
-    stockState.realizedPnL -= commissionCosts;
+    return newPositionValue;
+}
 
-    for (const int index : executedIndices)
+void SetRealizedPnL(StockState& stockState)
+{
+    if (stockState.position != 0)
     {
-        auto& interval = stockState.intervals[index];
-
-        optional<Decimal> pnLFromThisExecution;
-
-        if (interval.type == IntervalType::LONG)
-        {
-            if (orderSide == "BUY")
-            {
-                interval.SELL.boughtAtPrice = price;
-            }
-            else if (orderSide == "SELL")
-            {
-                pnLFromThisExecution = GetDecimal(stockState.sharesPerInterval) *
-                                       (price - interval.SELL.boughtAtPrice.value());
-            }
-        }
-
-        if (interval.type == IntervalType::SHORT)
-        {
-            if (orderSide == "SELL")
-            {
-                interval.BUY.soldAtPrice = price;
-            }
-            else if (orderSide == "BUY")
-            {
-                pnLFromThisExecution = GetDecimal(stockState.sharesPerInterval) *
-                                       (interval.BUY.soldAtPrice.value() - price);
-            }
-        }
-
-        if (pnLFromThisExecution.has_value())
-        {
-            stockState.realizedPnL += pnLFromThisExecution.value();
-        }
+        throw runtime_error("Cannot set realized PnL because Position is not zero");
     }
 
     const auto percentage_denominator =
@@ -285,7 +269,7 @@ void UpdateRealizedPnL(
         stockState.initialPrice;
 
     Decimal realizedPnLAsPercentage =
-        (stockState.realizedPnL / percentage_denominator) * 100;
+        (stockState.netPositionValue / percentage_denominator) * 100;
 
     stockState.realizedPnLAsPercentage = realizedPnLAsPercentage;
 }
@@ -307,44 +291,26 @@ void UpdateExitPnL(StockState& stockState)
         return;
     }
 
-    Decimal exitPnL = stockState.realizedPnL;
+    const string orderSide = position > 0 ? "SELL" : "BUY";
 
-    Decimal commissionCosts =
-        GetDecimal(position) * stockState.brokerageTradingCostPerShare;
+    const auto priceSetAt =
+        (orderSide == static_cast<string>("BUY")) ? lastAsk : lastBid;
 
-    exitPnL -= commissionCosts;
-
-    for (const auto& interval : stockState.intervals)
-    {
-        std::optional<Decimal> intervalPnL;
-
-        if (interval.type == IntervalType::LONG && interval.SELL.active)
-        {
-            const auto& boughtAtPrice = interval.SELL.boughtAtPrice.value();
-            intervalPnL =
-                GetDecimal(stockState.sharesPerInterval) * (lastBid - boughtAtPrice);
-        }
-
-        if (interval.type == IntervalType::SHORT && interval.BUY.active)
-        {
-            const auto& soldAtPrice = interval.BUY.soldAtPrice.value();
-            intervalPnL =
-                GetDecimal(stockState.sharesPerInterval) * (soldAtPrice - lastAsk);
-        }
-
-        if (intervalPnL.has_value())
-        {
-            exitPnL += intervalPnL.value();
-        }
-    }
-
-    stockState.exitPnL = exitPnL;
+    const auto ifClosingPositionValue = GetNewNetPositionValue(
+        stockState.netPositionValue,
+        stockState.brokerageTradingCostPerShare,
+        orderSide,
+        0,
+        position,
+        priceSetAt
+    );
 
     const auto percentage_denominator =
         GetDecimal(stockState.targetPosition + stockState.sharesPerInterval) *
         stockState.initialPrice;
 
-    Decimal exitPnLAsPercentage = (exitPnL / percentage_denominator) * 100;
+    Decimal exitPnLAsPercentage =
+        (ifClosingPositionValue / percentage_denominator) * 100;
 
     stockState.exitPnLAsPercentage = exitPnLAsPercentage;
 
@@ -391,46 +357,18 @@ void UpdateExitPnL(StockState& stockState)
     }
 }
 
-std::vector<int> GetActiveIntervalIndexesBeforeExit(const StockState& stockState)
-{
-    std::vector<int> indexes{};
-
-    for (int index = 0; index < static_cast<int>(stockState.intervals.size()); ++index)
-    {
-        const auto& interval = stockState.intervals[index];
-
-        if (interval.type == IntervalType::LONG && interval.SELL.active)
-        {
-            indexes.push_back(static_cast<int>(index));
-        }
-
-        if (interval.type == IntervalType::SHORT && interval.BUY.active)
-        {
-            indexes.push_back(static_cast<int>(index));
-        }
-    }
-
-    return indexes;
-}
-
 void ReconcileRealizedPnLWhenHistoricalSnapshotsExhausted(StockState& stockState)
 {
-    if (stockState.position == 0)
-    {
-        return;
-    }
-
-    std::string orderSide = stockState.position > 0 ? "SELL" : "BUY";
-
-    const auto& lastAsk = stockState.lastAsk;
-    const auto& lastBid = stockState.lastBid;
-    const auto& priceSetAt = (orderSide == "BUY") ? lastAsk : lastBid;
-
-    std::vector<int> intervalIndicesToExecute =
-        GetActiveIntervalIndexesBeforeExit(stockState);
-
     UpdateExitPnL(stockState);
-    UpdateRealizedPnL(stockState, intervalIndicesToExecute, orderSide, priceSetAt);
+
+    SetNewPosition(
+        stockState.brokerageId,
+        stockState,
+        0,
+        Snapshot{stockState.lastAsk, stockState.lastBid}
+    );
+
+    SetRealizedPnL(stockState);
 }
 
 void CorrectBadBuyIfRequired(StockState& stockState, std::vector<int>& indexesToExecute)

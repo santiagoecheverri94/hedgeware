@@ -42,8 +42,9 @@ export async function startStopLossArb(): Promise<void> {
     };
 
     if (isHistoricalSnapshot()) {
-        // const arrayOfDatesArrays = await getDatesArrayCppPartitions();
-        const arrayOfDatesArrays = [['2025-03-21']];
+        const arrayOfDatesArrays = await getDatesArrayCppPartitions();
+        // const arrayOfDatesArrays = [['2025-03-21']];
+        // const arrayOfDatesArrays = [['2025-05-09']];
 
         const startDate = arrayOfDatesArrays[0][0];
         const lastDatesArray = arrayOfDatesArrays[arrayOfDatesArrays.length - 1];

@@ -137,7 +137,6 @@ std::vector<SmoothingInterval> GetLongIntervalsAboveInitialPrice(
         interval.SELL.price = sellPrice;
         interval.SELL.active = false;
         interval.SELL.crossed = false;
-        interval.SELL.boughtAtPrice = std::nullopt;
 
         interval.BUY.price = sellPrice - stock_state.intervalProfit;
         interval.BUY.active = true;
@@ -173,7 +172,6 @@ std::vector<SmoothingInterval> GetShortIntervalsBelowInitialPrice(
         interval.BUY.price = buyPrice;
         interval.BUY.active = false;
         interval.BUY.crossed = false;
-        interval.BUY.soldAtPrice = std::nullopt;
 
         intervals.push_back(interval);
     }
