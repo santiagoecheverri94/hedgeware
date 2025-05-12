@@ -28,8 +28,8 @@ bool IsRandomSnapshot() { return IsTruthyEnv("RANDOM_SNAPSHOT"); }
 
 bool IsHistoricalSnapshot() { return IsTruthyEnv("HISTORICAL_SNAPSHOT"); }
 
-const Decimal INITIAL_PRICE = GetDecimal(9.0);
-Decimal randomPrice = INITIAL_PRICE;
+const Decimal INITIAL_RANDOM_PRICE = GetDecimal(9.0);
+Decimal randomPrice = INITIAL_RANDOM_PRICE;
 
 Decimal GetRandomPrice()
 {
@@ -58,7 +58,7 @@ Snapshot GetRandomSnapshot()
     return snapshot;
 }
 
-void RestartRandomPrice() { randomPrice = INITIAL_PRICE; }
+void RestartRandomPrice() { randomPrice = INITIAL_RANDOM_PRICE; }
 
 void DeleteHistoricalSnapshots(StockState& stock_state)
 {

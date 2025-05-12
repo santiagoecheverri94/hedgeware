@@ -301,22 +301,22 @@ async function setNewPosition({
     const quotedPrice = orderSide === OrderAction.BUY ? snapshot.ask : snapshot.bid;
     let priceSetAt: number = quotedPrice;
 
+    const tradingLog: (typeof stockState.tradingLogs)[number] = {
+        action: orderSide,
+        timeStamp: snapshot.timestamp || getCurrentTimeStamp(),
+        quotedPrice,
+        realizedPrice: priceSetAt,
+        previousPosition,
+        newPosition,
+    };
+    stockState.tradingLogs.push(tradingLog);
+
     if (brokerageClient) {
         priceSetAt = await brokerageClient.setSecurityPosition({
             brokerageIdOfSecurity: stockState.brokerageId,
             currentPosition: previousPosition * stockState.numContracts,
             newPosition: newPosition * stockState.numContracts,
         });
-
-        const tradingLog: (typeof stockState.tradingLogs)[number] = {
-            action: orderSide,
-            timeStamp: snapshot.timestamp || getCurrentTimeStamp(),
-            quotedPrice,
-            realizedPrice: priceSetAt,
-            previousPosition,
-            newPosition,
-        };
-        stockState.tradingLogs.push(tradingLog);
 
         log(
             `Changed position for ${stock}, action: ${orderSide}, fullNewPosition: ${

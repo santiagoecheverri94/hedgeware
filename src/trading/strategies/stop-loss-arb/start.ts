@@ -7,6 +7,7 @@ import {
     isRandomSnapshot,
     deleteHistoricalSnapshots,
     isHistoricalCppSnapshot,
+    INITIAL_RANDOM_PRICE,
 } from '../../../utils/price-simulator';
 import {isTimeToTrade} from '../../../utils/time';
 import {SchwabClient} from '../../brokerage-clients/Schwab/client';
@@ -21,6 +22,7 @@ import {
     getStockStates,
     getHistoricalStockStatesForDate,
     writeLiveStockStatesBeforeTradingStart,
+    getInitialStockState,
 } from './state';
 import {StockState} from './types';
 import {setTimeout} from 'node:timers/promises';
@@ -30,10 +32,12 @@ export async function startStopLossArb(): Promise<void> {
         profitThreshold: 0.75,
         lossThreshold: -0.75,
         brokerageTradingCostPerShare: 0, // otherwise 0.004,
-        targetPosition: 200,
+        targetPosition: 100,
         sharesPerInterval: 100,
-        intervalProfit: 0.03,
-        spaceBetweenIntervals: 0.04,
+
+        // best: {0.03, 0.06}
+        intervalProfit: 0.02,
+        spaceBetweenIntervals: 0.05,
     };
 
     const historicalPartialStockState: Partial<StockState> = {
@@ -74,7 +78,7 @@ export async function startStopLossArb(): Promise<void> {
         }
 
         console.log('Partial Stock State:', historicalPartialStockState);
-    } else {
+    } else if (isLiveTrading()) {
         const today = getTodayDate();
 
         let brokerageClient: BrokerageClient | undefined;
@@ -93,6 +97,20 @@ export async function startStopLossArb(): Promise<void> {
         const states = await getStockStates(stocks, today);
 
         await startStopLossArbNode(states, today, brokerageClient);
+    } else if (isRandomSnapshot()) {
+        const datePlaceholder = 'YYYY-MM-DD';
+
+        const states: { [stock: string]: StockState } = {
+            RNDM: getInitialStockState(datePlaceholder, 'RNDM', INITIAL_RANDOM_PRICE, {
+                brokerageTradingCostPerShare: 0,
+                targetPosition: 100,
+                sharesPerInterval: 10,
+                intervalProfit: 0.01,
+                spaceBetweenIntervals: 0.04,
+            }),
+        };
+
+        await startStopLossArbNode(states, datePlaceholder);
     }
 }
 

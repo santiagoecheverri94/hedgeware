@@ -82,7 +82,7 @@ export async function getHistoricalStockStatesForDate(
     return stockStates;
 }
 
-function getInitialStockState(
+export function getInitialStockState(
     date: string,
     ticker: string,
     initialAskPrice: number,

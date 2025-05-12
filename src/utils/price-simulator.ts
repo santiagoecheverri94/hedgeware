@@ -9,7 +9,9 @@ export function isLiveTrading(): boolean {
     const isLiveTradingSet = Boolean(process.env.LIVE_TRADING);
 
     if (!isSimulation && !isLiveTradingSet) {
-        throw new Error('Neither simulation nor live trading is set. Please set one of them.');
+        throw new Error(
+            'Neither simulation nor live trading is set. Please set one of them.',
+        );
     }
 
     return !isSimulation && isLiveTradingSet;
@@ -49,20 +51,20 @@ function getRandomSnapshot(): Snapshot {
     };
 }
 
-const INITIAL_PRICE = 9;
-let randomPrice: number = INITIAL_PRICE;
+export const INITIAL_RANDOM_PRICE = 9;
+let randomPrice: number = INITIAL_RANDOM_PRICE;
 
 function getRandomPrice(): number {
     const tickDown = fc.subtract(randomPrice, 0.01);
     const tickUp = fc.add(randomPrice, 0.01);
-    const probabilityOfTickDown = Math.random();
-    randomPrice = fc.lte(probabilityOfTickDown, 0.49) ? tickDown : tickUp;
+    const probabilityOfTickUp = Math.random();
+    randomPrice = fc.lte(probabilityOfTickUp, 0.5) ? tickUp : tickDown;
 
     return randomPrice;
 }
 
 export function restartRandomPrice(): void {
-    randomPrice = INITIAL_PRICE;
+    randomPrice = INITIAL_RANDOM_PRICE;
 }
 
 async function getHistoricalSnapshot(stockState: StockState): Promise<Snapshot> {
@@ -95,7 +97,9 @@ export async function getSnapshotsForStockOnDate(
     stock: string,
     date: string,
 ): Promise<Snapshot[]> {
-    const jsonFileData = await readJSONFile<{snapshots: Snapshot[]}>(getFilePathForStockDataOnDate(stock, date));
+    const jsonFileData = await readJSONFile<{ snapshots: Snapshot[] }>(
+        getFilePathForStockDataOnDate(stock, date),
+    );
     const snapshots = jsonFileData.snapshots;
 
     return snapshots;
@@ -117,8 +121,7 @@ export function isHistoricalSnapshotsExhausted(stockState: StockState): boolean 
     }
 
     const historicalSnapshots = stockState.historicalSnapshots;
-    const isExhausted =
-        historicalSnapshots.index === historicalSnapshots.data.length;
+    const isExhausted = historicalSnapshots.index === historicalSnapshots.data.length;
 
     return isExhausted;
 }
