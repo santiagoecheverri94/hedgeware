@@ -26,6 +26,12 @@ std::string DoubleToStr(const double& value)
 
 Decimal GetDecimal(const double& value) { return Decimal{DoubleToStr(value)}; }
 
+Decimal RoundToNumDecimalPlaces(const Decimal& value, const int& places)
+{
+    Decimal scale = pow(Decimal(10), places);
+    return boost::multiprecision::round(value * scale) / scale;
+}
+
 std::vector<std::string> string_split(const std::string& str, const char& delimiter)
 {
     vector<string> result{};

@@ -183,17 +183,22 @@ std::vector<SmoothingInterval> GetLongIntervalsAboveInitialPrice(
     {
         Decimal spaceFromBaseInterval =
             GetDecimal(index) * stock_state.spaceBetweenIntervals;
-        Decimal sellPrice = stock_state.initialPrice + spaceFromBaseInterval;
+
+        Decimal buyPrice = RoundToNumDecimalPlaces(
+            stock_state.initialPrice + spaceFromBaseInterval +
+                (stock_state.spaceBetweenIntervals / Decimal(2)),
+            2
+        );
 
         SmoothingInterval interval{};
         interval.type = IntervalType::LONG;
         interval.positionLimit = stock_state.sharesPerInterval * index;
 
-        interval.SELL.price = sellPrice;
+        interval.SELL.price = buyPrice + stock_state.intervalProfit;
         interval.SELL.active = false;
         interval.SELL.crossed = false;
 
-        interval.BUY.price = sellPrice - stock_state.intervalProfit;
+        interval.BUY.price = buyPrice;
         interval.BUY.active = true;
         interval.BUY.crossed = true;
 
@@ -214,17 +219,30 @@ std::vector<SmoothingInterval> GetShortIntervalsBelowInitialPrice(
     {
         Decimal spaceFromBaseInterval =
             GetDecimal(index) * stock_state.spaceBetweenIntervals;
-        Decimal buyPrice = stock_state.initialPrice - spaceFromBaseInterval;
+
+        // Decimal buyPrice = RoundToNumDecimalPlaces(
+        //     stock_state.initialPrice - spaceFromBaseInterval -
+        //         (stock_state.spaceBetweenIntervals / Decimal(2)),
+        //     2
+        // );
+
+        Decimal sellPrice = RoundToNumDecimalPlaces(
+            stock_state.initialPrice - spaceFromBaseInterval -
+                (stock_state.spaceBetweenIntervals / Decimal(2)),
+            2
+        );
 
         SmoothingInterval interval{};
         interval.type = IntervalType::SHORT;
         interval.positionLimit = -(stock_state.sharesPerInterval * index);
 
-        interval.SELL.price = buyPrice + stock_state.intervalProfit;
+        // interval.SELL.price = buyPrice + stock_state.intervalProfit;
+        interval.SELL.price = sellPrice;
         interval.SELL.active = true;
         interval.SELL.crossed = true;
 
-        interval.BUY.price = buyPrice;
+        // interval.BUY.price = buyPrice;
+        interval.BUY.price = sellPrice - stock_state.intervalProfit;
         interval.BUY.active = false;
         interval.BUY.crossed = false;
 

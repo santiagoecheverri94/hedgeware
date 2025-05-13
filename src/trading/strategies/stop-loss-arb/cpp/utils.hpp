@@ -15,4 +15,6 @@ using Decimal = boost::multiprecision::number<
 
 Decimal GetDecimal(const double& value);
 
+Decimal RoundToNumDecimalPlaces(const Decimal& value, const int& places);
+
 std::vector<std::string> string_split(const std::string& str, const char& delimiter);
