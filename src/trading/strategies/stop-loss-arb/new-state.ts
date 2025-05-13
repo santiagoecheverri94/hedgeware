@@ -48,24 +48,18 @@ function getLongIntervalsAboveInitialPrice(
             index,
             stockState.spaceBetweenIntervals,
         );
-        const buyPrice = fc.roundToNumDecimalPlaces(
-            fc.add(
-                fc.add(stockState.initialPrice, spaceFromBaseInterval),
-                fc.divide(stockState.spaceBetweenIntervals, 2),
-            ),
-            2,
-        );
+        const sellPrice = fc.add(stockState.initialPrice, spaceFromBaseInterval);
 
         intervals.unshift({
             type: IntervalType.LONG,
             positionLimit: stockState.sharesPerInterval * index,
             SELL: {
-                price: fc.add(buyPrice, stockState.intervalProfit),
+                price: sellPrice,
                 active: false,
                 crossed: false,
             },
             BUY: {
-                price: buyPrice,
+                price: fc.subtract(sellPrice, stockState.intervalProfit),
                 active: true,
                 crossed: true,
             },
@@ -86,35 +80,18 @@ function getShortIntervalsBelowInitialPrice(
             index,
             stockState.spaceBetweenIntervals,
         );
-
-        // const buyPrice = fc.roundToNumDecimalPlaces(
-        //     fc.subtract(
-        //         fc.subtract(stockState.initialPrice, spaceFromBaseInterval),
-        //         fc.divide(stockState.spaceBetweenIntervals, 2),
-        //     ),
-        //     2,
-        // );
-
-        const sellPrice = fc.roundToNumDecimalPlaces(
-            fc.subtract(
-                fc.subtract(stockState.initialPrice, spaceFromBaseInterval),
-                fc.divide(stockState.spaceBetweenIntervals, 2),
-            ),
-            2,
-        );
+        const buyPrice = fc.subtract(stockState.initialPrice, spaceFromBaseInterval);
 
         intervals.push({
             type: IntervalType.SHORT,
             positionLimit: -(stockState.sharesPerInterval * index),
             SELL: {
-                // price: fc.add(buyPrice, stockState.intervalProfit),
-                price: sellPrice,
+                price: fc.add(buyPrice, stockState.intervalProfit),
                 active: true,
                 crossed: true,
             },
             BUY: {
-                // price: buyPrice,
-                price: fc.subtract(sellPrice, stockState.intervalProfit),
+                price: buyPrice,
                 active: false,
                 crossed: false,
             },
