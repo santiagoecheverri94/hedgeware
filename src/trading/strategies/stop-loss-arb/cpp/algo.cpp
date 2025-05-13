@@ -105,9 +105,7 @@ std::vector<int> GetNumToBuy(StockState& stockState, const Snapshot& snapshot)
         if (snapshot.ask >= interval.BUY.price && interval.BUY.active &&
             interval.BUY.crossed)
         {
-            if (newPosition < interval.positionLimit ||
-                (interval.type == IntervalType::SHORT &&
-                 newPosition == interval.positionLimit))
+            if (newPosition < interval.positionLimit)
             {
                 indicesToExecute.insert(indicesToExecute.begin(), i);
                 newPosition += stockState.sharesPerInterval;
@@ -157,9 +155,7 @@ std::vector<int> GetNumToSell(StockState& stockState, const Snapshot& snapshot)
         if (snapshot.bid <= interval.SELL.price && interval.SELL.active &&
             interval.SELL.crossed)
         {
-            if (newPosition > interval.positionLimit ||
-                (interval.type == IntervalType::LONG &&
-                 newPosition == interval.positionLimit))
+            if (newPosition > interval.positionLimit)
             {
                 indicesToExecute.push_back(i);
                 newPosition -= stockState.sharesPerInterval;
@@ -269,8 +265,7 @@ void SetRealizedPnL(StockState& stockState)
     }
 
     const auto percentage_denominator =
-        GetDecimal(stockState.targetPosition + stockState.sharesPerInterval) *
-        stockState.initialPrice;
+        GetDecimal(stockState.targetPosition) * stockState.initialPrice;
 
     Decimal realizedPnLAsPercentage =
         (stockState.netPositionValue / percentage_denominator) * 100;
@@ -310,8 +305,7 @@ void UpdateExitPnL(StockState& stockState)
     );
 
     const auto percentage_denominator =
-        GetDecimal(stockState.targetPosition + stockState.sharesPerInterval) *
-        stockState.initialPrice;
+        GetDecimal(stockState.targetPosition) * stockState.initialPrice;
 
     Decimal exitPnLAsPercentage =
         (ifClosingPositionValue / percentage_denominator) * 100;

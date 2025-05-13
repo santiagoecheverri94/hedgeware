@@ -31,12 +31,12 @@ export async function startStopLossArb(): Promise<void> {
     const partialStockState: Partial<StockState> = {
         isStaticIntervals: false,
         profitThreshold: 0.5,
-        lossThreshold: -0.5,
+        lossThreshold: -0.75,
         brokerageTradingCostPerShare: 0, // otherwise 0.004,
         targetPosition: 100,
         sharesPerInterval: 50,
-        intervalProfit: 0.03,
-        spaceBetweenIntervals: 0.05,
+        intervalProfit: 0.05,
+        spaceBetweenIntervals: 0.09,
     };
 
     const historicalPartialStockState: Partial<StockState> = {
