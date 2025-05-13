@@ -34,9 +34,9 @@ export async function startStopLossArb(): Promise<void> {
         lossThreshold: -0.5,
         brokerageTradingCostPerShare: 0, // otherwise 0.004,
         targetPosition: 100,
-        sharesPerInterval: 100,
+        sharesPerInterval: 50,
         intervalProfit: 0.03,
-        spaceBetweenIntervals: 0.07,
+        spaceBetweenIntervals: 0.05,
     };
 
     const historicalPartialStockState: Partial<StockState> = {

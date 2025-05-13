@@ -105,7 +105,9 @@ std::vector<int> GetNumToBuy(StockState& stockState, const Snapshot& snapshot)
         if (snapshot.ask >= interval.BUY.price && interval.BUY.active &&
             interval.BUY.crossed)
         {
-            if (newPosition < interval.positionLimit)
+            if (newPosition < interval.positionLimit ||
+                (interval.type == IntervalType::SHORT &&
+                 newPosition == interval.positionLimit))
             {
                 indicesToExecute.insert(indicesToExecute.begin(), i);
                 newPosition += stockState.sharesPerInterval;
@@ -155,7 +157,9 @@ std::vector<int> GetNumToSell(StockState& stockState, const Snapshot& snapshot)
         if (snapshot.bid <= interval.SELL.price && interval.SELL.active &&
             interval.SELL.crossed)
         {
-            if (newPosition > interval.positionLimit)
+            if (newPosition > interval.positionLimit ||
+                (interval.type == IntervalType::LONG &&
+                 newPosition == interval.positionLimit))
             {
                 indicesToExecute.push_back(i);
                 newPosition -= stockState.sharesPerInterval;
