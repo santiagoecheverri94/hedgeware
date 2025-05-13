@@ -42,6 +42,48 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
             continue;
         }
 
+        // // if percentage change low, continue
+        // const auto raw_time_steps = stock_file_data["raw_time_steps"];
+
+        // const int len_expected_time_steps = 55;
+
+        // const int len_raw_time_steps = raw_time_steps.size();
+        // if (len_raw_time_steps != len_expected_time_steps)
+        // {
+        //     throw runtime_error(
+        //         format(
+        //             "The code is currently setup to support only {} time steps",
+        //             len_expected_time_steps
+        //         ) +
+        //         file.string()
+        //     );
+        // }
+
+        // const auto first_n_minutes_candle = raw_time_steps[0];
+        // const auto last_n_minutes_candle = raw_time_steps[len_expected_time_steps -
+        // 1]; if (first_n_minutes_candle.is_null() || last_n_minutes_candle.is_null())
+        // {
+        //     continue;
+        // }
+
+        // const Decimal first_n_minues_open_price =
+        //     GetDecimal(first_n_minutes_candle["open"].get<double>());
+
+        // const Decimal first_n_minues_close_price =
+        //     GetDecimal(last_n_minutes_candle["close"].get<double>());
+
+        // const Decimal percentage_change =
+        //     ((first_n_minues_close_price - first_n_minues_open_price) /
+        //      first_n_minues_open_price) *
+        //     100;
+
+        // const Decimal percentage_change_abs = abs(percentage_change);
+
+        // if (percentage_change_abs < Decimal("2.0"))
+        // {
+        //     continue;
+        // }
+
         const auto ticker = stock_file_data["ticker"].get<string>();
 
         const auto initial_ask_price_double =
