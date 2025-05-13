@@ -204,6 +204,10 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number[] {
         }
     }
 
+    if (stockState.isStaticIntervals) {
+        addSkippedBuysIfRequired(stockState, indicesToExecute);
+    }
+
     for (const index of indicesToExecute) {
         const interval = intervals[index];
 
@@ -212,10 +216,6 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number[] {
 
         interval[OrderAction.SELL].active = true;
         interval[OrderAction.SELL].crossed = false;
-    }
-
-    if (stockState.isStaticIntervals) {
-        addSkippedBuysIfRequired(stockState, indicesToExecute);
     }
 
     if (indicesToExecute.length > 0) {

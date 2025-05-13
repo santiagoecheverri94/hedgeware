@@ -103,7 +103,7 @@ export async function startStopLossArb(): Promise<void> {
             RNDM: getInitialStockState(datePlaceholder, 'RNDM', INITIAL_RANDOM_PRICE, {
                 isStaticIntervals: true,
                 brokerageTradingCostPerShare: 0,
-                targetPosition: 20,
+                targetPosition: 10,
                 sharesPerInterval: 10,
                 intervalProfit: 0.02,
                 spaceBetweenIntervals: 0.04,

@@ -113,6 +113,11 @@ std::vector<int> GetNumToBuy(StockState& stockState, const Snapshot& snapshot)
         }
     }
 
+    if (stockState.isStaticIntervals)
+    {
+        AddSkippedBuysIfRequired(stockState, indicesToExecute);
+    }
+
     for (const int index : indicesToExecute)
     {
         auto& interval = intervals[index];
@@ -122,11 +127,6 @@ std::vector<int> GetNumToBuy(StockState& stockState, const Snapshot& snapshot)
 
         interval.SELL.active = true;
         interval.SELL.crossed = false;
-    }
-
-    if (stockState.isStaticIntervals)
-    {
-        AddSkippedBuysIfRequired(stockState, indicesToExecute);
     }
 
     if (!indicesToExecute.empty())
