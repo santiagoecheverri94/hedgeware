@@ -37,7 +37,7 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
                 ["first_n_minutes_volume_value_as_prev_day_mkt_cap_percentage"]
                     .get<double>();
         const Decimal volume_value = GetDecimal(volume_value_double);
-        if (volume_value < Decimal("0.25"))
+        if (volume_value < Decimal("0.2"))
         {
             continue;
         }
