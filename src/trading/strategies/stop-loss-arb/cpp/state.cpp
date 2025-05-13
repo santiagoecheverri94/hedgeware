@@ -31,6 +31,17 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
             continue;
         }
 
+        // if volume value low, continue
+        const auto volume_value_double =
+            stock_file_data
+                ["first_n_minutes_volume_value_as_prev_day_mkt_cap_percentage"]
+                    .get<double>();
+        const Decimal volume_value = GetDecimal(volume_value_double);
+        if (volume_value < Decimal("0.25"))
+        {
+            continue;
+        }
+
         const auto ticker = stock_file_data["ticker"].get<string>();
 
         const auto initial_ask_price_double =
@@ -105,6 +116,8 @@ StockState GetInitialStockState(
         get<Decimal>(partial_stock_state.at("profitThreshold"));
     new_stock_state.lossThreshold =
         get<Decimal>(partial_stock_state.at("lossThreshold"));
+    new_stock_state.isStaticIntervals =
+        get<bool>(partial_stock_state.at("isStaticIntervals"));
 
     std::vector<SmoothingInterval> intervals{};
     auto long_intervals = GetLongIntervalsAboveInitialPrice(new_stock_state);
