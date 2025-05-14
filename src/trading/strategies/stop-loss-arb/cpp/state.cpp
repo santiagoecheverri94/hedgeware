@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 
+#include "data.hpp"
 #include "price_simulator.hpp"
 
 using json = nlohmann::json;
@@ -41,6 +42,64 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
         {
             continue;
         }
+
+        // ------------------ BEGIN MKT CAP FILTERING ------------------
+
+        // const auto mkt_cap_double =
+        //     stock_file_data["prev_day_market_cap"].get<double>();
+        // const Decimal mkt_cap = GetDecimal(mkt_cap_double);
+
+        // // [1B,)
+        // if (mkt_cap < Decimal(1'000'000'000))
+        // {
+        //     continue;
+        // }
+
+        // // [500M, 1B)
+        // if (mkt_cap < GetDecimal(500'000'000) || mkt_cap >= Decimal(1'000'000'000))
+        // {
+        //     continue;
+        // }
+
+        // ...
+
+        // // [100M, 200M)
+        // if (mkt_cap < GetDecimal(100'000'000) || mkt_cap >= Decimal(200'000'000))
+        // {
+        //     continue;
+        // }
+
+        // ------------------ END MKT CAP FILTERING ------------------
+
+        // ------------------ BEGIN PRICE FILTERING ------------------
+
+        // const Decimal price = GetFirstNMinutesClosePrice(stock_file_data);
+
+        // // [6, 7)]
+        // if (price < GetDecimal(6))
+        // {
+        //     continue;
+        // }
+
+        // // [5, 6)
+        // if (price < GetDecimal(5) || price >= GetDecimal(6))
+        // {
+        //     continue;
+        // }
+
+        // // [4, 5)
+        // if (price < GetDecimal(4) || price >= GetDecimal(5))
+        // {
+        //     continue;
+        // }
+
+        // // [3p5, 4)
+        // if (price < GetDecimal(3.5) || price >= GetDecimal(4))
+        // {
+        //     continue;
+        // }
+
+        // ------------------ END OF PRICE FILTERING ------------------
 
         // // if percentage change low, continue
         // const auto raw_time_steps = stock_file_data["raw_time_steps"];
