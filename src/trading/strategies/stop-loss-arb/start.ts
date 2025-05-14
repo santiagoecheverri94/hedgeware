@@ -30,13 +30,13 @@ import {setTimeout} from 'node:timers/promises';
 export async function startStopLossArb(): Promise<void> {
     const partialStockState: Partial<StockState> = {
         isStaticIntervals: false,
-        profitThreshold: 0.5,
-        lossThreshold: -0.625,
+        profitThreshold: 1,
+        lossThreshold: -1.25,
         brokerageTradingCostPerShare: 0, // otherwise 0.004,
-        targetPosition: 100,
+        targetPosition: 0,
         sharesPerInterval: 100,
-        intervalProfit: 0.09,
-        spaceBetweenIntervals: 0.13,
+        intervalProfit: 0.01,
+        spaceBetweenIntervals: 0.06,
     };
 
     const historicalPartialStockState: Partial<StockState> = {
@@ -46,7 +46,7 @@ export async function startStopLossArb(): Promise<void> {
 
     if (isHistoricalSnapshot()) {
         const arrayOfDatesArrays = await getDatesArrayCppPartitions();
-        // const arrayOfDatesArrays = [['2025-03-21']];
+        // const arrayOfDatesArrays = [['2024-03-21']];
         // const arrayOfDatesArrays = [['2025-05-09']];
 
         const startDate = arrayOfDatesArrays[0][0];
