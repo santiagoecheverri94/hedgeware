@@ -10,6 +10,19 @@ using json = nlohmann::json;
 
 using namespace std;
 
+std::unordered_map<std::string, StockState> GetFilteredStockStates(
+    const std::unordered_map<std::string, StockState>& stock_states
+)
+{
+    unordered_map<string, StockState> filtered_stock_states{};
+    vector<StockState> filtered_stock_states_vector{};
+
+    // On the function below add a field to stockState that we can use to easily
+    // sort it over here
+
+    return filtered_stock_states;
+}
+
 std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
     const std::string& date, const PartialStockState& partial_stock_state
 )
@@ -75,8 +88,26 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
 
         const Decimal price = GetFirstNMinutesClosePrice(stock_file_data);
 
+        // // [9, 10)]
+        // if (price < GetDecimal(9) || price >= GetDecimal(10))
+        // {
+        //     continue;
+        // }
+        
+        // // [8, 9)]
+        // if (price < GetDecimal(8) || price >= GetDecimal(9))
+        // {
+        //     continue;
+        // }
+        
+        // // [7, 8)]
+        // if (price < GetDecimal(7) || price >= GetDecimal(8))
+        // {
+        //     continue;
+        // }
+        
         // [6, 7)]
-        if (price < GetDecimal(6))
+        if (price < GetDecimal(6) || price >= GetDecimal(7))
         {
             continue;
         }

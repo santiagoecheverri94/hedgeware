@@ -81,6 +81,8 @@ struct StockState
     Decimal max_loss_when_reached_0_25_percentage_profit;
     // std::vector<TradingLog> tradingLogs;
     HistoricalSnapshots historicalSnapshots;
+    Decimal first_n_mins_volume_value{};
+    Decimal first_n_mins_percentage_change{};
 };
 
 using PartialStockState =
