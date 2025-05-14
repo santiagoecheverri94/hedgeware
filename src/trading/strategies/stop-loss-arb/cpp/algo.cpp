@@ -265,7 +265,8 @@ void SetRealizedPnL(StockState& stockState)
     }
 
     const auto percentage_denominator =
-        GetDecimal(stockState.targetPosition) * stockState.initialPrice;
+        GetDecimal(stockState.targetPosition + stockState.sharesPerInterval) *
+        stockState.initialPrice;
 
     Decimal realizedPnLAsPercentage =
         (stockState.netPositionValue / percentage_denominator) * 100;
@@ -305,7 +306,8 @@ void UpdateExitPnL(StockState& stockState)
     );
 
     const auto percentage_denominator =
-        GetDecimal(stockState.targetPosition) * stockState.initialPrice;
+        GetDecimal(stockState.targetPosition + stockState.sharesPerInterval) *
+        stockState.initialPrice;
 
     Decimal exitPnLAsPercentage =
         (ifClosingPositionValue / percentage_denominator) * 100;
