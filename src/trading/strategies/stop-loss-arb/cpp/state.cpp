@@ -54,7 +54,8 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
 
         // if (volume_value < Decimal("0.175")) // ~20/day with n=25 on [3p5,7)
         // if (volume_value < Decimal("0.15")) // ~10/day with n=25 on [7,10)
-        if (volume_value < Decimal("0.075"))  // ~20/day with n=25 on [7,10)
+        // if (volume_value < Decimal("0.075"))  // ~20/day with n=25 on [7,10)
+        if (volume_value < Decimal("0.05"))
         {
             continue;
         }
@@ -98,10 +99,10 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
         // }
 
         // [9, 10)
-        // if (price < GetDecimal(9) || price >= GetDecimal(10))
-        // {
-        //     continue;
-        // }
+        if (price < GetDecimal(9) || price >= GetDecimal(10))
+        {
+            continue;
+        }
 
         // // [8, 9)
         // if (price < GetDecimal(8) || price >= GetDecimal(9))
@@ -109,11 +110,11 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
         //     continue;
         // }
 
-        // [7, 8)
-        if (price < GetDecimal(7) || price >= GetDecimal(8))
-        {
-            continue;
-        }
+        // // [7, 8)
+        // if (price < GetDecimal(7) || price >= GetDecimal(8))
+        // {
+        //     continue;
+        // }
 
         // // [3p5, 10)
         // if (price < GetDecimal(3.5) || price >= GetDecimal(7))
