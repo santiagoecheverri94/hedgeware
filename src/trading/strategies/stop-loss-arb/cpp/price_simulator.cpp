@@ -208,7 +208,7 @@ Snapshot GetHistoricalSnapshot(StockState& stock_state)
     Snapshot snapshot =
         stock_state.historicalSnapshots.data->at(stock_state.historicalSnapshots.index);
 
-    stock_state.historicalSnapshots.index++;
+    stock_state.historicalSnapshots.index += 1;
 
     return snapshot;
 }
@@ -231,7 +231,7 @@ Snapshot GetSimulatedSnapshot(StockState& stock_state)
 bool IsHistoricalSnapshotsExhausted(const StockState& stock_state)
 {
     const bool isExhausted =
-        stock_state.historicalSnapshots.index ==
+        stock_state.historicalSnapshots.index >=
         static_cast<int>(stock_state.historicalSnapshots.data->size());
 
     return isExhausted;
