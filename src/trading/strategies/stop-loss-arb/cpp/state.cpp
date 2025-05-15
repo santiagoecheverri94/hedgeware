@@ -51,7 +51,10 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
                 ["first_n_minutes_volume_value_as_prev_day_mkt_cap_percentage"]
                     .get<double>();
         const Decimal volume_value = GetDecimal(volume_value_double);
-        if (volume_value < Decimal("0.07"))
+
+        // if (volume_value < Decimal("0.175")) // ~20/day with n=25 on [3p5,7)
+        // if (volume_value < Decimal("0.15")) // ~10/day with n=25 on [7,10)
+        if (volume_value < Decimal("0.075"))  // ~20/day with n=25 on [7,10)
         {
             continue;
         }
@@ -88,11 +91,11 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
 
         const Decimal price = GetFirstNMinutesClosePrice(stock_file_data);
 
-        // [7, 10)
-        if (price < GetDecimal(7) || price >= GetDecimal(10))
-        {
-            continue;
-        }
+        // // [7, 10)
+        // if (price < GetDecimal(7) || price >= GetDecimal(10))
+        // {
+        //     continue;
+        // }
 
         // [9, 10)
         // if (price < GetDecimal(9) || price >= GetDecimal(10))
@@ -106,8 +109,14 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
         //     continue;
         // }
 
-        // // [7, 8)
-        // if (price < GetDecimal(7) || price >= GetDecimal(8))
+        // [7, 8)
+        if (price < GetDecimal(7) || price >= GetDecimal(8))
+        {
+            continue;
+        }
+
+        // // [3p5, 10)
+        // if (price < GetDecimal(3.5) || price >= GetDecimal(7))
         // {
         //     continue;
         // }
