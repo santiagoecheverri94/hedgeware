@@ -99,19 +99,19 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
         // {
         //     continue;
         // }
-        
+
         // // [8, 9)
         // if (price < GetDecimal(8) || price >= GetDecimal(9))
         // {
         //     continue;
         // }
-        
+
         // // [7, 8)
         // if (price < GetDecimal(7) || price >= GetDecimal(8))
         // {
         //     continue;
         // }
-        
+
         // // [6, 7)
         // if (price < GetDecimal(6) || price >= GetDecimal(7))
         // {
@@ -138,26 +138,16 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
 
         // ------------------ END OF PRICE FILTERING ------------------
 
-        // // if percentage change low, continue
+        // ------------------ BEGIN % CHANGE FILTERING ------------------
+
         // const auto raw_time_steps = stock_file_data["raw_time_steps"];
 
-        // const int len_expected_time_steps = 55;
-
         // const int len_raw_time_steps = raw_time_steps.size();
-        // if (len_raw_time_steps != len_expected_time_steps)
-        // {
-        //     throw runtime_error(
-        //         format(
-        //             "The code is currently setup to support only {} time steps",
-        //             len_expected_time_steps
-        //         ) +
-        //         file.string()
-        //     );
-        // }
 
         // const auto first_n_minutes_candle = raw_time_steps[0];
-        // const auto last_n_minutes_candle = raw_time_steps[len_expected_time_steps -
-        // 1]; if (first_n_minutes_candle.is_null() || last_n_minutes_candle.is_null())
+        // const auto last_n_minutes_candle = raw_time_steps[len_raw_time_steps - 1];
+
+        // if (first_n_minutes_candle.is_null() || last_n_minutes_candle.is_null())
         // {
         //     continue;
         // }
@@ -175,10 +165,12 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
 
         // const Decimal percentage_change_abs = abs(percentage_change);
 
-        // if (percentage_change_abs < Decimal("2.0"))
+        // if (percentage_change_abs < Decimal("1.0"))
         // {
         //     continue;
         // }
+
+        // ------------------ END % CHANGE FILTERING ------------------
 
         const auto ticker = stock_file_data["ticker"].get<string>();
 
