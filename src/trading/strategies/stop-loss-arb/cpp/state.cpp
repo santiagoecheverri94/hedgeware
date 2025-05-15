@@ -88,7 +88,7 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
 
         const Decimal price = GetFirstNMinutesClosePrice(stock_file_data);
 
-        // // [9, 10)]
+        // [9, 10)]
         // if (price < GetDecimal(9) || price >= GetDecimal(10))
         // {
         //     continue;
@@ -100,17 +100,17 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
         //     continue;
         // }
         
-        // // [7, 8)]
-        // if (price < GetDecimal(7) || price >= GetDecimal(8))
-        // {
-        //     continue;
-        // }
-        
-        // [6, 7)]
-        if (price < GetDecimal(6) || price >= GetDecimal(7))
+        // [7, 8)]
+        if (price < GetDecimal(7) || price >= GetDecimal(8))
         {
             continue;
         }
+        
+        // // [6, 7)]
+        // if (price < GetDecimal(6) || price >= GetDecimal(7))
+        // {
+        //     continue;
+        // }
 
         // // [5, 6)
         // if (price < GetDecimal(5) || price >= GetDecimal(6))
