@@ -110,6 +110,29 @@ void WritePnLAsPercentagesToSnapshotsFile(const StockState& stock_state)
         json_data["max_moving_loss_as_percentage"] =
             stock_state.maxMovingLossAsPercentage.convert_to<double>();
 
+        json_data["reached_2_percentage_profit"] =
+            stock_state.reached_2_percentage_profit;
+        json_data["max_loss_when_reached_2_percentage_profit"] =
+            stock_state.max_loss_when_reached_2_percentage_profit.convert_to<double>();
+
+        json_data["reached_1_75_percentage_profit"] =
+            stock_state.reached_1_75_percentage_profit;
+        json_data["max_loss_when_reached_1_75_percentage_profit"] =
+            stock_state.max_loss_when_reached_1_75_percentage_profit.convert_to<double>(
+            );
+
+        json_data["reached_1_5_percentage_profit"] =
+            stock_state.reached_1_5_percentage_profit;
+        json_data["max_loss_when_reached_1_5_percentage_profit"] =
+            stock_state.max_loss_when_reached_1_5_percentage_profit.convert_to<double>(
+            );
+
+        json_data["reached_1_25_percentage_profit"] =
+            stock_state.reached_1_25_percentage_profit;
+        json_data["max_loss_when_reached_1_25_percentage_profit"] =
+            stock_state.max_loss_when_reached_1_25_percentage_profit.convert_to<double>(
+            );
+
         json_data["reached_1_percentage_profit"] =
             stock_state.reached_1_percentage_profit;
         json_data["max_loss_when_reached_1_percentage_profit"] =

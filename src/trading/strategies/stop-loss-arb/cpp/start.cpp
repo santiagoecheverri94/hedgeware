@@ -182,6 +182,50 @@ AggResults GetAggregateResults(
 
 bool IsStockProfitable(const StockState& stockState)
 {
+    if (stockState.profitThreshold == Decimal("2.0"))
+    {
+        if (!stockState.reached_2_percentage_profit)
+        {
+            return false;
+        }
+
+        return stockState.max_loss_when_reached_2_percentage_profit >
+               stockState.lossThreshold;
+    }
+
+    if (stockState.profitThreshold == Decimal("1.75"))
+    {
+        if (!stockState.reached_1_75_percentage_profit)
+        {
+            return false;
+        }
+
+        return stockState.max_loss_when_reached_1_75_percentage_profit >
+               stockState.lossThreshold;
+    }
+
+    if (stockState.profitThreshold == Decimal("1.5"))
+    {
+        if (!stockState.reached_1_5_percentage_profit)
+        {
+            return false;
+        }
+
+        return stockState.max_loss_when_reached_1_5_percentage_profit >
+               stockState.lossThreshold;
+    }
+
+    if (stockState.profitThreshold == Decimal("1.25"))
+    {
+        if (!stockState.reached_1_25_percentage_profit)
+        {
+            return false;
+        }
+
+        return stockState.max_loss_when_reached_1_25_percentage_profit >
+               stockState.lossThreshold;
+    }
+
     if (stockState.profitThreshold == Decimal("1.0"))
     {
         if (!stockState.reached_1_percentage_profit)

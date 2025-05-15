@@ -330,6 +330,38 @@ void UpdateExitPnL(StockState& stockState)
         stockState.maxMovingLossAsPercentage = exitPnLAsPercentage;
     }
 
+    if (!stockState.reached_2_percentage_profit &&
+        exitPnLAsPercentage >= GetDecimal(2.0))
+    {
+        stockState.reached_2_percentage_profit = true;
+        stockState.max_loss_when_reached_2_percentage_profit =
+            stockState.maxMovingLossAsPercentage;
+    }
+
+    if (!stockState.reached_1_75_percentage_profit &&
+        exitPnLAsPercentage >= GetDecimal(1.75))
+    {
+        stockState.reached_1_75_percentage_profit = true;
+        stockState.max_loss_when_reached_1_75_percentage_profit =
+            stockState.maxMovingLossAsPercentage;
+    }
+
+    if (!stockState.reached_1_5_percentage_profit &&
+        exitPnLAsPercentage >= GetDecimal(1.5))
+    {
+        stockState.reached_1_5_percentage_profit = true;
+        stockState.max_loss_when_reached_1_5_percentage_profit =
+            stockState.maxMovingLossAsPercentage;
+    }
+
+    if (!stockState.reached_1_25_percentage_profit &&
+        exitPnLAsPercentage >= GetDecimal(1.25))
+    {
+        stockState.reached_1_25_percentage_profit = true;
+        stockState.max_loss_when_reached_1_25_percentage_profit =
+            stockState.maxMovingLossAsPercentage;
+    }
+
     if (!stockState.reached_1_percentage_profit &&
         exitPnLAsPercentage >= GetDecimal(1.0))
     {

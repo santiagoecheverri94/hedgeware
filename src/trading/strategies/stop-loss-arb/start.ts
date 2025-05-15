@@ -30,7 +30,7 @@ import {setTimeout} from 'node:timers/promises';
 export async function startStopLossArb(): Promise<void> {
     const partialStockState: Partial<StockState> = {
         isStaticIntervals: false,
-        profitThreshold: 1,
+        profitThreshold: 1.25,
         lossThreshold: -2,
         brokerageTradingCostPerShare: 0, // otherwise 0.004,
         targetPosition: 0,

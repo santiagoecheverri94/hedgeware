@@ -71,6 +71,14 @@ struct StockState
     Decimal exitPnLAsPercentage;
     Decimal maxMovingProfitAsPercentage;
     Decimal maxMovingLossAsPercentage;
+    bool reached_2_percentage_profit;
+    Decimal max_loss_when_reached_2_percentage_profit;
+    bool reached_1_75_percentage_profit;
+    Decimal max_loss_when_reached_1_75_percentage_profit;
+    bool reached_1_5_percentage_profit;
+    Decimal max_loss_when_reached_1_5_percentage_profit;
+    bool reached_1_25_percentage_profit;
+    Decimal max_loss_when_reached_1_25_percentage_profit;
     bool reached_1_percentage_profit;
     Decimal max_loss_when_reached_1_percentage_profit;
     bool reached_0_75_percentage_profit;
