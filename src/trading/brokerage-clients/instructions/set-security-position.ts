@@ -1,87 +1,86 @@
-import {
-    BrokerageClient,
-    OrderDetails,
-    OrderAction,
-    OrderStatus,
-    Snapshot,
-} from '../brokerage-client';
-import {setTimeout} from 'node:timers/promises';
+import {FloatCalculator as fc} from '../../../utils/float-calculator';
+import {BrokerageClient, OrderDetails, OrderAction} from '../brokerage-client';
 
-export async function setSecurityPosition({
+export async function setSecurityPositionMultiStyleOrders({
     brokerageClient,
     brokerageIdOfSecurity,
     currentPosition,
     newPosition,
-    snapshot,
 }: {
     brokerageClient: BrokerageClient;
     brokerageIdOfSecurity: string;
     currentPosition: number;
     newPosition: number;
-    snapshot: Snapshot;
-}): Promise<void> {
-    if (currentPosition === newPosition) {
-        return;
+}): Promise<number> {
+    // Single Long Order
+    if (currentPosition >= 0 && newPosition >= 0) {
+        return setSecurityPositionLongOrder({
+            brokerageClient,
+            brokerageIdOfSecurity,
+            currentPosition,
+            newPosition,
+        });
     }
 
-    const side = determineIfOrderNeedBeBuyOrSell(currentPosition, newPosition);
-    const quantity = getOrderQuantity(currentPosition, newPosition);
-    const price = getOrderPrice({snapshot, orderSide: side});
+    // Single Short Order
+    if (currentPosition <= 0 && newPosition <= 0) {
+        return setSecurityPositionShortOrder({
+            brokerageClient,
+            brokerageIdOfSecurity,
+            currentPosition,
+            newPosition,
+        });
+    }
 
-    const orderDetails: OrderDetails = {
-        ticker: brokerageIdOfSecurity,
-        action: side,
-        quantity: quantity,
-        price,
-    };
+    // From Long to Short Position
+    if (currentPosition > 0 && newPosition < 0) {
+        return setSecurityPositionFromLongToShort({
+            brokerageClient,
+            brokerageIdOfSecurity,
+            currentPosition,
+            newPosition,
+        });
+    }
 
-    // TODO: use code commented in this block if we ever want to stop assuming
-    // that we can fulfill all our orders at the bid/ask
+    // From Short to Long Position
+    if (currentPosition < 0 && newPosition > 0) {
+        return setSecurityPositionFromShortToLong({
+            brokerageClient,
+            brokerageIdOfSecurity,
+            currentPosition,
+            newPosition,
+        });
+    }
 
-    // const orderId = await brokerageClient.placeOrder(orderDetails);
-    // const waitTimeMs = 60_000 * 5;
-    // await setTimeout(waitTimeMs);
-
-    // currentPosition = await brokerageClient.getPositionSize(brokerageIdOfSecurity);
-
-    // if (currentPosition === newPosition) {
-    //   return;
-    // }
-
-    // await brokerageClient.cancelOrder(orderId);
-    // await setTimeout(waitTimeMs);
-
-    // return setSecurityPosition({
-    //   brokerageClient,
-    //   brokerageIdOfSecurity,
-    //   newPosition,
-    // });
-
-    // await brokerageClient.placeOrder(orderDetails);
-    // const TEN_SECS = 10_000;
-    // while (!(await isNewPositionSet(brokerageClient, brokerageIdOfSecurity, newPosition))) {
-    //   await setTimeout(TEN_SECS);
-    // }
-
-    const orderId = await brokerageClient.placeOrder(orderDetails);
-    const ONE_SEC = 1000;
-    do {
-        await setTimeout(ONE_SEC);
-    } while (!(await isOrderFilled(brokerageClient, orderId)));
+    debugger;
+    throw new Error(
+        `Invalid position change from ${currentPosition} to ${newPosition}`,
+    );
 }
 
-// TODO: use code commented in this block if we ever want to stop assuming that we can fulfill all our orders at the bid/ask
-// async function isNewPositionSet(brokerageClient: BrokerageClient, brokerageIdOfSecurity: string, newPosition: number): Promise<boolean> {
-//   const currentlySettledPosition = await brokerageClient.getPositionSize(brokerageIdOfSecurity);
-//   return currentlySettledPosition === newPosition;
-// }
+export async function setSecurityPositionLongOrder({
+    brokerageClient,
+    brokerageIdOfSecurity,
+    currentPosition,
+    newPosition,
+}: {
+    brokerageClient: BrokerageClient;
+    brokerageIdOfSecurity: string;
+    currentPosition: number;
+    newPosition: number;
+}): Promise<number> {
+    const side = determineIfOrderNeedBeBuyOrSell(currentPosition, newPosition);
+    const quantity = getOrderQuantity(currentPosition, newPosition);
 
-async function isOrderFilled(
-    brokerageClient: BrokerageClient,
-    orderId: number,
-): Promise<boolean> {
-    const orderStatus = await brokerageClient.getOrderStatus(orderId);
-    return orderStatus === OrderStatus.FILLED;
+    const orderDetails: OrderDetails = {
+        brokerageIdOfSecurity: brokerageIdOfSecurity,
+        action: side,
+        quantity: quantity,
+    };
+
+    const pricePerShare = await brokerageClient.placeMarketOrder(orderDetails);
+
+    return pricePerShare;
 }
 
 function determineIfOrderNeedBeBuyOrSell(
@@ -95,16 +94,129 @@ function getOrderQuantity(currentPosition: number, newPosition: number): number 
     return Math.abs(currentPosition - newPosition);
 }
 
-function getOrderPrice({
-    snapshot,
-    orderSide,
+async function setSecurityPositionShortOrder({
+    brokerageClient,
+    brokerageIdOfSecurity,
+    currentPosition,
+    newPosition,
 }: {
-    snapshot: Snapshot;
-    orderSide: OrderAction;
-}): number {
-    if (orderSide === OrderAction.BUY) {
-        return snapshot.ask;
-    }
+    brokerageClient: BrokerageClient;
+    brokerageIdOfSecurity: string;
+    currentPosition: number;
+    newPosition: number;
+}): Promise<number> {
+    const side = determineIfOrderNeedBeBuyToCoverOrSellShort(
+        currentPosition,
+        newPosition,
+    );
+    const quantity = getOrderQuantity(currentPosition, newPosition);
 
-    return snapshot.bid;
+    const orderDetails: OrderDetails = {
+        brokerageIdOfSecurity: brokerageIdOfSecurity,
+        action: side,
+        quantity: quantity,
+    };
+
+    const pricePerShare = await brokerageClient.placeMarketOrder(orderDetails);
+
+    return pricePerShare;
+}
+
+function determineIfOrderNeedBeBuyToCoverOrSellShort(
+    currentPosition: number,
+    newPosition: number,
+): OrderAction {
+    return newPosition > currentPosition ?
+        OrderAction.BUY_TO_COVER :
+        OrderAction.SELL_SHORT;
+}
+
+async function setSecurityPositionFromLongToShort({
+    brokerageClient,
+    brokerageIdOfSecurity,
+    currentPosition,
+    newPosition,
+}: {
+    brokerageClient: BrokerageClient;
+    brokerageIdOfSecurity: string;
+    currentPosition: number;
+    newPosition: number;
+}): Promise<number> {
+    const longToZeroQuantity = getOrderQuantity(currentPosition, 0);
+    const longToZeroPricePerShare = await setSecurityPositionLongOrder({
+        brokerageClient,
+        brokerageIdOfSecurity,
+        currentPosition,
+        newPosition: 0,
+    });
+
+    const zeroToShortQuantity = getOrderQuantity(0, newPosition);
+    const zeroToShortPricePerShare = await setSecurityPositionShortOrder({
+        brokerageClient,
+        brokerageIdOfSecurity,
+        currentPosition: 0,
+        newPosition,
+    });
+
+    const longToZeroTotalValue = fc.multiply(
+        longToZeroPricePerShare,
+        longToZeroQuantity,
+    );
+    const zeroToShortTotalValue = fc.multiply(
+        zeroToShortPricePerShare,
+        zeroToShortQuantity,
+    );
+    const totalValue = fc.add(longToZeroTotalValue, zeroToShortTotalValue);
+
+    const averagePricePerShare = fc.divide(
+        totalValue,
+        longToZeroQuantity + zeroToShortQuantity,
+    );
+
+    return averagePricePerShare;
+}
+
+async function setSecurityPositionFromShortToLong({
+    brokerageClient,
+    brokerageIdOfSecurity,
+    currentPosition,
+    newPosition,
+}: {
+    brokerageClient: BrokerageClient;
+    brokerageIdOfSecurity: string;
+    currentPosition: number;
+    newPosition: number;
+}): Promise<number> {
+    const shortToZeroQuantity = getOrderQuantity(currentPosition, 0);
+    const shortToZeroPricePerShare = await setSecurityPositionShortOrder({
+        brokerageClient,
+        brokerageIdOfSecurity,
+        currentPosition,
+        newPosition: 0,
+    });
+
+    const zeroToLongQuantity = getOrderQuantity(0, newPosition);
+    const zeroToLongPricePerShare = await setSecurityPositionLongOrder({
+        brokerageClient,
+        brokerageIdOfSecurity,
+        currentPosition: 0,
+        newPosition,
+    });
+
+    const shortToZeroTotalValue = fc.multiply(
+        shortToZeroPricePerShare,
+        shortToZeroQuantity,
+    );
+    const zeroToLongTotalValue = fc.multiply(
+        zeroToLongPricePerShare,
+        zeroToLongQuantity,
+    );
+    const totalValue = fc.add(shortToZeroTotalValue, zeroToLongTotalValue);
+
+    const averagePricePerShare = fc.divide(
+        totalValue,
+        shortToZeroQuantity + zeroToLongQuantity,
+    );
+
+    return averagePricePerShare;
 }

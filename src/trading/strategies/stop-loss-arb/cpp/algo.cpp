@@ -11,36 +11,22 @@ using namespace std;
 Snapshot ReconcileStockPosition(const std::string& stock, StockState& stockState)
 {
     // 0)
-    // Snapshot snapshot = isLiveTrading() ? brokerageClient.GetSnapshot(stock,
-    // stockState.brokerageId) : GetSimulatedSnapshot(stock);
     Snapshot snapshot = GetSimulatedSnapshot(stockState);
+
+    const bool isSnapshotChanged = IsSnapshotChange(snapshot, stockState);
+    if (isSnapshotChanged)
+    {
+        UpdateSnaphotOnState(stockState, snapshot);
+        UpdateExitPnL(stockState);
+    }
 
     if (IsWideBidAskSpread(snapshot, stockState) || !snapshot.bid || !snapshot.ask)
     {
         return snapshot;
     }
 
-    const bool isSnapshotChanged = IsSnapshotChange(snapshot, stockState);
-    if (isSnapshotChanged)
-    {
-        UpdateSnaphotOnState(stockState, snapshot);
-
-        UpdateExitPnL(stockState);
-
-        // if (isLiveTrading()) {
-        //     SyncWriteJSONFile(
-        //         GetStockStateFilePath(stock),
-        //         JsonPrettyPrint(stockState)
-        //     );
-        // }
-    }
-
     // 1)
-    bool crossingHappened = CheckCrossings(stockState, snapshot);
-
-    // if (isLiveTrading() && crossingHappened) {
-    //     SyncWriteJSONFile(GetStockStateFilePath(stock), JsonPrettyPrint(stockState));
-    // }
+    CheckCrossings(stockState, snapshot);
 
     // 2)
     vector<int> intervalIndicesToExecute = GetNumToBuy(stockState, snapshot);
@@ -68,31 +54,13 @@ Snapshot ReconcileStockPosition(const std::string& stock, StockState& stockState
     // 5)
     if (newPosition.has_value())
     {
-        string orderSide = numToBuy > 0 ? "BUY" : "SELL";
-
-        SetNewPosition(stock, stockState, newPosition.value(), snapshot, orderSide);
-
-        // TODO: refactor so price is returned from setNewPosition
-        Decimal priceSetAt = orderSide == "BUY" ? snapshot.ask : snapshot.bid;
-        UpdateRealizedPnL(stockState, intervalIndicesToExecute, orderSide, priceSetAt);
+        SetNewPosition(stock, stockState, newPosition.value(), snapshot);
 
         CheckCrossings(stockState, snapshot);
     }
 
     // 6)
-    if (isSnapshotChanged)
-    {
-        UpdateSnaphotOnState(stockState, snapshot);
-
-        UpdateExitPnL(stockState);
-
-        // if (isLiveTrading()) {
-        //     SyncWriteJSONFile(
-        //         GetStockStateFilePath(stock),
-        //         JsonPrettyPrint(stockState)
-        //     );
-        // }
-    }
+    // No Step 6 on cpp because we've decided not to add Live Trading logic
 
     return snapshot;
 }
@@ -102,29 +70,24 @@ bool IsWideBidAskSpread(const Snapshot& snapshot, const StockState& stockState)
     return (snapshot.ask - snapshot.bid) >= stockState.spaceBetweenIntervals;
 }
 
-bool CheckCrossings(StockState& stockState, const Snapshot& snapshot)
+void CheckCrossings(StockState& stockState, const Snapshot& snapshot)
 {
     auto& intervals = stockState.intervals;
 
-    bool crossingHappened = false;
     for (auto& interval : intervals)
     {
         if (interval.BUY.active && !interval.BUY.crossed &&
             snapshot.ask < interval.BUY.price)
         {
             interval.BUY.crossed = true;
-            crossingHappened = true;
         }
 
         if (interval.SELL.active && !interval.SELL.crossed &&
             snapshot.bid > interval.SELL.price)
         {
             interval.SELL.crossed = true;
-            crossingHappened = true;
         }
     }
-
-    return crossingHappened;
 }
 
 std::vector<int> GetNumToBuy(StockState& stockState, const Snapshot& snapshot)
@@ -143,11 +106,19 @@ std::vector<int> GetNumToBuy(StockState& stockState, const Snapshot& snapshot)
             interval.BUY.crossed)
         {
             if (newPosition < interval.positionLimit)
+            // if (newPosition < interval.positionLimit ||
+            //     (interval.type == IntervalType::SHORT &&
+            //      newPosition == interval.positionLimit))
             {
                 indicesToExecute.insert(indicesToExecute.begin(), i);
                 newPosition += stockState.sharesPerInterval;
             }
         }
+    }
+
+    if (stockState.isStaticIntervals)
+    {
+        AddSkippedBuysIfRequired(stockState, indicesToExecute);
     }
 
     for (const int index : indicesToExecute)
@@ -159,11 +130,6 @@ std::vector<int> GetNumToBuy(StockState& stockState, const Snapshot& snapshot)
 
         interval.SELL.active = true;
         interval.SELL.crossed = false;
-    }
-
-    if (stockState.isStaticIntervals)
-    {
-        AddSkippedBuysIfRequired(stockState, indicesToExecute);
     }
 
     if (!indicesToExecute.empty())
@@ -185,7 +151,7 @@ std::vector<int> GetNumToSell(StockState& stockState, const Snapshot& snapshot)
     int newPosition = position;
     vector<int> indicesToExecute;
 
-    for (int i = 0; i < intervals.size(); ++i)
+    for (int i = 0; i < static_cast<int>(intervals.size()); ++i)
     {
         const auto& interval = intervals[i];
 
@@ -193,6 +159,9 @@ std::vector<int> GetNumToSell(StockState& stockState, const Snapshot& snapshot)
             interval.SELL.crossed)
         {
             if (newPosition > interval.positionLimit)
+            // if (newPosition > interval.positionLimit ||
+            //     (interval.type == IntervalType::LONG &&
+            //      newPosition == interval.positionLimit))
             {
                 indicesToExecute.push_back(i);
                 newPosition -= stockState.sharesPerInterval;
@@ -240,97 +209,75 @@ bool IsSnapshotChange(const Snapshot& snapshot, const StockState& stockState)
 void SetNewPosition(
     const std::string& stock,
     StockState& stockState,
-    int newPosition,
-    const Snapshot& snapshot,
-    std::string orderSide
+    const int& newPosition,
+    const Snapshot& snapshot
 )
 {
-    int previousPosition = stockState.position;
+    const auto previousPosition = stockState.position;
     stockState.position = newPosition;
 
-    TradingLog tradingLog;
-    tradingLog.action = orderSide;
-    tradingLog.timeStamp = snapshot.timestamp;
-    tradingLog.price = (orderSide == "BUY") ? snapshot.ask : snapshot.bid;
-    tradingLog.previousPosition = previousPosition;
-    tradingLog.newPosition = newPosition;
-    stockState.tradingLogs.push_back(tradingLog);
+    const string orderSide = newPosition > previousPosition ? "BUY" : "SELL";
+    const Decimal quotedPrice =
+        orderSide == static_cast<string>("BUY") ? snapshot.ask : snapshot.bid;
 
-    // if (isLiveTrading()) {
-    //     await brokerageClient.setSecurityPosition({
-    //         brokerageIdOfSecurity: stockState.brokerageId,
-    //         currentPosition: stockState.position * stockState.numContracts,
-    //         newPosition: newPosition * stockState.numContracts,
-    //         snapshot,
-    //     });
+    const auto newNetPositionValue = GetNewNetPositionValue(
+        stockState.netPositionValue,
+        stockState.brokerageTradingCostPerShare,
+        orderSide,
+        newPosition,
+        previousPosition,
+        quotedPrice
+    );
 
-    //     log(
-    //         `Changed position for ${stock} (${
-    //             stockState.numContracts
-    //         } constracts): ${jsonPrettyPrint({
-    //             price: tradingLog.price,
-    //             previousPosition: tradingLog.previousPosition,
-    //             newPosition: tradingLog.newPosition,
-    //         })}`,
-    //     );
-    // }
+    stockState.netPositionValue = newNetPositionValue;
 }
 
-void UpdateRealizedPnL(
-    StockState& stockState,
-    const std::vector<int>& executedIndices,
+Decimal GetNewNetPositionValue(
+    const Decimal& currentPositionValue,
+    const Decimal& commissionPerShare,
     const std::string& orderSide,
-    Decimal price
+    const int& newPosition,
+    const int& previousPosition,
+    const Decimal& priceSetAt
 )
 {
-    if (executedIndices.empty())
+    int quantity = abs(newPosition - previousPosition);
+
+    Decimal commissionCosts = Decimal(quantity) * commissionPerShare;
+
+    Decimal change = -commissionCosts;
+
+    Decimal orderValue = Decimal(quantity) * priceSetAt;
+
+    if (orderSide == "BUY")
     {
-        return;
+        change -= orderValue;
+    }
+    else if (orderSide == "SELL")
+    {
+        change += orderValue;
     }
 
-    Decimal commissionCosts =
-        GetDecimal(executedIndices.size() * stockState.sharesPerInterval) *
-        stockState.brokerageTradingCostPerShare;
+    Decimal newPositionValue = currentPositionValue + change;
 
-    stockState.realizedPnL -= commissionCosts;
+    return newPositionValue;
+}
 
-    for (const int index : executedIndices)
+void SetRealizedPnL(StockState& stockState)
+{
+    if (stockState.position != 0)
     {
-        auto& interval = stockState.intervals[index];
-
-        optional<Decimal> pnLFromThisExecution;
-
-        if (interval.type == IntervalType::LONG)
-        {
-            if (orderSide == "BUY")
-            {
-                interval.SELL.boughtAtPrice = price;
-            }
-            else if (orderSide == "SELL")
-            {
-                pnLFromThisExecution = GetDecimal(stockState.sharesPerInterval) *
-                                       (price - interval.SELL.boughtAtPrice.value());
-            }
-        }
-
-        if (interval.type == IntervalType::SHORT)
-        {
-            if (orderSide == "SELL")
-            {
-                interval.BUY.soldAtPrice = price;
-            }
-            else if (orderSide == "BUY")
-            {
-                pnLFromThisExecution = GetDecimal(stockState.sharesPerInterval) *
-                                       (interval.BUY.soldAtPrice.value() - price);
-            }
-        }
-
-        if (pnLFromThisExecution.has_value())
-        {
-            stockState.realizedPnL += pnLFromThisExecution.value();
-        }
+        throw runtime_error("Cannot set realized PnL because Position is not zero");
     }
+
+    const auto percentage_denominator =
+        GetDecimal(stockState.targetPosition + stockState.sharesPerInterval) *
+        stockState.initialPrice;
+
+    Decimal realizedPnLAsPercentage =
+        (stockState.netPositionValue / percentage_denominator) * 100;
+
+    stockState.realizedPnLAsPercentage = realizedPnLAsPercentage;
 }
 
 void UpdateSnaphotOnState(StockState& stockState, const Snapshot& snapshot)
@@ -350,44 +297,26 @@ void UpdateExitPnL(StockState& stockState)
         return;
     }
 
-    Decimal exitPnL = stockState.realizedPnL;
+    const string orderSide = position > 0 ? "SELL" : "BUY";
 
-    Decimal commissionCosts =
-        GetDecimal(position) * stockState.brokerageTradingCostPerShare;
+    const auto priceSetAt =
+        (orderSide == static_cast<string>("BUY")) ? lastAsk : lastBid;
 
-    exitPnL -= commissionCosts;
-
-    for (const auto& interval : stockState.intervals)
-    {
-        std::optional<Decimal> intervalPnL;
-
-        if (interval.type == IntervalType::LONG && interval.SELL.active)
-        {
-            const auto& boughtAtPrice = interval.SELL.boughtAtPrice.value();
-            intervalPnL =
-                GetDecimal(stockState.sharesPerInterval) * (lastBid - boughtAtPrice);
-        }
-
-        if (interval.type == IntervalType::SHORT && interval.BUY.active)
-        {
-            const auto& soldAtPrice = interval.BUY.soldAtPrice.value();
-            intervalPnL =
-                GetDecimal(stockState.sharesPerInterval) * (soldAtPrice - lastAsk);
-        }
-
-        if (intervalPnL.has_value())
-        {
-            exitPnL += intervalPnL.value();
-        }
-    }
-
-    stockState.exitPnL = exitPnL;
+    const auto ifClosingPositionValue = GetNewNetPositionValue(
+        stockState.netPositionValue,
+        stockState.brokerageTradingCostPerShare,
+        orderSide,
+        0,
+        position,
+        priceSetAt
+    );
 
     const auto percentage_denominator =
         GetDecimal(stockState.targetPosition + stockState.sharesPerInterval) *
         stockState.initialPrice;
 
-    Decimal exitPnLAsPercentage = (exitPnL / percentage_denominator) * 100;
+    Decimal exitPnLAsPercentage =
+        (ifClosingPositionValue / percentage_denominator) * 100;
 
     stockState.exitPnLAsPercentage = exitPnLAsPercentage;
 
@@ -434,10 +363,24 @@ void UpdateExitPnL(StockState& stockState)
     }
 }
 
+void ReconcileRealizedPnLWhenHistoricalSnapshotsExhausted(StockState& stockState)
+{
+    UpdateExitPnL(stockState);
+
+    SetNewPosition(
+        stockState.brokerageId,
+        stockState,
+        0,
+        Snapshot{stockState.lastAsk, stockState.lastBid}
+    );
+
+    SetRealizedPnL(stockState);
+}
+
 void CorrectBadBuyIfRequired(StockState& stockState, std::vector<int>& indexesToExecute)
 {
     int lowestIndexExecuted = indexesToExecute.back();
-    if (lowestIndexExecuted >= stockState.intervals.size() - 1)
+    if (lowestIndexExecuted >= static_cast<int>(stockState.intervals.size()) - 1)
     {
         return;
     }

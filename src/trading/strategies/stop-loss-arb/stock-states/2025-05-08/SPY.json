@@ -1,0 +1,117 @@
+{
+  "date": "2025-05-08",
+  "brokerageId": "SPY",
+  "brokerageTradingCostPerShare": 0,
+  "targetPosition": 2,
+  "sharesPerInterval": 1,
+  "spaceBetweenIntervals": 0.04,
+  "intervalProfit": 0.03,
+  "numContracts": 2,
+  "initialPrice": 564.96,
+  "profitThreshold": 0.75,
+  "lossThreshold": -0.75,
+  "intervals": [
+    {
+      "type": "LONG",
+      "positionLimit": 3,
+      "SELL": {
+        "price": 565.08,
+        "active": false,
+        "crossed": false,
+        "boughtAtPrice": null
+      },
+      "BUY": {
+        "price": 565.05,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 2,
+      "SELL": {
+        "price": 565.04,
+        "active": false,
+        "crossed": false,
+        "boughtAtPrice": null
+      },
+      "BUY": {
+        "price": 565.01,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 1,
+      "SELL": {
+        "price": 565,
+        "active": false,
+        "crossed": false,
+        "boughtAtPrice": null
+      },
+      "BUY": {
+        "price": 564.97,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -1,
+      "SELL": {
+        "price": 564.95,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 564.92,
+        "active": false,
+        "crossed": false,
+        "soldAtPrice": null
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -2,
+      "SELL": {
+        "price": 564.91,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 564.88,
+        "active": false,
+        "crossed": false,
+        "soldAtPrice": null
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -3,
+      "SELL": {
+        "price": 564.87,
+        "active": true,
+        "crossed": true
+      },
+      "BUY": {
+        "price": 564.84,
+        "active": false,
+        "crossed": false,
+        "soldAtPrice": null
+      }
+    }
+  ],
+  "prediction": 0.7430509567260742,
+  "isStaticIntervals": false,
+  "position": 0,
+  "lastAsk": 0,
+  "lastBid": 0,
+  "realizedPnL": 0,
+  "realizedPnLAsPercentage": 0,
+  "exitPnL": 0,
+  "exitPnLAsPercentage": 0,
+  "maxMovingProfitAsPercentage": 0,
+  "maxMovingLossAsPercentage": 0,
+  "tradingLogs": []
+}

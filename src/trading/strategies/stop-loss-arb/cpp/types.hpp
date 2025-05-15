@@ -8,7 +8,7 @@ struct Snapshot
 {
     Decimal ask;
     Decimal bid;
-    std::string timestamp;
+    std::string timestamp = "";
 };
 
 enum class IntervalType
@@ -24,8 +24,6 @@ struct SmoothingInterval
         bool active;
         bool crossed;
         Decimal price;
-        std::optional<Decimal> boughtAtPrice;
-        std::optional<Decimal> soldAtPrice;
     };
 
     IntervalType type;
@@ -52,19 +50,24 @@ struct HistoricalSnapshots
 struct StockState
 {
     std::string date;
-    bool isStaticIntervals;
     std::string brokerageId;
     Decimal brokerageTradingCostPerShare;
-    int sharesPerInterval;
-    Decimal intervalProfit;
-    Decimal initialPrice;
-    int shiftIntervalsFromInitialPrice;
-    Decimal spaceBetweenIntervals;
-    int numContracts;
-    int position;
     int targetPosition;
-    Decimal realizedPnL;
-    Decimal exitPnL;
+    int sharesPerInterval;
+    Decimal spaceBetweenIntervals;
+    Decimal intervalProfit;
+    int numContracts;
+    Decimal initialPrice;
+    std::vector<SmoothingInterval> intervals;
+    // prediction?: number;
+    Decimal profitThreshold;
+    Decimal lossThreshold;
+    bool isStaticIntervals;
+    int position;
+    Decimal lastAsk;
+    Decimal lastBid;
+    Decimal netPositionValue;
+    Decimal realizedPnLAsPercentage;
     Decimal exitPnLAsPercentage;
     Decimal maxMovingProfitAsPercentage;
     Decimal maxMovingLossAsPercentage;
@@ -76,9 +79,11 @@ struct StockState
     Decimal max_loss_when_reached_0_5_percentage_profit;
     bool reached_0_25_percentage_profit;
     Decimal max_loss_when_reached_0_25_percentage_profit;
-    Decimal lastAsk;
-    Decimal lastBid;
-    std::vector<SmoothingInterval> intervals;
-    std::vector<TradingLog> tradingLogs;
+    // std::vector<TradingLog> tradingLogs;
     HistoricalSnapshots historicalSnapshots;
+    Decimal first_n_mins_volume_value{};
+    Decimal first_n_mins_percentage_change{};
 };
+
+using PartialStockState =
+    std::unordered_map<std::string, std::variant<std::string, bool, Decimal>>;

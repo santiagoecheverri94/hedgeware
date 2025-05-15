@@ -1,0 +1,166 @@
+{
+  "date": "2025-05-09",
+  "brokerageId": "NEOG",
+  "brokerageTradingCostPerShare": 0,
+  "targetPosition": 200,
+  "sharesPerInterval": 100,
+  "spaceBetweenIntervals": 0.04,
+  "intervalProfit": 0.03,
+  "numContracts": 2,
+  "initialPrice": 6.01,
+  "profitThreshold": 0.75,
+  "lossThreshold": -0.75,
+  "intervals": [
+    {
+      "type": "LONG",
+      "positionLimit": 300,
+      "SELL": {
+        "price": 6.17,
+        "active": false,
+        "crossed": false,
+        "boughtAtPrice": null
+      },
+      "BUY": {
+        "price": 6.14,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 200,
+      "SELL": {
+        "price": 6.13,
+        "active": false,
+        "crossed": false,
+        "boughtAtPrice": null
+      },
+      "BUY": {
+        "price": 6.1,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "LONG",
+      "positionLimit": 100,
+      "SELL": {
+        "price": 6.09,
+        "active": false,
+        "crossed": false,
+        "boughtAtPrice": 6.025
+      },
+      "BUY": {
+        "price": 6.06,
+        "active": true,
+        "crossed": true
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -100,
+      "SELL": {
+        "price": 6.04,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 6.01,
+        "active": true,
+        "crossed": true,
+        "soldAtPrice": 6.01
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -200,
+      "SELL": {
+        "price": 6,
+        "active": false,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 5.97,
+        "active": true,
+        "crossed": true,
+        "soldAtPrice": 5.9543
+      }
+    },
+    {
+      "type": "SHORT",
+      "positionLimit": -300,
+      "SELL": {
+        "price": 5.96,
+        "active": true,
+        "crossed": false
+      },
+      "BUY": {
+        "price": 5.93,
+        "active": false,
+        "crossed": false,
+        "soldAtPrice": 5.93
+      }
+    }
+  ],
+  "prediction": 0.7364168167114258,
+  "isStaticIntervals": false,
+  "position": -200,
+  "lastAsk": 5.93,
+  "lastBid": 5.92,
+  "realizedPnL": 1.91,
+  "realizedPnLAsPercentage": 0.8464,
+  "exitPnL": 12.34,
+  "exitPnLAsPercentage": 0.6844148641153633,
+  "maxMovingProfitAsPercentage": 0.7448696616749861,
+  "maxMovingLossAsPercentage": -0.11092623405435385,
+  "tradingLogs": [
+    {
+      "action": "SELL",
+      "timeStamp": "2025-05-09 at 10:40:46am ET",
+      "quotedPrice": 6,
+      "realizedPrice": 6.01,
+      "previousPosition": 0,
+      "newPosition": -100
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-05-09 at 10:42:41am ET",
+      "quotedPrice": 6.03,
+      "realizedPrice": 6.025,
+      "previousPosition": -100,
+      "newPosition": 0
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-05-09 at 10:48:30am ET",
+      "quotedPrice": 5.99,
+      "realizedPrice": 5.995,
+      "previousPosition": 0,
+      "newPosition": -100
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-05-09 at 10:54:46am ET",
+      "quotedPrice": 5.95,
+      "realizedPrice": 5.9543,
+      "previousPosition": -100,
+      "newPosition": -200
+    },
+    {
+      "action": "SELL",
+      "timeStamp": "2025-05-09 at 10:57:41am ET",
+      "quotedPrice": 5.92,
+      "realizedPrice": 5.93,
+      "previousPosition": -200,
+      "newPosition": -300
+    },
+    {
+      "action": "BUY",
+      "timeStamp": "2025-05-09 at 10:59:37am ET",
+      "quotedPrice": 5.94,
+      "realizedPrice": 5.9352,
+      "previousPosition": -300,
+      "newPosition": -200
+    }
+  ]
+}

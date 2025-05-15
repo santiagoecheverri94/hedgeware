@@ -1,35 +1,18 @@
-import {setSecurityPosition} from './instructions/set-security-position';
-import {getSimulatedSnapshot, isLiveTrading} from '../../utils/price-simulator';
-import {OrdersResponse} from './IBKR/types';
-
 export abstract class BrokerageClient {
-    protected abstract snapshotFields: { [field in SnapShotFields]: string };
+    abstract getSnapshot(stock: string): Promise<Snapshot>;
+    abstract getSnapshots(stocks: string[]): Promise<Record<string, Snapshot>>;
+    abstract getShortableQuantities(stocks: string[]): Promise<Record<string, number>>;
+    abstract placeMarketOrder(orderDetails: OrderDetails): Promise<number>;
 
-    abstract getSnapshot(stock: string, brokerageIdOfSecurity: string): Promise<Snapshot>;
-    abstract placeOrder(orderDetails: OrderDetails): Promise<number>;
-    abstract modifyOrder(orderId: string, orderDetails: OrderDetails): Promise<number>;
-    abstract getOrderStatus(orderId: number): Promise<OrderStatus>;
-    abstract getPositionSize(brokerageIdOfSecurity: string): Promise<number>;
-
-    async setSecurityPosition({
+    abstract setSecurityPosition({
         brokerageIdOfSecurity,
         currentPosition,
         newPosition,
-        snapshot,
     }: {
         brokerageIdOfSecurity: string;
         currentPosition: number;
         newPosition: number;
-        snapshot: Snapshot;
-    }): Promise<void> {
-        return setSecurityPosition({
-            brokerageClient: this,
-            brokerageIdOfSecurity,
-            newPosition,
-            currentPosition,
-            snapshot,
-        });
-    }
+    }): Promise<number>;
 }
 
 export enum SnapShotFields {
@@ -47,17 +30,13 @@ export type Snapshot = {
 export enum OrderAction {
     BUY = 'BUY',
     SELL = 'SELL',
-}
-
-export enum OrderStatus {
-    FILLED = 'Filled',
-    // Pending???
+    BUY_TO_COVER = 'BUY_TO_COVER',
+    SELL_SHORT = 'SELL_SHORT',
 }
 
 export interface OrderDetails {
-    ticker: string;
-    // exchange?
-    price: number;
+    brokerageIdOfSecurity: string;
     action: OrderAction;
     quantity: number;
+    // limitPrice?: number;
 }

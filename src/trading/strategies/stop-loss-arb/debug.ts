@@ -10,8 +10,11 @@ import {StockState} from './types';
 
 export function printPnLValues(stock: string, stockState: StockState): void {
     console.log(`stock: ${stock}`);
+    console.log(`realizedPnLAsPercentage: ${stockState.realizedPnLAsPercentage}`);
     console.log(`exitPnLAsPercentage: ${stockState.exitPnLAsPercentage}`);
-    console.log(`maxMovingProfitAsPercentage: ${stockState.maxMovingProfitAsPercentage}`);
+    console.log(
+        `maxMovingProfitAsPercentage: ${stockState.maxMovingProfitAsPercentage}`,
+    );
     console.log(`maxMovingLossAsPercentage: ${stockState.maxMovingLossAsPercentage}`);
     console.log('');
 }

@@ -6,12 +6,19 @@
             "label": "node-gyp rebuild",
             "command": "yarn",
             "args": [
-                "node-gyp",
-                "rebuild",
-                "--debug"
+                "cpp-debug"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
+            },
+            "linux": {
+                "options": {
+                    "env": {
+                        "PATH": "/usr/local/nodejs/bin:${env:PATH}",
+                        "CC": "gcc-13",
+                        "CXX": "g++-13",
+                    }
+                }
             },
             "problemMatcher": [],
             "group": {

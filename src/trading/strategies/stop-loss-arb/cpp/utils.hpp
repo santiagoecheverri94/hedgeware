@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/multiprecision/cpp_dec_float.hpp>
+#include <format>
 #include <functional>
 #include <iostream>
 #include <variant>
@@ -13,5 +14,7 @@ using Decimal = boost::multiprecision::number<
     boost::multiprecision::backends::cpp_dec_float<kDecimalPrecision>>;
 
 Decimal GetDecimal(const double& value);
+
+Decimal RoundToNumDecimalPlaces(const Decimal& value, const int& places);
 
 std::vector<std::string> string_split(const std::string& str, const char& delimiter);

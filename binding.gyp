@@ -14,6 +14,7 @@
                     ],
                 },
             },
+            "cflags_cc": [ "-std=c++20" ]
         }
     ]
 }  # type: ignore

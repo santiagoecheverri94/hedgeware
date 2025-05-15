@@ -1,8 +1,13 @@
-import {syncWriteJSONFile, jsonPrettyPrint} from '../../../utils/file';
+import {writeJSONFile, jsonPrettyPrint, renameFile} from '../../../utils/file';
 import {FloatCalculator as fc} from '../../../utils/float-calculator';
 import {log} from '../../../utils/log';
 import {getSimulatedSnapshot, isLiveTrading} from '../../../utils/price-simulator';
-import {getCurrentTimeStamp} from '../../../utils/time';
+import {
+    getCurrentMomentInNewYork,
+    getCurrentTimeStamp,
+    getMomentForTime,
+    kTradingEndTime,
+} from '../../../utils/time';
 import {
     Snapshot,
     OrderAction,
@@ -14,39 +19,70 @@ import {IntervalType, StockState} from './types';
 export async function reconcileStockPosition(
     stock: string,
     stockState: StockState,
-    brokerageClient: BrokerageClient,
-): Promise<Snapshot> {
+    date: string,
+    brokerageClient?: BrokerageClient,
+): Promise<{
+    snapshot: Snapshot;
+    crossedThreshold: boolean;
+}> {
     // 0)
     let snapshot: Snapshot;
-    snapshot = await (isLiveTrading() ?
-        brokerageClient.getSnapshot(stock, stockState.brokerageId) :
-        getSimulatedSnapshot(stock));
+    snapshot = await (brokerageClient ?
+        brokerageClient.getSnapshot(stockState.brokerageId) :
+        getSimulatedSnapshot(stockState));
 
-    if (isWideBidAskSpread(snapshot, stockState) || !snapshot.bid || !snapshot.ask) {
-        return snapshot;
-    }
-
-    // TODO: do I still need this afterwards?
     const isSnapshotChanged = isSnapshotChange(snapshot, stockState);
-    if (isSnapshotChanged) {
+    const isPastTradingTimeBool = isPastTradingTime();
+    if (isSnapshotChanged || isPastTradingTimeBool) {
         updateSnaphotOnState(stockState, snapshot);
-
         updateExitPnL(stockState);
 
-        if (isLiveTrading()) {
-            syncWriteJSONFile(
-                getStockStateFilePath(stock),
+        const isExitPnlBeyondThresholdsStr = isExitPnlBeyondThresholds(stockState);
+        if (
+            isLiveTrading() &&
+            (isExitPnlBeyondThresholdsStr || isPastTradingTimeBool)
+        ) {
+            if (stockState.position !== 0) {
+                await setNewPosition({
+                    stock,
+                    brokerageClient,
+                    stockState,
+                    newPosition: 0,
+                    snapshot,
+                });
+
+                setRealizedPnL(stockState);
+            }
+
+            await writeJSONFile(
+                getStockStateFilePath(stock, date),
                 jsonPrettyPrint(stockState),
             );
+
+            const oldPath = getStockStateFilePath(stock, date);
+
+            const suffix = isExitPnlBeyondThresholdsStr || 'N';
+            const newFileName = `_${stock}_${suffix}`;
+            const newPath = getStockStateFilePath(newFileName, date);
+
+            await renameFile(oldPath, newPath);
+
+            return {
+                snapshot,
+                crossedThreshold: true,
+            };
         }
     }
 
-    // 1)
-    const crossingHappened = checkCrossings(stockState, snapshot);
-
-    if (isLiveTrading() && crossingHappened) {
-        syncWriteJSONFile(getStockStateFilePath(stock), jsonPrettyPrint(stockState));
+    if (isWideBidAskSpread(snapshot, stockState) || !snapshot.bid || !snapshot.ask) {
+        return {
+            snapshot,
+            crossedThreshold: false,
+        };
     }
+
+    // 1)
+    checkCrossings(stockState, snapshot);
 
     // 2)
     let intervalIndicesToExecute = getNumToBuy(stockState, snapshot);
@@ -69,51 +105,66 @@ export async function reconcileStockPosition(
 
     // 5)
     if (newPosition !== undefined) {
-        const orderSide: OrderAction =
-            numToBuy > 0 ? OrderAction.BUY : OrderAction.SELL;
-
-        // TODO: refactor so price is returned from setNewPosition
-        let priceSetAt: number = (await setNewPosition({
+        await setNewPosition({
             stock,
             brokerageClient,
             stockState,
             newPosition,
             snapshot,
-            orderSide,
-        })) as any;
-
-        priceSetAt = orderSide === OrderAction.BUY ? snapshot.ask : snapshot.bid;
-
-        updateRealizedPnL(stockState, intervalIndicesToExecute, orderSide, priceSetAt);
+        });
 
         checkCrossings(stockState, snapshot);
     }
 
     // 6)
     if (isSnapshotChanged) {
-        updateSnaphotOnState(stockState, snapshot);
-
-        updateExitPnL(stockState);
-
         if (isLiveTrading()) {
-            syncWriteJSONFile(
-                getStockStateFilePath(stock),
+            await writeJSONFile(
+                getStockStateFilePath(stock, date),
                 jsonPrettyPrint(stockState),
             );
         }
     }
 
-    return snapshot;
+    return {
+        snapshot,
+        crossedThreshold: false,
+    };
+}
+
+function isExitPnlBeyondThresholds(stockState: StockState): string {
+    if (isLiveTrading() && stockState.profitThreshold && stockState.lossThreshold) {
+        if (fc.gte(stockState.exitPnLAsPercentage, stockState.profitThreshold)) {
+            return 'W';
+        }
+
+        if (fc.lte(stockState.exitPnLAsPercentage, stockState.lossThreshold)) {
+            return 'L';
+        }
+    }
+
+    return '';
+}
+
+function isPastTradingTime(): boolean {
+    // return false;
+
+    const tradingEndTime = getMomentForTime(kTradingEndTime);
+    const currentMomentInNewYork = getCurrentMomentInNewYork();
+
+    const isPastTradingTimeBool = currentMomentInNewYork.isSameOrAfter(tradingEndTime);
+
+    return isPastTradingTimeBool;
 }
 
 function isWideBidAskSpread({bid, ask}: Snapshot, stockState: StockState): boolean {
-    return fc.gt(fc.subtract(ask, bid), stockState.spaceBetweenIntervals) === 1;
+    // return false;
+    return fc.gte(fc.subtract(ask, bid), stockState.spaceBetweenIntervals) === 1;
 }
 
-function checkCrossings(stockState: StockState, {bid, ask}: Snapshot): boolean {
+function checkCrossings(stockState: StockState, {bid, ask}: Snapshot): void {
     const {intervals} = stockState;
 
-    let crossingHappened = false;
     for (const interval of intervals) {
         if (
             interval[OrderAction.BUY].active &&
@@ -121,7 +172,6 @@ function checkCrossings(stockState: StockState, {bid, ask}: Snapshot): boolean {
             fc.lt(ask, interval[OrderAction.BUY].price)
         ) {
             interval[OrderAction.BUY].crossed = true;
-            crossingHappened = true;
         }
 
         if (
@@ -130,11 +180,8 @@ function checkCrossings(stockState: StockState, {bid, ask}: Snapshot): boolean {
             fc.gt(bid, interval[OrderAction.SELL].price)
         ) {
             interval[OrderAction.SELL].crossed = true;
-            crossingHappened = true;
         }
     }
-
-    return crossingHappened;
 }
 
 function getNumToBuy(stockState: StockState, {ask}: Snapshot): number[] {
@@ -157,6 +204,10 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number[] {
         }
     }
 
+    if (stockState.isStaticIntervals) {
+        addSkippedBuysIfRequired(stockState, indicesToExecute);
+    }
+
     for (const index of indicesToExecute) {
         const interval = intervals[index];
 
@@ -165,10 +216,6 @@ function getNumToBuy(stockState: StockState, {ask}: Snapshot): number[] {
 
         interval[OrderAction.SELL].active = true;
         interval[OrderAction.SELL].crossed = false;
-    }
-
-    if (stockState.isStaticIntervals) {
-        addSkippedBuysIfRequired(stockState, indicesToExecute);
     }
 
     if (indicesToExecute.length > 0) {
@@ -238,98 +285,115 @@ async function setNewPosition({
     stockState,
     newPosition,
     snapshot,
-    orderSide,
 }: {
     stock: string;
-    brokerageClient: BrokerageClient;
+    brokerageClient?: BrokerageClient;
     stockState: StockState;
     newPosition: number;
     snapshot: Snapshot;
-    orderSide: OrderAction;
 }): Promise<void> {
     const previousPosition = stockState.position;
     stockState.position = newPosition;
 
+    const orderSide: OrderAction =
+        newPosition > previousPosition ? OrderAction.BUY : OrderAction.SELL;
+
+    const quotedPrice = orderSide === OrderAction.BUY ? snapshot.ask : snapshot.bid;
+    let priceSetAt: number = quotedPrice;
+
     const tradingLog: (typeof stockState.tradingLogs)[number] = {
         action: orderSide,
         timeStamp: snapshot.timestamp || getCurrentTimeStamp(),
-        price: orderSide === OrderAction.BUY ? snapshot.ask : snapshot.bid,
+        quotedPrice,
+        realizedPrice: priceSetAt,
         previousPosition,
         newPosition,
     };
     stockState.tradingLogs.push(tradingLog);
 
-    if (isLiveTrading()) {
-        await brokerageClient.setSecurityPosition({
+    if (brokerageClient) {
+        priceSetAt = await brokerageClient.setSecurityPosition({
             brokerageIdOfSecurity: stockState.brokerageId,
-            currentPosition: stockState.position * stockState.numContracts,
+            currentPosition: previousPosition * stockState.numContracts,
             newPosition: newPosition * stockState.numContracts,
-            snapshot,
         });
 
         log(
-            `Changed position for ${stock} (${
-                stockState.numContracts
-            } constracts): ${jsonPrettyPrint({
-                price: tradingLog.price,
-                previousPosition: tradingLog.previousPosition,
-                newPosition: tradingLog.newPosition,
-            })}`,
+            `Changed position for ${stock}, action: ${orderSide}, fullNewPosition: ${
+                newPosition * stockState.numContracts
+            }, quotedPrice: ${tradingLog.quotedPrice}, realizedPrice: ${
+                tradingLog.realizedPrice
+            }`,
+        );
+
+        await writeJSONFile(
+            getStockStateFilePath(stock, stockState.date),
+            jsonPrettyPrint(stockState),
         );
     }
+
+    const newNetPositionValue = getNewNetPositionValue({
+        currentPositionValue: stockState.netPositionValue,
+        commissionPerShare: stockState.brokerageTradingCostPerShare,
+        orderSide,
+        newPosition,
+        previousPosition,
+        priceSetAt,
+    });
+
+    stockState.netPositionValue = newNetPositionValue;
 }
 
-function updateRealizedPnL(
-    stockState: StockState,
-    executedIndices: number[],
-    orderSide: OrderAction,
-    price: number,
-): void {
-    if (executedIndices.length === 0) {
-        return;
+function getNewNetPositionValue({
+    currentPositionValue,
+    commissionPerShare,
+    orderSide,
+    newPosition,
+    previousPosition,
+    priceSetAt,
+}: {
+    currentPositionValue: number;
+    commissionPerShare: number;
+    orderSide: OrderAction;
+    newPosition: number;
+    previousPosition: number;
+    priceSetAt: number;
+}): number {
+    const quantity = Math.abs(newPosition - previousPosition);
+
+    const commissionCosts = fc.multiply(quantity, commissionPerShare);
+
+    let change = -commissionCosts;
+
+    const orderValue = fc.multiply(quantity, priceSetAt);
+
+    if (orderSide === OrderAction.BUY) {
+        change = fc.subtract(change, orderValue);
+    } else if (orderSide === OrderAction.SELL) {
+        change = fc.add(change, orderValue);
     }
 
-    const commissionCosts = fc.multiply(
-        executedIndices.length * stockState.sharesPerInterval,
-        stockState.brokerageTradingCostPerShare,
+    const newPositionValue = fc.add(currentPositionValue, change);
+
+    return newPositionValue;
+}
+
+function setRealizedPnL(stockState: StockState): void {
+    if (stockState.position !== 0) {
+        throw new Error('Cannot set realized PnL because Position is not zero');
+    }
+
+    const percentageDenominator = fc.multiply(
+        stockState.targetPosition + stockState.sharesPerInterval,
+        stockState.initialPrice,
     );
 
-    stockState.realizedPnL = fc.subtract(stockState.realizedPnL, commissionCosts);
+    const realizedPnLAsPercentage = fc.multiply(
+        fc.divide(stockState.netPositionValue, percentageDenominator),
+        100,
+    );
 
-    for (const index of executedIndices) {
-        const interval = stockState.intervals[index];
-
-        let pnLFromThisExecution: number | undefined;
-
-        if (interval.type === IntervalType.LONG) {
-            if (orderSide === OrderAction.BUY) {
-                interval[OrderAction.SELL].boughtAtPrice = price;
-            } else if (orderSide === OrderAction.SELL) {
-                pnLFromThisExecution = fc.multiply(
-                    stockState.sharesPerInterval,
-                    fc.subtract(price, interval[OrderAction.SELL].boughtAtPrice!),
-                );
-            }
-        }
-
-        if (interval.type === IntervalType.SHORT) {
-            if (orderSide === OrderAction.SELL) {
-                interval[OrderAction.BUY].soldAtPrice = price;
-            } else if (orderSide === OrderAction.BUY) {
-                pnLFromThisExecution = fc.multiply(
-                    stockState.sharesPerInterval,
-                    fc.subtract(interval[OrderAction.BUY].soldAtPrice!, price),
-                );
-            }
-        }
-
-        if (pnLFromThisExecution !== undefined) {
-            stockState.realizedPnL = fc.add(
-                stockState.realizedPnL,
-                pnLFromThisExecution,
-            );
-        }
-    }
+    stockState.realizedPnLAsPercentage = realizedPnLAsPercentage;
 }
 
 function updateSnaphotOnState(stockState: StockState, snapshot: Snapshot): void {
@@ -344,47 +408,28 @@ function updateExitPnL(stockState: StockState): void {
         return;
     }
 
-    let exitPnL = stockState.realizedPnL;
+    const orderSide: OrderAction = position > 0 ? OrderAction.SELL : OrderAction.BUY;
 
-    const commissionCosts = fc.multiply(
-        position,
-        stockState.brokerageTradingCostPerShare,
+    const priceSetAt = orderSide === OrderAction.BUY ? lastAsk : lastBid;
+
+    const ifClosingPositionValue = getNewNetPositionValue({
+        currentPositionValue: stockState.netPositionValue,
+        commissionPerShare: stockState.brokerageTradingCostPerShare,
+        orderSide,
+        newPosition: 0,
+        previousPosition: position,
+        priceSetAt,
+    });
+
+    const percentageDenominator = fc.multiply(
+        stockState.targetPosition + stockState.sharesPerInterval,
+        stockState.initialPrice,
     );
 
-    exitPnL = fc.subtract(exitPnL, commissionCosts);
-
-    for (const interval of stockState.intervals) {
-        let intervalPnL: number | undefined;
-
-        if (interval.type === IntervalType.LONG && interval[OrderAction.SELL].active) {
-            const boughtAtPrice = interval[OrderAction.SELL].boughtAtPrice!;
-            intervalPnL = fc.multiply(
-                stockState.sharesPerInterval,
-                fc.subtract(lastBid, boughtAtPrice),
-            );
-        }
-
-        if (interval.type === IntervalType.SHORT && interval[OrderAction.BUY].active) {
-            const soldAtPrice = interval[OrderAction.BUY].soldAtPrice!;
-            intervalPnL = fc.multiply(
-                stockState.sharesPerInterval,
-                fc.subtract(soldAtPrice, lastAsk),
-            );
-        }
-
-        if (intervalPnL !== undefined) {
-            exitPnL = fc.add(exitPnL, intervalPnL);
-        }
-    }
-
-    stockState.exitPnL = exitPnL;
-
-    const percentageDenominator = fc.multiply(stockState.targetPosition + stockState.sharesPerInterval, stockState.initialPrice);
-
-    const exitPnLAsPercentage = fc.multiply(fc.divide(
-        exitPnL,
-        percentageDenominator,
-    ), 100);
+    const exitPnLAsPercentage = fc.multiply(
+        fc.divide(ifClosingPositionValue, percentageDenominator),
+        100,
+    );
 
     stockState.exitPnLAsPercentage = exitPnLAsPercentage;
 
@@ -397,6 +442,26 @@ function updateExitPnL(stockState: StockState): void {
     }
 
     // Here the cpp version is different, because it has the reched_when losses...
+}
+
+export function reconcileRealizedPnlWhenHistoricalSnapshotsExhausted(
+    stockState: StockState,
+): void {
+    updateExitPnL(stockState);
+
+    setNewPosition({
+        stock: stockState.brokerageId,
+        brokerageClient: undefined,
+        stockState,
+        newPosition: 0,
+        snapshot: {
+            ask: stockState.lastAsk,
+            bid: stockState.lastBid,
+            timestamp: getCurrentTimeStamp(),
+        },
+    });
+
+    setRealizedPnL(stockState);
 }
 
 function correctBadBuyIfRequired(

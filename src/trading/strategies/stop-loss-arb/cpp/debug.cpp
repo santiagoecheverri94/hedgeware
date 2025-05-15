@@ -9,6 +9,9 @@ using namespace std;
 void PrintPnLValues(const std::string stock, const StockState& stockState)
 {
     Print(format("stock: {}", stock));
+    Print(
+        format("realizedPnLAsPercentage: {}", stockState.realizedPnLAsPercentage.str())
+    );
     Print(format("exitPnLAsPercentage: {}", stockState.exitPnLAsPercentage.str()));
     Print(format(
         "maxMovingProfitAsPercentage: {}", stockState.maxMovingProfitAsPercentage.str()
@@ -26,24 +29,15 @@ void DebugUpperOrLowerBound(
     const std::unordered_map<std::string, StockState>& originalStates
 )
 {
-    if (states[stock].tradingLogs.empty())
-    {
-        RestartRandomPrice();
-        states[stock] = originalStates.at(stock);
-        return;
-    }
-
-    // PrintPnLValues(stock, states);
-
     if (upperOrLowerBound == "up" &&
         states[stock].position < states[stock].targetPosition)
     {
-        __debugbreak();
+        Print("Place breakpoint here. No cross platform breakpoints in C++");
     }
     else if (upperOrLowerBound == "down" &&
              states[stock].position > -states[stock].targetPosition)
     {
-        __debugbreak();
+        Print("Place breakpoint here. No cross platform breakpoints in C++");
     }
 
     RestartRandomPrice();

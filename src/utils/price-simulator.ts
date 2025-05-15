@@ -1,10 +1,20 @@
-import {getFilePathForStockDataOnDate} from '../historical-data/save-stock-historical-data';
 import {Snapshot} from '../trading/brokerage-clients/brokerage-client';
+import {StockState} from '../trading/strategies/stop-loss-arb/types';
 import {readJSONFile} from './file';
 import {FloatCalculator as fc} from './float-calculator';
+import path from 'node:path';
 
 export function isLiveTrading(): boolean {
-    return !isRandomSnapshot() && !isHistoricalSnapshot();
+    const isSimulation = isRandomSnapshot() || isHistoricalSnapshot();
+    const isLiveTradingSet = Boolean(process.env.LIVE_TRADING);
+
+    if (!isSimulation && !isLiveTradingSet) {
+        throw new Error(
+            'Neither simulation nor live trading is set. Please set one of them.',
+        );
+    }
+
+    return !isSimulation && isLiveTradingSet;
 }
 
 export function isRandomSnapshot(): boolean {
@@ -19,13 +29,13 @@ export function isHistoricalCppSnapshot(): boolean {
     return isHistoricalSnapshot() && Boolean(process.env.CPP_NODE_ADDON);
 }
 
-export async function getSimulatedSnapshot(stock: string): Promise<Snapshot> {
+export async function getSimulatedSnapshot(stockState: StockState): Promise<Snapshot> {
     if (isRandomSnapshot()) {
         return getRandomSnapshot();
     }
 
     if (isHistoricalSnapshot()) {
-        return getHistoricalSnapshot(stock);
+        return getHistoricalSnapshot(stockState);
     }
 
     throw new Error('No snapshot type specified');
@@ -41,47 +51,41 @@ function getRandomSnapshot(): Snapshot {
     };
 }
 
-const INITIAL_PRICE = 9;
-let randomPrice: number = INITIAL_PRICE;
+export const INITIAL_RANDOM_PRICE = 10.1;
+let randomPrice: number = INITIAL_RANDOM_PRICE;
 
 function getRandomPrice(): number {
     const tickDown = fc.subtract(randomPrice, 0.01);
     const tickUp = fc.add(randomPrice, 0.01);
-    const probabilityOfTickDown = Math.random();
-    randomPrice = fc.lte(probabilityOfTickDown, 0.49) ? tickDown : tickUp;
+    const probabilityOfTickUp = Math.random();
+    randomPrice = fc.lte(probabilityOfTickUp, 0.5) ? tickUp : tickDown;
 
     return randomPrice;
 }
 
 export function restartRandomPrice(): void {
-    randomPrice = INITIAL_PRICE;
+    randomPrice = INITIAL_RANDOM_PRICE;
 }
 
-const historicalSnapshots: {
-    [stock: string]: {
-        data: Snapshot[];
-        index: number;
-    };
-} = {};
-
-async function getHistoricalSnapshot(stock: string): Promise<Snapshot> {
-    if (!historicalSnapshots[stock]) {
-        historicalSnapshots[stock] = await getHistoricalSnapshotData(stock);
+async function getHistoricalSnapshot(stockState: StockState): Promise<Snapshot> {
+    if (!stockState.historicalSnapshots) {
+        stockState.historicalSnapshots = await getHistoricalSnapshotData(stockState);
     }
 
-    const snapshot = historicalSnapshots[stock].data[historicalSnapshots[stock].index];
-    historicalSnapshots[stock].index += 1;
+    const historicalSnapshots = stockState.historicalSnapshots;
+    const snapshot = historicalSnapshots.data[historicalSnapshots.index];
+    historicalSnapshots.index += 1;
 
     return snapshot;
 }
 
-async function getHistoricalSnapshotData(fileName: string): Promise<{
+async function getHistoricalSnapshotData(stockState: StockState): Promise<{
     data: Snapshot[];
     index: number;
 }> {
-    const {stock, date} = getStockAndDate(fileName);
+    const {brokerageId, date} = stockState;
 
-    const snapshotsData = await getSnapshotsForStockOnDate(stock, date);
+    const snapshotsData = await getSnapshotsForStockOnDate(brokerageId, date);
 
     return {
         data: snapshotsData,
@@ -89,43 +93,45 @@ async function getHistoricalSnapshotData(fileName: string): Promise<{
     };
 }
 
-function getStockAndDate(fileName: string): {
-    stock: string;
-    date: string;
-} {
-    const stock = fileName.split('__')[0];
-    const date = fileName.split('__')[1];
-
-    if (!date) {
-        throw new Error(
-            `Invalid historical snapshot file name: "${fileName}" is missing date`,
-        );
-    }
-
-    return {
-        stock,
-        date,
-    };
-}
-
 export async function getSnapshotsForStockOnDate(
     stock: string,
     date: string,
 ): Promise<Snapshot[]> {
-    return readJSONFile<Snapshot[]>(getFilePathForStockDataOnDate(stock, date));
+    const jsonFileData = await readJSONFile<{ snapshots: Snapshot[] }>(
+        getFilePathForStockDataOnDate(stock, date),
+    );
+    const snapshots = jsonFileData.snapshots;
+
+    return snapshots;
 }
 
-export function isHistoricalSnapshotsExhausted(stock: string): boolean {
-    if (!isHistoricalSnapshot()) {
+export function getDirWithStocksDataOnDate(date: string): string {
+    const year = date.split('-')[0];
+    const month = date.split('-')[1];
+
+    const cwd = process.cwd();
+    const dir = path.join(cwd, '..', 'deephedge', 'historical-data', year, month, date);
+
+    return dir;
+}
+
+export function isHistoricalSnapshotsExhausted(stockState: StockState): boolean {
+    if (!isHistoricalSnapshot() || !stockState.historicalSnapshots) {
         return false;
     }
 
-    const isExhausted =
-        historicalSnapshots[stock].index === historicalSnapshots[stock].data.length;
+    const historicalSnapshots = stockState.historicalSnapshots;
+    const isExhausted = historicalSnapshots.index === historicalSnapshots.data.length;
 
     return isExhausted;
 }
 
-export function deleteHistoricalSnapshots(stock: string): void {
-    delete historicalSnapshots[stock];
+export function deleteHistoricalSnapshots(stockState: StockState): void {
+    delete stockState.historicalSnapshots;
+}
+
+function getFilePathForStockDataOnDate(stock: string, date: string): string {
+    const dir = getDirWithStocksDataOnDate(date);
+    const filepPath = path.join(dir, `${stock}.json`);
+    return filepPath;
 }

@@ -1,3 +1,4 @@
+#include "data.hpp"
 #include "js_bindings.hpp"
 #include "start.hpp"
 
@@ -16,14 +17,19 @@ void JsTestCallJSFunction(const JS::CallbackInfo& info)
 
 void JsStartStopLossArbCpp(const JS::CallbackInfo& info)
 {
-    JS::Env env = info.Env();
+    const auto js_lists_of_list_of_dates = info[0].As<JS::Array>();
+    const auto js_partial_stock_state = info[1].As<JS::Object>();
 
-    const auto js_states_list = info[0].As<JS::Array>();
+    const auto cpp_lists_of_list_of_dates =
+        BindJsListOfListOfDatesToCppListOfListOfDates(js_lists_of_list_of_dates);
 
-    auto cpp_states_list = BindJsStatesListToCppStatesList(js_states_list);
+    const auto cpp_partial_stock_state =
+        BindJsPartialStockStateToCppMap(js_partial_stock_state);
 
-    StartStopLossArbCpp(cpp_states_list);
+    StartStopLossArbCpp(cpp_lists_of_list_of_dates, cpp_partial_stock_state);
 }
+
+void JsFilterHistoricalData(const JS::CallbackInfo& info) { CopyFilteredJsonFiles(); }
 
 JS::Object Init(JS::Env env, JS::Object exports)
 {
@@ -35,6 +41,11 @@ JS::Object Init(JS::Env env, JS::Object exports)
     exports.Set(
         JS::String::New(env, GET_SYMBOL_NAME(JsStartStopLossArbCpp)),
         JS::Function::New(env, JsStartStopLossArbCpp)
+    );
+
+    exports.Set(
+        JS::String::New(env, GET_SYMBOL_NAME(JsFilterHistoricalData)),
+        JS::Function::New(env, JsFilterHistoricalData)
     );
 
     return exports;

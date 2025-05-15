@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "node cpp debug",
+            "name": "Windows stop-loss-arb debug",
             "type": "cppvsdbg",
             "request": "launch",
             // "preLaunchTask": "node-gyp rebuild",
@@ -10,7 +10,6 @@
             "args": [
                 // "--inspect-brk",
                 "C:\\Users\\santi\\Documents\\trading\\hedgeware\\bin\\dev.js",
-                // "C:\\Users\\santi\\Documents\\trading\\hedgeware\\bin\\run.js",
                 "stop-loss-arb"
             ],
             "stopAtEntry": false,
@@ -20,6 +19,10 @@
                 //     "name": "RANDOM_SNAPSHOT",
                 //     "value": "true"
                 // },
+                {
+                    "name": "PRINT_PNL_VALUES",
+                    "value": "true"
+                },
                 {
                     "name": "HISTORICAL_SNAPSHOT",
                     "value": "true"
@@ -32,7 +35,80 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "node attach debug",
+            "name": "Linux stop-loss-arb cpp",
+            "type": "cppdbg",
+            "request": "launch",
+            // "preLaunchTask": "node-gyp rebuild",
+            "program": "/usr/local/nodejs/bin/node",
+            "args": [
+                // "--inspect-brk",
+                "/root/hedgeware/bin/dev.js",
+                "stop-loss-arb"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [
+                // {
+                //     "name": "RANDOM_SNAPSHOT",
+                //     "value": "true"
+                // },
+                {
+                    "name": "PRINT_PNL_VALUES",
+                    "value": "true"
+                },
+                {
+                    "name": "HISTORICAL_SNAPSHOT",
+                    "value": "true"
+                },
+                {
+                    "name": "CPP_NODE_ADDON",
+                    "value": "true"
+                }
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "Linux filter-historical-data cpp",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/usr/local/nodejs/bin/node",
+            "args": [
+                "/root/hedgeware/bin/dev.js",
+                "filter-historical-data"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "attach node",
             "type": "node",
             "request": "attach",
             "port": 9229,
