@@ -14,11 +14,26 @@ std::unordered_map<std::string, StockState> GetFilteredStockStates(
     const std::unordered_map<std::string, StockState>& stock_states
 )
 {
-    unordered_map<string, StockState> filtered_stock_states{};
-    vector<StockState> filtered_stock_states_vector{};
+    vector<StockState> stock_states_vector{};
+    for (const auto& [_, state] : stock_states)
+    {
+        stock_states_vector.push_back(state);
+    }
 
-    // On the function below add a field to stockState that we can use to easily
-    // sort it over here
+    ranges::sort(
+        stock_states_vector,
+        [](const StockState& a, const StockState& b)
+        { return a.first_n_mins_volume_value > b.first_n_mins_volume_value; }
+    );
+
+    unordered_map<string, StockState> filtered_stock_states{};
+
+    const int top_n = min(1, static_cast<int>(stock_states_vector.size()));
+    for (int i = 0; i < top_n; ++i)
+    {
+        const auto& state = stock_states_vector[i];
+        filtered_stock_states[state.brokerageId] = state;
+    }
 
     return filtered_stock_states;
 }
@@ -187,13 +202,18 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
             stock_file_data["snapshots"][0]["ask"].get<double>();
         const Decimal initial_ask_price = GetDecimal(initial_ask_price_double);
 
-        auto stock_state =
-            GetInitialStockState(date, ticker, initial_ask_price, partial_stock_state);
+        auto stock_state = GetInitialStockState(
+            date, ticker, initial_ask_price, partial_stock_state, volume_value
+        );
 
         stock_states[ticker] = stock_state;
     }
 
-    return stock_states;
+    // return stock_states;
+
+    const auto filtered_stock_states = GetFilteredStockStates(stock_states);
+
+    return filtered_stock_states;
 }
 
 std::vector<std::filesystem::path> GetJsonFilePaths(const std::filesystem::path& dir)
@@ -231,7 +251,8 @@ StockState GetInitialStockState(
     const std::string& date,
     const std::string& ticker,
     const Decimal& initial_ask_price,
-    const PartialStockState& partial_stock_state
+    const PartialStockState& partial_stock_state,
+    const Decimal& first_n_mins_volume_value
 )
 {
     StockState new_stock_state{};
@@ -265,6 +286,8 @@ StockState GetInitialStockState(
     intervals.insert(intervals.end(), short_intervals.begin(), short_intervals.end());
 
     new_stock_state.intervals = intervals;
+
+    new_stock_state.first_n_mins_volume_value = first_n_mins_volume_value;
 
     return new_stock_state;
 }
