@@ -19,9 +19,7 @@ StockState GetInitialStockState(
     const std::string& date,
     const std::string& ticker,
     const Decimal& initial_ask_price,
-    const PartialStockState& partial_stock_state,
-    const Decimal& first_n_mins_volume_value,
-    const Decimal& first_n_mins_percentage_change
+    const PartialStockState& partial_stock_state
 );
 
 std::vector<SmoothingInterval> GetLongIntervalsAboveInitialPrice(

@@ -10,58 +10,15 @@ using json = nlohmann::json;
 
 using namespace std;
 
-std::unordered_map<std::string, StockState> GetFilteredStockStatesByVolumeValue(
+std::unordered_map<std::string, StockState> GetFilteredStockStates(
     const std::unordered_map<std::string, StockState>& stock_states
 )
 {
-    vector<StockState> stock_states_vector{};
-    for (const auto& [_, state] : stock_states)
-    {
-        stock_states_vector.push_back(state);
-    }
-
-    ranges::sort(
-        stock_states_vector,
-        [](const StockState& a, const StockState& b)
-        { return a.first_n_mins_volume_value > b.first_n_mins_volume_value; }
-    );
-
     unordered_map<string, StockState> filtered_stock_states{};
+    vector<StockState> filtered_stock_states_vector{};
 
-    const int top_n = min(1, static_cast<int>(stock_states_vector.size()));
-    for (int i = 0; i < top_n; ++i)
-    {
-        const auto& state = stock_states_vector[i];
-        filtered_stock_states[state.brokerageId] = state;
-    }
-
-    return filtered_stock_states;
-}
-
-std::unordered_map<std::string, StockState> GetFilteredStockStatesByPercentageChange(
-    const std::unordered_map<std::string, StockState>& stock_states
-)
-{
-    vector<StockState> stock_states_vector{};
-    for (const auto& [_, state] : stock_states)
-    {
-        stock_states_vector.push_back(state);
-    }
-
-    ranges::sort(
-        stock_states_vector,
-        [](const StockState& a, const StockState& b)
-        { return a.first_n_mins_percentage_change > b.first_n_mins_percentage_change; }
-    );
-
-    unordered_map<string, StockState> filtered_stock_states{};
-
-    const int top_n = min(10, static_cast<int>(stock_states_vector.size()));
-    for (int i = 0; i < top_n; ++i)
-    {
-        const auto& state = stock_states_vector[i];
-        filtered_stock_states[state.brokerageId] = state;
-    }
+    // On the function below add a field to stockState that we can use to easily
+    // sort it over here
 
     return filtered_stock_states;
 }
@@ -192,30 +149,30 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
 
         // ------------------ BEGIN % CHANGE FILTERING ------------------
 
-        const auto raw_time_steps = stock_file_data["raw_time_steps"];
+        // const auto raw_time_steps = stock_file_data["raw_time_steps"];
 
-        const int len_raw_time_steps = raw_time_steps.size();
+        // const int len_raw_time_steps = raw_time_steps.size();
 
-        const auto first_n_minutes_candle = raw_time_steps[0];
-        const auto last_n_minutes_candle = raw_time_steps[len_raw_time_steps - 1];
+        // const auto first_n_minutes_candle = raw_time_steps[0];
+        // const auto last_n_minutes_candle = raw_time_steps[len_raw_time_steps - 1];
 
-        if (first_n_minutes_candle.is_null() || last_n_minutes_candle.is_null())
-        {
-            continue;
-        }
+        // if (first_n_minutes_candle.is_null() || last_n_minutes_candle.is_null())
+        // {
+        //     continue;
+        // }
 
-        const Decimal first_n_minues_open_price =
-            GetDecimal(first_n_minutes_candle["open"].get<double>());
+        // const Decimal first_n_minues_open_price =
+        //     GetDecimal(first_n_minutes_candle["open"].get<double>());
 
-        const Decimal first_n_minues_close_price =
-            GetDecimal(last_n_minutes_candle["close"].get<double>());
+        // const Decimal first_n_minues_close_price =
+        //     GetDecimal(last_n_minutes_candle["close"].get<double>());
 
-        const Decimal percentage_change =
-            ((first_n_minues_close_price - first_n_minues_open_price) /
-             first_n_minues_open_price) *
-            100;
+        // const Decimal percentage_change =
+        //     ((first_n_minues_close_price - first_n_minues_open_price) /
+        //      first_n_minues_open_price) *
+        //     100;
 
-        const Decimal percentage_change_abs = abs(percentage_change);
+        // const Decimal percentage_change_abs = abs(percentage_change);
 
         // if (percentage_change_abs < Decimal("1.0"))
         // {
@@ -230,27 +187,13 @@ std::unordered_map<std::string, StockState> GetHistoricalStockStatesForDate(
             stock_file_data["snapshots"][0]["ask"].get<double>();
         const Decimal initial_ask_price = GetDecimal(initial_ask_price_double);
 
-        auto stock_state = GetInitialStockState(
-            date,
-            ticker,
-            initial_ask_price,
-            partial_stock_state,
-            volume_value,
-            percentage_change_abs
-        );
+        auto stock_state =
+            GetInitialStockState(date, ticker, initial_ask_price, partial_stock_state);
 
         stock_states[ticker] = stock_state;
     }
 
     return stock_states;
-
-    // const auto filtered_stock_states =
-    //     GetFilteredStockStatesByVolumeValue(stock_states);
-
-    // const auto filtered_stock_states =
-    //     GetFilteredStockStatesByPercentageChange(stock_states);
-
-    // return filtered_stock_states;
 }
 
 std::vector<std::filesystem::path> GetJsonFilePaths(const std::filesystem::path& dir)
@@ -288,9 +231,7 @@ StockState GetInitialStockState(
     const std::string& date,
     const std::string& ticker,
     const Decimal& initial_ask_price,
-    const PartialStockState& partial_stock_state,
-    const Decimal& first_n_mins_volume_value,
-    const Decimal& first_n_mins_percentage_change
+    const PartialStockState& partial_stock_state
 )
 {
     StockState new_stock_state{};
@@ -324,9 +265,6 @@ StockState GetInitialStockState(
     intervals.insert(intervals.end(), short_intervals.begin(), short_intervals.end());
 
     new_stock_state.intervals = intervals;
-
-    new_stock_state.first_n_mins_volume_value = first_n_mins_volume_value;
-    new_stock_state.first_n_mins_percentage_change = first_n_mins_percentage_change;
 
     return new_stock_state;
 }
