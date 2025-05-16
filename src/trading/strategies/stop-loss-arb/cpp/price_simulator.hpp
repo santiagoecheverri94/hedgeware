@@ -20,3 +20,5 @@ void DeleteHistoricalSnapshots(StockState& stock_state);
 void WritePnLAsPercentagesToSnapshotsFile(const StockState& stock_state);
 
 std::filesystem::path GetDirWithStocksDataOnDate(const std::string& date);
+
+std::filesystem::path DeleteAnalyzedDir();

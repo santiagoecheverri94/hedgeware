@@ -86,6 +86,43 @@ std::filesystem::path GetDirWithStocksDataOnDate(const std::string& date)
     return folder_path.lexically_normal();
 }
 
+std::filesystem::path GetAnalyzedDir()
+{
+    filesystem::path folder_path =
+        filesystem::current_path() / ".." / "deephedge" / "historical-data-analyzed";
+
+    return folder_path.lexically_normal();
+}
+
+std::filesystem::path GetAnalyzedDirWithStocksDataOnDate(const std::string& date)
+{
+    string year = string_split(date, '-')[0];
+    string month = string_split(date, '-')[1];
+
+    const auto analyzed_dir = GetAnalyzedDir();
+
+    filesystem::path folder_path = analyzed_dir / year / month / date;
+
+    return folder_path.lexically_normal();
+}
+
+std::filesystem::path GetAnalyzedFilePathForStockDataOnDate(
+    const std::string& ticker, const std::string& date
+)
+{
+    const auto dir = GetAnalyzedDirWithStocksDataOnDate(date);
+    filesystem::path file_path = dir / (ticker + ".json");
+
+    return file_path.lexically_normal();
+}
+
+std::filesystem::path DeleteAnalyzedDir()
+{
+    const auto analyzed_dir = GetAnalyzedDir();
+    std::filesystem::remove_all(analyzed_dir);
+    return analyzed_dir;
+}
+
 void WritePnLAsPercentagesToSnapshotsFile(const StockState& stock_state)
 {
     string file_path =
@@ -156,7 +193,13 @@ void WritePnLAsPercentagesToSnapshotsFile(const StockState& stock_state)
             stock_state.max_loss_when_reached_0_25_percentage_profit.convert_to<double>(
             );
 
-        std::ofstream out_file(file_path);
+        const auto out_file_path = GetAnalyzedFilePathForStockDataOnDate(
+            stock_state.brokerageId, stock_state.date
+        );
+
+        std::filesystem::create_directories(out_file_path.parent_path());
+
+        std::ofstream out_file(out_file_path);
         out_file << json_data.dump();
     }
     catch (const json::parse_error& e)

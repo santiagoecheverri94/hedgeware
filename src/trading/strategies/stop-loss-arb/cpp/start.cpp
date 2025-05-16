@@ -18,6 +18,8 @@ void StartStopLossArbCpp(
 {
     const auto start_time = chrono::high_resolution_clock::now();
 
+    DeleteAnalyzedDir();
+
     vector<future<AggResults>> waiting_for_dates_to_be_hedged{};
 
     for (auto& list_of_dates : lists_of_list_of_dates)
